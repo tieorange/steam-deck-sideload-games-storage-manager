@@ -1,0 +1,319 @@
+import 'package:flutter/material.dart';
+
+import 'package:game_size_manager/core/constants.dart';
+import 'package:game_size_manager/core/extensions/size_formatter.dart';
+import 'package:game_size_manager/core/theme/steam_deck_constants.dart';
+import 'package:game_size_manager/features/games/domain/entities/game_entity.dart';
+
+/// Single game item in the list with animations
+/// Optimized for Steam Deck touch with 72px height
+class GameListItem extends StatefulWidget {
+  const GameListItem({
+    super.key,
+    required this.game,
+    required this.onTap,
+    this.index = 0,
+  });
+  
+  final Game game;
+  final VoidCallback onTap;
+  final int index;
+
+  @override
+  State<GameListItem> createState() => _GameListItemState();
+}
+
+class _GameListItemState extends State<GameListItem> 
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+  late Animation<double> _scaleAnimation;
+  
+  bool _isPressed = false;
+  
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 400),
+      vsync: this,
+    );
+    
+    // Staggered animation based on index
+    final delay = (widget.index * 0.05).clamp(0.0, 0.3);
+    
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Interval(delay, 1.0, curve: Curves.easeOut),
+      ),
+    );
+    
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0.05, 0),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Interval(delay, 1.0, curve: Curves.easeOutCubic),
+      ),
+    );
+    
+    _scaleAnimation = Tween<double>(begin: 0.95, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Interval(delay, 1.0, curve: Curves.easeOut),
+      ),
+    );
+    
+    _controller.forward();
+  }
+  
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+  
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final sourceColor = _getSourceColor(widget.game.source);
+    
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) => FadeTransition(
+        opacity: _fadeAnimation,
+        child: SlideTransition(
+          position: _slideAnimation,
+          child: ScaleTransition(
+            scale: _scaleAnimation,
+            child: child,
+          ),
+        ),
+      ),
+      child: GestureDetector(
+        onTapDown: (_) => setState(() => _isPressed = true),
+        onTapUp: (_) => setState(() => _isPressed = false),
+        onTapCancel: () => setState(() => _isPressed = false),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          curve: Curves.easeOut,
+          transform: Matrix4.diagonal3Values(
+            _isPressed ? 0.98 : 1.0, 
+            _isPressed ? 0.98 : 1.0, 
+            1.0,
+          ),
+          child: Material(
+            color: widget.game.isSelected 
+              ? colorScheme.primaryContainer.withValues(alpha: 0.4)
+              : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+            child: InkWell(
+              onTap: widget.onTap,
+              borderRadius: BorderRadius.circular(12),
+              splashColor: sourceColor.withValues(alpha: 0.1),
+              highlightColor: sourceColor.withValues(alpha: 0.05),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                height: SteamDeckConstants.gameListItemHeight,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: SteamDeckConstants.pagePadding,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  border: widget.game.isSelected 
+                    ? Border.all(color: colorScheme.primary.withValues(alpha: 0.5), width: 2)
+                    : null,
+                ),
+                child: Row(
+                  children: [
+                    // Animated checkbox
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      width: SteamDeckConstants.minTouchTarget,
+                      height: SteamDeckConstants.minTouchTarget,
+                      child: Transform.scale(
+                        scale: 1.2,
+                        child: Checkbox(
+                          value: widget.game.isSelected,
+                          onChanged: (_) => widget.onTap(),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
+                      ),
+                    ),
+                    
+                    // Game icon with gradient
+                    Container(
+                      width: SteamDeckConstants.gameIconSize,
+                      height: SteamDeckConstants.gameIconSize,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            sourceColor.withValues(alpha: 0.3),
+                            sourceColor.withValues(alpha: 0.1),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: sourceColor.withValues(alpha: 0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Icon(
+                        _getSourceIcon(widget.game.source),
+                        color: sourceColor,
+                        size: 24,
+                      ),
+                    ),
+                    
+                    const SizedBox(width: 12),
+                    
+                    // Title and path
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            widget.game.title,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          Row(
+                            children: [
+                              // Source badge inline
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: sourceColor.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  widget.game.source.displayName,
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: sourceColor,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 10,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  widget.game.installPath.split('/').last,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: colorScheme.onSurface.withValues(alpha: 0.5),
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    
+                    const SizedBox(width: 8),
+                    
+                    // Size with visual indicator
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          widget.game.sizeBytes.toHumanReadableSize(),
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: _getSizeColor(widget.game.sizeBytes, colorScheme),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        // Size bar indicator
+                        Container(
+                          width: 60,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(2),
+                            color: colorScheme.surfaceContainerHighest,
+                          ),
+                          child: FractionallySizedBox(
+                            alignment: Alignment.centerLeft,
+                            widthFactor: _getSizePercent(widget.game.sizeBytes),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(2),
+                                gradient: LinearGradient(
+                                  colors: [
+                                    _getSizeColor(widget.game.sizeBytes, colorScheme),
+                                    _getSizeColor(widget.game.sizeBytes, colorScheme).withValues(alpha: 0.6),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+  
+  IconData _getSourceIcon(GameSource source) {
+    switch (source) {
+      case GameSource.heroic:
+        return Icons.storefront_rounded;
+      case GameSource.ogi:
+        return Icons.apps_rounded;
+      case GameSource.lutris:
+        return Icons.sports_esports_rounded;
+      case GameSource.steam:
+        return Icons.gamepad_rounded;
+    }
+  }
+  
+  Color _getSourceColor(GameSource source) {
+    switch (source) {
+      case GameSource.heroic:
+        return const Color(0xFFE91E63); // Pink for Epic/GOG
+      case GameSource.ogi:
+        return const Color(0xFF9C27B0); // Purple
+      case GameSource.lutris:
+        return const Color(0xFFFF9800); // Orange
+      case GameSource.steam:
+        return const Color(0xFF2196F3); // Blue
+    }
+  }
+  
+  Color _getSizeColor(int sizeBytes, ColorScheme colorScheme) {
+    final gb = sizeBytes / (1024 * 1024 * 1024);
+    if (gb > 80) return const Color(0xFFEF4444); // Red for huge games
+    if (gb > 50) return const Color(0xFFF59E0B); // Orange for large games
+    if (gb > 30) return const Color(0xFFEAB308); // Yellow for medium
+    return colorScheme.primary; // Default for small
+  }
+  
+  double _getSizePercent(int sizeBytes) {
+    // Normalize to 150GB max for visual representation
+    final gb = sizeBytes / (1024 * 1024 * 1024);
+    return (gb / 150).clamp(0.1, 1.0);
+  }
+}
