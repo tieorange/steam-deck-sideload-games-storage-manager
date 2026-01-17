@@ -23,6 +23,8 @@ class _GamesPageState extends State<GamesPage> with TickerProviderStateMixin {
   late AnimationController _headerController;
   late Animation<double> _headerFade;
   late Animation<Offset> _headerSlide;
+  final TextEditingController _searchController = TextEditingController();
+  bool _isSearching = false;
   
   @override
   void initState() {
@@ -46,11 +48,16 @@ class _GamesPageState extends State<GamesPage> with TickerProviderStateMixin {
     
     context.read<GamesCubit>().loadGames();
     _headerController.forward();
+    
+    _searchController.addListener(() {
+      context.read<GamesCubit>().setSearchQuery(_searchController.text);
+    });
   }
   
   @override
   void dispose() {
     _headerController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
   
@@ -60,11 +67,41 @@ class _GamesPageState extends State<GamesPage> with TickerProviderStateMixin {
     
     return Scaffold(
       appBar: AppBar(
-        title: FadeTransition(
-          opacity: _headerFade,
-          child: const Text('Games'),
-        ),
+        title: _isSearching
+            ? TextField(
+                controller: _searchController,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: 'Search games...',
+                  border: InputBorder.none,
+                  hintStyle: theme.textTheme.bodyLarge?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                  ),
+                ),
+                style: theme.textTheme.titleMedium,
+              )
+            : FadeTransition(
+                opacity: _headerFade,
+                child: const Text('Games'),
+              ),
         actions: [
+          if (_isSearching)
+            IconButton(
+              icon: const Icon(Icons.close_rounded),
+              onPressed: () {
+                setState(() {
+                  _isSearching = false;
+                  _searchController.clear();
+                });
+                context.read<GamesCubit>().setSearchQuery('');
+              },
+            )
+          else
+            IconButton(
+              icon: const Icon(Icons.search_rounded),
+              onPressed: () => setState(() => _isSearching = true),
+              tooltip: 'Search',
+            ),
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
             onPressed: () => context.read<GamesCubit>().refreshGames(),
@@ -78,7 +115,7 @@ class _GamesPageState extends State<GamesPage> with TickerProviderStateMixin {
             initial: () => const SizedBox.shrink(),
             loading: () => _buildLoadingState(theme),
             error: (message) => _buildErrorState(context, message, theme),
-            loaded: (games, filter, sortDesc) => _buildLoadedState(context, games, filter, sortDesc),
+            loaded: (games, filter, sortDesc, _) => _buildLoadedState(context, games, filter, sortDesc),
           );
         },
       ),

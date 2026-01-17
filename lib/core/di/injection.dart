@@ -1,55 +1,90 @@
 import 'package:get_it/get_it.dart';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:game_size_manager/core/platform/platform_service.dart';
+import 'package:game_size_manager/core/database/game_database.dart';
 import 'package:game_size_manager/core/services/disk_size_service.dart';
+import 'package:game_size_manager/core/platform/platform_service.dart';
 import 'package:game_size_manager/features/games/data/datasources/heroic_datasource.dart';
-import 'package:game_size_manager/features/games/data/datasources/lutris_datasource.dart';
 import 'package:game_size_manager/features/games/data/datasources/ogi_datasource.dart';
 import 'package:game_size_manager/features/games/data/datasources/steam_datasource.dart';
+import 'package:game_size_manager/features/games/data/datasources/lutris_datasource.dart';
 import 'package:game_size_manager/features/games/data/repositories/game_repository_impl.dart';
 import 'package:game_size_manager/features/games/data/repositories/mock_game_repository.dart';
 import 'package:game_size_manager/features/games/domain/repositories/game_repository.dart';
+import 'package:game_size_manager/features/games/domain/usecases/calculate_game_size_usecase.dart';
+import 'package:game_size_manager/features/games/domain/usecases/get_all_games_usecase.dart';
+import 'package:game_size_manager/features/games/domain/usecases/refresh_games_usecase.dart';
+import 'package:game_size_manager/features/games/domain/usecases/search_games_usecase.dart';
+import 'package:game_size_manager/features/games/domain/usecases/uninstall_game_usecase.dart';
+import 'package:game_size_manager/features/games/presentation/cubit/games_cubit.dart';
 import 'package:game_size_manager/features/settings/data/repositories/settings_repository_impl.dart';
 import 'package:game_size_manager/features/settings/domain/repositories/settings_repository.dart';
+import 'package:game_size_manager/features/settings/presentation/cubit/settings_cubit.dart';
 
-final getIt = GetIt.instance;
+final sl = GetIt.instance;
 
-/// Configure dependency injection
-Future<void> configureDependencies(SharedPreferences prefs) async {
-  // Core services
-  getIt.registerSingleton<PlatformService>(PlatformService.instance);
-  getIt.registerSingleton<DiskSizeService>(DiskSizeService.instance);
+Future<void> init() async {
+  // External
+  sl.registerLazySingleton(() => http.Client());
+  final sharedPreferences = await SharedPreferences.getInstance();
+  sl.registerLazySingleton(() => sharedPreferences);
   
-  // SharedPreferences
-  getIt.registerSingleton<SharedPreferences>(prefs);
-  
-  // Datasources
-  getIt.registerLazySingleton<HeroicDatasource>(() => HeroicDatasource());
-  getIt.registerLazySingleton<OgiDatasource>(() => OgiDatasource());
-  getIt.registerLazySingleton<LutrisDatasource>(() => LutrisDatasource());
-  getIt.registerLazySingleton<SteamDatasource>(() => SteamDatasource());
-  
+  // Database
+  sl.registerLazySingleton(() => GameDatabase.instance);
+
+  // Services
+  sl.registerLazySingleton(() => PlatformService.instance);
+  sl.registerLazySingleton(() => DiskSizeService.instance);
+
+  // Data Sources
+  sl.registerLazySingleton(() => HeroicDatasource(platformService: sl()));
+  sl.registerLazySingleton(() => OgiDatasource(platformService: sl()));
+  sl.registerLazySingleton(() => SteamDatasource(platformService: sl()));
+  sl.registerLazySingleton(() => LutrisDatasource(platformService: sl()));
+
   // Repositories
-  final platform = getIt<PlatformService>();
-  
-  // Use mock repository on macOS for development
-  if (platform.shouldUseMockData) {
-    getIt.registerLazySingleton<GameRepository>(() => MockGameRepository());
+  if (!PlatformService.instance.shouldUseMockData) {
+    sl.registerLazySingleton<GameRepository>(
+      () => GameRepositoryImpl(
+        heroicDatasource: sl(),
+        ogiDatasource: sl(),
+        lutrisDatasource: sl(),
+        steamDatasource: sl(),
+        diskSizeService: sl(),
+        gameDatabase: sl(),
+      ),
+    );
   } else {
-    getIt.registerLazySingleton<GameRepository>(() => GameRepositoryImpl(
-      heroicDatasource: getIt<HeroicDatasource>(),
-      ogiDatasource: getIt<OgiDatasource>(),
-      lutrisDatasource: getIt<LutrisDatasource>(),
-      steamDatasource: getIt<SteamDatasource>(),
-      diskSizeService: getIt<DiskSizeService>(),
-    ));
+    // Use Mock Repository for macOS development if not strictly testing full integration
+    sl.registerLazySingleton<GameRepository>(
+      () => MockGameRepository(),
+    );
   }
   
-  getIt.registerLazySingleton<SettingsRepository>(
-    () => SettingsRepositoryImpl(getIt<SharedPreferences>()),
+  sl.registerLazySingleton<SettingsRepository>(
+    () => SettingsRepositoryImpl(sl()),
+  );
+
+  // Use Cases
+  sl.registerLazySingleton(() => GetAllGamesUsecase(sl()));
+  sl.registerLazySingleton(() => RefreshGamesUsecase(sl()));
+  sl.registerLazySingleton(() => CalculateGameSizeUsecase(sl()));
+  sl.registerLazySingleton(() => UninstallGameUsecase(sl()));
+  sl.registerLazySingleton(() => SearchGamesUsecase());
+
+  // BloC / Cubit
+  sl.registerFactory(
+    () => GamesCubit(
+      getAllGames: sl(),
+      refreshGames: sl(),
+      uninstallGame: sl(),
+      calculateGameSize: sl(),
+      searchGames: sl(),
+    ),
   );
   
-  // Log platform info
-  platform.logPlatformInfo();
+  sl.registerFactory(
+    () => SettingsCubit(sl()),
+  );
 }

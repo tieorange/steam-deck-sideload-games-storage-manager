@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import 'package:game_size_manager/core/theme/steam_deck_constants.dart';
 
+import 'package:game_size_manager/core/widgets/animated_card.dart';
+
 /// Storage page showing disk usage details with animations
 class StoragePage extends StatefulWidget {
   const StoragePage({super.key});
@@ -42,7 +44,7 @@ class _StoragePageState extends State<StoragePage>
         padding: const EdgeInsets.all(SteamDeckConstants.pagePadding),
         children: [
           // Coming soon card
-          _AnimatedCard(
+          AnimatedCard(
             controller: _controller,
             delay: 0.0,
             child: Container(
@@ -98,7 +100,7 @@ class _StoragePageState extends State<StoragePage>
           const SizedBox(height: 24),
           
           // Feature list
-          _AnimatedCard(
+          AnimatedCard(
             controller: _controller,
             delay: 0.1,
             child: Container(
@@ -180,49 +182,6 @@ class _StoragePageState extends State<StoragePage>
           ),
         ),
       ],
-    );
-  }
-}
-
-class _AnimatedCard extends StatelessWidget {
-  const _AnimatedCard({
-    required this.controller,
-    required this.delay,
-    required this.child,
-  });
-  
-  final AnimationController controller;
-  final double delay;
-  final Widget child;
-  
-  @override
-  Widget build(BuildContext context) {
-    final animation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: controller,
-        curve: Interval(delay, (delay + 0.4).clamp(0.0, 1.0), curve: Curves.easeOut),
-      ),
-    );
-    
-    final slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.1),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: controller,
-        curve: Interval(delay, (delay + 0.4).clamp(0.0, 1.0), curve: Curves.easeOutCubic),
-      ),
-    );
-    
-    return AnimatedBuilder(
-      animation: controller,
-      builder: (context, _) => FadeTransition(
-        opacity: animation,
-        child: SlideTransition(
-          position: slideAnimation,
-          child: child,
-        ),
-      ),
     );
   }
 }

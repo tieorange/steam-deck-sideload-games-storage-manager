@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 
 import 'package:game_size_manager/core/constants.dart';
@@ -31,6 +32,7 @@ class _GameListItemState extends State<GameListItem>
   late Animation<double> _scaleAnimation;
   
   bool _isPressed = false;
+  bool _isFocused = false;
   
   @override
   void initState() {
@@ -94,186 +96,208 @@ class _GameListItemState extends State<GameListItem>
           ),
         ),
       ),
-      child: GestureDetector(
-        onTapDown: (_) => setState(() => _isPressed = true),
-        onTapUp: (_) => setState(() => _isPressed = false),
-        onTapCancel: () => setState(() => _isPressed = false),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          curve: Curves.easeOut,
-          transform: Matrix4.diagonal3Values(
-            _isPressed ? 0.98 : 1.0, 
-            _isPressed ? 0.98 : 1.0, 
-            1.0,
-          ),
-          child: Material(
-            color: widget.game.isSelected 
-              ? colorScheme.primaryContainer.withValues(alpha: 0.4)
-              : Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
-            child: InkWell(
-              onTap: widget.onTap,
-              borderRadius: BorderRadius.circular(12),
-              splashColor: sourceColor.withValues(alpha: 0.1),
-              highlightColor: sourceColor.withValues(alpha: 0.05),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                height: SteamDeckConstants.gameListItemHeight,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: SteamDeckConstants.pagePadding,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: FocusableActionDetector(
+          onShowFocusHighlight: (focused) => setState(() => _isFocused = focused),
+          child: GestureDetector(
+            onTapDown: (_) => setState(() => _isPressed = true),
+            onTapUp: (_) => setState(() => _isPressed = false),
+            onTapCancel: () => setState(() => _isPressed = false),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              curve: Curves.easeOut,
+              transform: Matrix4.diagonal3Values(
+                _isPressed ? 0.98 : (_isFocused ? 1.02 : 1.0), 
+                _isPressed ? 0.98 : (_isFocused ? 1.02 : 1.0), 
+                1.0,
+              ),
+              child: Material(
+                color: widget.game.isSelected 
+                  ? colorScheme.primaryContainer.withValues(alpha: 0.4)
+                  : (_isFocused ? colorScheme.surfaceContainerHighest : Colors.transparent),
+                borderRadius: BorderRadius.circular(12),
+                elevation: _isFocused ? 4 : 0,
+                child: InkWell(
+                  onTap: widget.onTap,
                   borderRadius: BorderRadius.circular(12),
-                  border: widget.game.isSelected 
-                    ? Border.all(color: colorScheme.primary.withValues(alpha: 0.5), width: 2)
-                    : null,
-                ),
-                child: Row(
-                  children: [
-                    // Animated checkbox
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      width: SteamDeckConstants.minTouchTarget,
-                      height: SteamDeckConstants.minTouchTarget,
-                      child: Transform.scale(
-                        scale: 1.2,
-                        child: Checkbox(
-                          value: widget.game.isSelected,
-                          onChanged: (_) => widget.onTap(),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                        ),
-                      ),
+                  splashColor: sourceColor.withValues(alpha: 0.1),
+                  highlightColor: sourceColor.withValues(alpha: 0.05),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    height: SteamDeckConstants.gameListItemHeight,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: SteamDeckConstants.pagePadding,
+                      vertical: 8,
                     ),
-                    
-                    // Game icon with gradient
-                    Container(
-                      width: SteamDeckConstants.gameIconSize,
-                      height: SteamDeckConstants.gameIconSize,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            sourceColor.withValues(alpha: 0.3),
-                            sourceColor.withValues(alpha: 0.1),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: sourceColor.withValues(alpha: 0.3),
-                          width: 1,
-                        ),
-                      ),
-                      child: Icon(
-                        _getSourceIcon(widget.game.source),
-                        color: sourceColor,
-                        size: 24,
-                      ),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      border: widget.game.isSelected 
+                        ? Border.all(color: colorScheme.primary.withValues(alpha: 0.5), width: 2)
+                        : null,
                     ),
-                    
-                    const SizedBox(width: 12),
-                    
-                    // Title and path
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            widget.game.title,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 2),
-                          Row(
-                            children: [
-                              // Source badge inline
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: sourceColor.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  widget.game.source.displayName,
-                                  style: theme.textTheme.labelSmall?.copyWith(
-                                    color: sourceColor,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 10,
-                                  ),
-                                ),
+                    child: Row(
+                      children: [
+                        // Animated checkbox
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          width: SteamDeckConstants.minTouchTarget,
+                          height: SteamDeckConstants.minTouchTarget,
+                          child: Transform.scale(
+                            scale: 1.2,
+                            child: Checkbox(
+                              value: widget.game.isSelected,
+                              onChanged: (_) => widget.onTap(),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(6),
                               ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  widget.game.installPath.split('/').last,
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: colorScheme.onSurface.withValues(alpha: 0.5),
+                            ),
+                          ),
+                        ),
+                        
+                        // Game icon with gradient
+                        Container(
+                          width: SteamDeckConstants.gameIconSize,
+                          height: SteamDeckConstants.gameIconSize,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                sourceColor.withValues(alpha: 0.3),
+                                sourceColor.withValues(alpha: 0.1),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: sourceColor.withValues(alpha: 0.3),
+                              width: 1,
+                            ),
+                          ),
+                          child: widget.game.iconPath != null
+                              ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(11),
+                                  child: Image.file(
+                                    File(widget.game.iconPath!),
+                                    width: SteamDeckConstants.gameIconSize,
+                                    height: SteamDeckConstants.gameIconSize,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) => _buildFallbackIcon(sourceColor),
                                   ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                                )
+                              : _buildFallbackIcon(sourceColor),
+                        ),
+                        
+                        const SizedBox(width: 12),
+                        
+                        // Title and path
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                widget.game.title,
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
                                 ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 2),
+                              Row(
+                                children: [
+                                  // Source badge inline
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: sourceColor.withValues(alpha: 0.15),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      widget.game.source.displayName,
+                                      style: theme.textTheme.labelSmall?.copyWith(
+                                        color: sourceColor,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 10,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      widget.game.installPath.split('/').last,
+                                      style: theme.textTheme.bodySmall?.copyWith(
+                                        color: colorScheme.onSurface.withValues(alpha: 0.5),
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
-                        ],
-                      ),
-                    ),
-                    
-                    const SizedBox(width: 8),
-                    
-                    // Size with visual indicator
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          widget.game.sizeBytes.toHumanReadableSize(),
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: _getSizeColor(widget.game.sizeBytes, colorScheme),
-                          ),
                         ),
-                        const SizedBox(height: 4),
-                        // Size bar indicator
-                        Container(
-                          width: 60,
-                          height: 4,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(2),
-                            color: colorScheme.surfaceContainerHighest,
-                          ),
-                          child: FractionallySizedBox(
-                            alignment: Alignment.centerLeft,
-                            widthFactor: _getSizePercent(widget.game.sizeBytes),
-                            child: Container(
+                        
+                        const SizedBox(width: 8),
+                        
+                        // Size with visual indicator
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              widget.game.sizeBytes.toHumanReadableSize(),
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: _getSizeColor(widget.game.sizeBytes, colorScheme),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            // Size bar indicator
+                            Container(
+                              width: 60,
+                              height: 4,
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(2),
-                                gradient: LinearGradient(
-                                  colors: [
-                                    _getSizeColor(widget.game.sizeBytes, colorScheme),
-                                    _getSizeColor(widget.game.sizeBytes, colorScheme).withValues(alpha: 0.6),
-                                  ],
+                                color: colorScheme.surfaceContainerHighest,
+                              ),
+                              child: FractionallySizedBox(
+                                alignment: Alignment.centerLeft,
+                                widthFactor: _getSizePercent(widget.game.sizeBytes),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(2),
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        _getSizeColor(widget.game.sizeBytes, colorScheme),
+                                        _getSizeColor(widget.game.sizeBytes, colorScheme).withValues(alpha: 0.6),
+                                      ],
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildFallbackIcon(Color color) {
+    return Icon(
+      _getSourceIcon(widget.game.source),
+      color: color,
+      size: 24,
     );
   }
   

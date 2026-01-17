@@ -1,14 +1,14 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'package:game_size_manager/core/di/injection.dart';
 import 'package:game_size_manager/core/logging/logger_service.dart';
 import 'package:game_size_manager/core/router/app_router.dart';
 import 'package:game_size_manager/core/theme/app_theme.dart';
-import 'package:game_size_manager/features/games/domain/repositories/game_repository.dart';
 import 'package:game_size_manager/features/games/presentation/cubit/games_cubit.dart';
-import 'package:game_size_manager/features/settings/domain/repositories/settings_repository.dart';
 import 'package:game_size_manager/features/settings/presentation/cubit/settings_cubit.dart';
 import 'package:game_size_manager/features/settings/presentation/cubit/settings_state.dart';
 import 'package:game_size_manager/features/settings/presentation/widgets/update_widgets.dart';
@@ -16,14 +16,17 @@ import 'package:game_size_manager/features/settings/presentation/widgets/update_
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
+  // Initialize FFI for SQLite on desktop
+  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  }
+  
   // Initialize logging
   await LoggerService.instance.init();
   
-  // Initialize SharedPreferences
-  final prefs = await SharedPreferences.getInstance();
-  
   // Configure dependency injection
-  await configureDependencies(prefs);
+  await init();
   
   runApp(const GameSizeManagerApp());
 }
@@ -36,10 +39,10 @@ class GameSizeManagerApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(
-          create: (_) => GamesCubit(getIt<GameRepository>()),
+          create: (_) => sl<GamesCubit>(),
         ),
         BlocProvider(
-          create: (_) => SettingsCubit(getIt<SettingsRepository>())..loadSettings(),
+          create: (_) => sl<SettingsCubit>()..loadSettings(),
         ),
       ],
       child: BlocBuilder<SettingsCubit, SettingsState>(

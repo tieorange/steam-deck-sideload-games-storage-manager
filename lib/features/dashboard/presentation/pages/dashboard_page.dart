@@ -8,6 +8,8 @@ import 'package:game_size_manager/features/games/domain/entities/game_entity.dar
 import 'package:game_size_manager/features/games/presentation/cubit/games_cubit.dart';
 import 'package:game_size_manager/features/games/presentation/cubit/games_state.dart';
 
+import 'package:game_size_manager/core/widgets/animated_card.dart';
+
 /// Dashboard page showing storage overview and top games with animations
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -60,7 +62,7 @@ class _DashboardPageState extends State<DashboardPage>
             },
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (message) => Center(child: Text('Error: $message')),
-            loaded: (games, _, __) => _buildDashboard(context, games),
+            loaded: (games, _, __, ___) => _buildDashboard(context, games),
           );
         },
       ),
@@ -79,7 +81,7 @@ class _DashboardPageState extends State<DashboardPage>
         padding: const EdgeInsets.all(SteamDeckConstants.pagePadding),
         children: [
           // Storage Overview Card with animation
-          _AnimatedCard(
+          AnimatedCard(
             controller: _controller,
             delay: 0.0,
             child: _buildStorageCard(theme, games, totalSize),
@@ -88,7 +90,7 @@ class _DashboardPageState extends State<DashboardPage>
           const SizedBox(height: SteamDeckConstants.sectionGap),
           
           // Source Breakdown with animation
-          _AnimatedCard(
+          AnimatedCard(
             controller: _controller,
             delay: 0.1,
             child: _buildSourceBreakdown(context, games, totalSize, theme),
@@ -97,7 +99,7 @@ class _DashboardPageState extends State<DashboardPage>
           const SizedBox(height: SteamDeckConstants.sectionGap),
           
           // Top 5 header
-          _AnimatedCard(
+          AnimatedCard(
             controller: _controller,
             delay: 0.2,
             child: Row(
@@ -112,7 +114,7 @@ class _DashboardPageState extends State<DashboardPage>
           
           // Top 5 games
           for (int i = 0; i < top5.length; i++)
-            _AnimatedCard(
+            AnimatedCard(
               controller: _controller,
               delay: 0.3 + (i * 0.05),
               child: _buildGameCard(context, top5[i], i + 1, theme),
@@ -381,49 +383,5 @@ class _DashboardPageState extends State<DashboardPage>
     if (gb > 80) return const Color(0xFFEF4444);
     if (gb > 50) return const Color(0xFFF59E0B);
     return theme.colorScheme.primary;
-  }
-}
-
-/// Helper widget for staggered animations
-class _AnimatedCard extends StatelessWidget {
-  const _AnimatedCard({
-    required this.controller,
-    required this.delay,
-    required this.child,
-  });
-  
-  final AnimationController controller;
-  final double delay;
-  final Widget child;
-  
-  @override
-  Widget build(BuildContext context) {
-    final animation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: controller,
-        curve: Interval(delay, (delay + 0.4).clamp(0.0, 1.0), curve: Curves.easeOut),
-      ),
-    );
-    
-    final slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.1),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: controller,
-        curve: Interval(delay, (delay + 0.4).clamp(0.0, 1.0), curve: Curves.easeOutCubic),
-      ),
-    );
-    
-    return AnimatedBuilder(
-      animation: controller,
-      builder: (context, _) => FadeTransition(
-        opacity: animation,
-        child: SlideTransition(
-          position: slideAnimation,
-          child: child,
-        ),
-      ),
-    );
   }
 }

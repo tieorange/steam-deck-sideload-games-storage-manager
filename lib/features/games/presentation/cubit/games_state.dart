@@ -21,6 +21,7 @@ class GamesState with _$GamesState {
     required List<Game> games,
     @Default(null) GameSource? filterSource,
     @Default(true) bool sortDescending,
+    @Default(null) String? searchQuery,
   }) = GamesLoaded;
   
   /// Error state
@@ -28,8 +29,15 @@ class GamesState with _$GamesState {
   
   /// Get displayed games (filtered and sorted)
   List<Game> get displayedGames => maybeWhen(
-    loaded: (games, filter, sortDesc) {
+    loaded: (games, filter, sortDesc, searchQuery) {
       var result = games.filterBySource(filter);
+      
+      // Apply search filter
+      if (searchQuery != null && searchQuery.isNotEmpty) {
+        final query = searchQuery.toLowerCase();
+        result = result.where((g) => g.title.toLowerCase().contains(query)).toList();
+      }
+      
       result = result.sortedBySize();
       if (!sortDesc) {
         result = result.reversed.toList();
@@ -41,7 +49,7 @@ class GamesState with _$GamesState {
   
   /// Get selected games
   List<Game> get selectedGames => maybeWhen(
-    loaded: (games, _, __) => games.selectedGames,
+    loaded: (games, _, __, ___) => games.selectedGames,
     orElse: () => [],
   );
   

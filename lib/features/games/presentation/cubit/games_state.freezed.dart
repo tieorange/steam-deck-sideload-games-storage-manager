@@ -25,6 +25,7 @@ mixin _$GamesState {
       List<Game> games,
       GameSource? filterSource,
       bool sortDescending,
+      String? searchQuery,
     )
     loaded,
     required TResult Function(String message) error,
@@ -37,6 +38,7 @@ mixin _$GamesState {
       List<Game> games,
       GameSource? filterSource,
       bool sortDescending,
+      String? searchQuery,
     )?
     loaded,
     TResult? Function(String message)? error,
@@ -49,6 +51,7 @@ mixin _$GamesState {
       List<Game> games,
       GameSource? filterSource,
       bool sortDescending,
+      String? searchQuery,
     )?
     loaded,
     TResult Function(String message)? error,
@@ -149,6 +152,7 @@ class _$GamesInitialImpl extends GamesInitial {
       List<Game> games,
       GameSource? filterSource,
       bool sortDescending,
+      String? searchQuery,
     )
     loaded,
     required TResult Function(String message) error,
@@ -165,6 +169,7 @@ class _$GamesInitialImpl extends GamesInitial {
       List<Game> games,
       GameSource? filterSource,
       bool sortDescending,
+      String? searchQuery,
     )?
     loaded,
     TResult? Function(String message)? error,
@@ -181,6 +186,7 @@ class _$GamesInitialImpl extends GamesInitial {
       List<Game> games,
       GameSource? filterSource,
       bool sortDescending,
+      String? searchQuery,
     )?
     loaded,
     TResult Function(String message)? error,
@@ -284,6 +290,7 @@ class _$GamesLoadingImpl extends GamesLoading {
       List<Game> games,
       GameSource? filterSource,
       bool sortDescending,
+      String? searchQuery,
     )
     loaded,
     required TResult Function(String message) error,
@@ -300,6 +307,7 @@ class _$GamesLoadingImpl extends GamesLoading {
       List<Game> games,
       GameSource? filterSource,
       bool sortDescending,
+      String? searchQuery,
     )?
     loaded,
     TResult? Function(String message)? error,
@@ -316,6 +324,7 @@ class _$GamesLoadingImpl extends GamesLoading {
       List<Game> games,
       GameSource? filterSource,
       bool sortDescending,
+      String? searchQuery,
     )?
     loaded,
     TResult Function(String message)? error,
@@ -377,7 +386,12 @@ abstract class _$$GamesLoadedImplCopyWith<$Res> {
     $Res Function(_$GamesLoadedImpl) then,
   ) = __$$GamesLoadedImplCopyWithImpl<$Res>;
   @useResult
-  $Res call({List<Game> games, GameSource? filterSource, bool sortDescending});
+  $Res call({
+    List<Game> games,
+    GameSource? filterSource,
+    bool sortDescending,
+    String? searchQuery,
+  });
 }
 
 /// @nodoc
@@ -397,6 +411,7 @@ class __$$GamesLoadedImplCopyWithImpl<$Res>
     Object? games = null,
     Object? filterSource = freezed,
     Object? sortDescending = null,
+    Object? searchQuery = freezed,
   }) {
     return _then(
       _$GamesLoadedImpl(
@@ -412,6 +427,10 @@ class __$$GamesLoadedImplCopyWithImpl<$Res>
             ? _value.sortDescending
             : sortDescending // ignore: cast_nullable_to_non_nullable
                   as bool,
+        searchQuery: freezed == searchQuery
+            ? _value.searchQuery
+            : searchQuery // ignore: cast_nullable_to_non_nullable
+                  as String?,
       ),
     );
   }
@@ -424,6 +443,7 @@ class _$GamesLoadedImpl extends GamesLoaded {
     required final List<Game> games,
     this.filterSource = null,
     this.sortDescending = true,
+    this.searchQuery = null,
   }) : _games = games,
        super._();
 
@@ -441,10 +461,13 @@ class _$GamesLoadedImpl extends GamesLoaded {
   @override
   @JsonKey()
   final bool sortDescending;
+  @override
+  @JsonKey()
+  final String? searchQuery;
 
   @override
   String toString() {
-    return 'GamesState.loaded(games: $games, filterSource: $filterSource, sortDescending: $sortDescending)';
+    return 'GamesState.loaded(games: $games, filterSource: $filterSource, sortDescending: $sortDescending, searchQuery: $searchQuery)';
   }
 
   @override
@@ -456,7 +479,9 @@ class _$GamesLoadedImpl extends GamesLoaded {
             (identical(other.filterSource, filterSource) ||
                 other.filterSource == filterSource) &&
             (identical(other.sortDescending, sortDescending) ||
-                other.sortDescending == sortDescending));
+                other.sortDescending == sortDescending) &&
+            (identical(other.searchQuery, searchQuery) ||
+                other.searchQuery == searchQuery));
   }
 
   @override
@@ -465,6 +490,7 @@ class _$GamesLoadedImpl extends GamesLoaded {
     const DeepCollectionEquality().hash(_games),
     filterSource,
     sortDescending,
+    searchQuery,
   );
 
   /// Create a copy of GamesState
@@ -484,11 +510,12 @@ class _$GamesLoadedImpl extends GamesLoaded {
       List<Game> games,
       GameSource? filterSource,
       bool sortDescending,
+      String? searchQuery,
     )
     loaded,
     required TResult Function(String message) error,
   }) {
-    return loaded(games, filterSource, sortDescending);
+    return loaded(games, filterSource, sortDescending, searchQuery);
   }
 
   @override
@@ -500,11 +527,12 @@ class _$GamesLoadedImpl extends GamesLoaded {
       List<Game> games,
       GameSource? filterSource,
       bool sortDescending,
+      String? searchQuery,
     )?
     loaded,
     TResult? Function(String message)? error,
   }) {
-    return loaded?.call(games, filterSource, sortDescending);
+    return loaded?.call(games, filterSource, sortDescending, searchQuery);
   }
 
   @override
@@ -516,13 +544,14 @@ class _$GamesLoadedImpl extends GamesLoaded {
       List<Game> games,
       GameSource? filterSource,
       bool sortDescending,
+      String? searchQuery,
     )?
     loaded,
     TResult Function(String message)? error,
     required TResult orElse(),
   }) {
     if (loaded != null) {
-      return loaded(games, filterSource, sortDescending);
+      return loaded(games, filterSource, sortDescending, searchQuery);
     }
     return orElse();
   }
@@ -570,12 +599,14 @@ abstract class GamesLoaded extends GamesState {
     required final List<Game> games,
     final GameSource? filterSource,
     final bool sortDescending,
+    final String? searchQuery,
   }) = _$GamesLoadedImpl;
   const GamesLoaded._() : super._();
 
   List<Game> get games;
   GameSource? get filterSource;
   bool get sortDescending;
+  String? get searchQuery;
 
   /// Create a copy of GamesState
   /// with the given fields replaced by the non-null parameter values.
@@ -660,6 +691,7 @@ class _$GamesErrorImpl extends GamesError {
       List<Game> games,
       GameSource? filterSource,
       bool sortDescending,
+      String? searchQuery,
     )
     loaded,
     required TResult Function(String message) error,
@@ -676,6 +708,7 @@ class _$GamesErrorImpl extends GamesError {
       List<Game> games,
       GameSource? filterSource,
       bool sortDescending,
+      String? searchQuery,
     )?
     loaded,
     TResult? Function(String message)? error,
@@ -692,6 +725,7 @@ class _$GamesErrorImpl extends GamesError {
       List<Game> games,
       GameSource? filterSource,
       bool sortDescending,
+      String? searchQuery,
     )?
     loaded,
     TResult Function(String message)? error,

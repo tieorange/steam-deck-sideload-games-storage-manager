@@ -8,6 +8,8 @@ import 'package:game_size_manager/features/settings/presentation/cubit/settings_
 import 'package:game_size_manager/features/settings/presentation/cubit/settings_state.dart';
 import 'package:game_size_manager/features/settings/presentation/widgets/update_widgets.dart';
 
+import 'package:game_size_manager/core/widgets/animated_card.dart';
+
 /// Settings page for app configuration with animations
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -54,45 +56,51 @@ class _SettingsPageState extends State<SettingsPage>
               padding: const EdgeInsets.all(SteamDeckConstants.pagePadding),
               children: [
                 // Theme Section
-                _AnimatedSection(
+                AnimatedCard(
                   controller: _controller,
                   delay: 0.0,
+                  slideOffset: const Offset(0.05, 0),
                   child: _buildSectionHeader(theme, Icons.palette_rounded, 'Appearance'),
                 ),
                 const SizedBox(height: 12),
-                _AnimatedSection(
+                AnimatedCard(
                   controller: _controller,
                   delay: 0.1,
+                  slideOffset: const Offset(0.05, 0),
                   child: _buildThemeCard(context, settings, theme),
                 ),
                 
                 const SizedBox(height: SteamDeckConstants.sectionGap),
                 
                 // Behavior Section
-                _AnimatedSection(
+                AnimatedCard(
                   controller: _controller,
                   delay: 0.15,
+                  slideOffset: const Offset(0.05, 0),
                   child: _buildSectionHeader(theme, Icons.tune_rounded, 'Behavior'),
                 ),
                 const SizedBox(height: 12),
-                _AnimatedSection(
+                AnimatedCard(
                   controller: _controller,
                   delay: 0.2,
+                  slideOffset: const Offset(0.05, 0),
                   child: _buildBehaviorCard(context, settings, theme),
                 ),
                 
                 const SizedBox(height: SteamDeckConstants.sectionGap),
                 
                 // About Section
-                _AnimatedSection(
+                AnimatedCard(
                   controller: _controller,
                   delay: 0.25,
+                  slideOffset: const Offset(0.05, 0),
                   child: _buildSectionHeader(theme, Icons.info_rounded, 'About'),
                 ),
                 const SizedBox(height: 12),
-                _AnimatedSection(
+                AnimatedCard(
                   controller: _controller,
                   delay: 0.3,
+                  slideOffset: const Offset(0.05, 0),
                   child: _buildAboutCard(context, theme),
                 ),
               ],
@@ -427,48 +435,5 @@ class _SettingsPageState extends State<SettingsPage>
       case ThemeMode.dark:
         return 'Always dark';
     }
-  }
-}
-
-class _AnimatedSection extends StatelessWidget {
-  const _AnimatedSection({
-    required this.controller,
-    required this.delay,
-    required this.child,
-  });
-  
-  final AnimationController controller;
-  final double delay;
-  final Widget child;
-  
-  @override
-  Widget build(BuildContext context) {
-    final animation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: controller,
-        curve: Interval(delay, (delay + 0.3).clamp(0.0, 1.0), curve: Curves.easeOut),
-      ),
-    );
-    
-    final slideAnimation = Tween<Offset>(
-      begin: const Offset(0.05, 0),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: controller,
-        curve: Interval(delay, (delay + 0.3).clamp(0.0, 1.0), curve: Curves.easeOutCubic),
-      ),
-    );
-    
-    return AnimatedBuilder(
-      animation: controller,
-      builder: (context, _) => FadeTransition(
-        opacity: animation,
-        child: SlideTransition(
-          position: slideAnimation,
-          child: child,
-        ),
-      ),
-    );
   }
 }
