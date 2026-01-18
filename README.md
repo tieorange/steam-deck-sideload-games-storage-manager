@@ -29,6 +29,14 @@ This will:
 3. Extract the build artifacts to `build/game-size-manager-linux.zip`.
 
 ## Installation on Steam Deck
-1. Extract the zip file to a folder (e.g., `~/Applications/GameSizeManager`).
-2. Run the binary `steam-deck-sideload-games-storage-manager`.
-3. (Optional) Add to Steam as a Non-Steam Game for Gaming Mode access.
+
+You can install the latest version with a single command. Open the Konsole (terminal) and run:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/tieorange/steam-deck-sideload-games-storage-manager/main/install.sh | bash
+```
+
+This will:
+1. Download the latest release.
+2. Install it to `~/Applications/GameSizeManager`.
+3. Create a shortcut in your application menu.
