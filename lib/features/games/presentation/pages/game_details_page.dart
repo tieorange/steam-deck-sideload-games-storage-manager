@@ -13,13 +13,45 @@ import 'package:game_size_manager/features/games/presentation/widgets/uninstall_
 
 import 'package:game_size_manager/core/utils/game_utils.dart';
 
-class GameDetailsPage extends StatelessWidget {
+class GameDetailsPage extends StatefulWidget {
   const GameDetailsPage({super.key, required this.game});
 
   final Game game;
 
   @override
+  State<GameDetailsPage> createState() => _GameDetailsPageState();
+}
+
+class _GameDetailsPageState extends State<GameDetailsPage> {
+  int? _compatDataSize;
+  int? _shaderCacheSize;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSizes();
+  }
+
+  Future<void> _loadSizes() async {
+    final compatPath = GameUtils.getCompatDataPath(widget.game);
+    final shaderPath = GameUtils.getShaderCachePath(widget.game);
+
+    if (compatPath != null) {
+      GameUtils.getDirectorySize(compatPath).then((size) {
+        if (mounted) setState(() => _compatDataSize = size);
+      });
+    }
+
+    if (shaderPath != null) {
+      GameUtils.getDirectorySize(shaderPath).then((size) {
+        if (mounted) setState(() => _shaderCacheSize = size);
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final game = widget.game; // Local convenience
     final theme = Theme.of(context);
     final sourceColor = _getSourceColor(game.source);
 
@@ -252,6 +284,7 @@ class GameDetailsPage extends StatelessWidget {
                         icon: Icons.wine_bar,
                         color: theme.colorScheme.tertiary,
                         onOpen: () => GameUtils.openFileExplorer(compatDataPath),
+                        sizeBytes: _compatDataSize,
                       ),
                     if (shaderCachePath != null) ...[
                       const SizedBox(height: 8),
@@ -261,6 +294,7 @@ class GameDetailsPage extends StatelessWidget {
                         icon: Icons.memory,
                         color: theme.colorScheme.secondary,
                         onOpen: () => GameUtils.openFileExplorer(shaderCachePath),
+                        sizeBytes: _shaderCacheSize,
                       ),
                     ],
                   ],
@@ -368,7 +402,7 @@ class GameDetailsPage extends StatelessWidget {
 
   Widget _buildGameIcon(Color sourceColor) {
     return Hero(
-      tag: 'game_icon_${game.id}',
+      tag: 'game_icon_${widget.game.id}',
       child: Container(
         width: 100,
         height: 100,
@@ -384,9 +418,9 @@ class GameDetailsPage extends StatelessWidget {
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(24),
-          child: game.iconPath != null
+          child: widget.game.iconPath != null
               ? Image.file(
-                  File(game.iconPath!),
+                  File(widget.game.iconPath!),
                   fit: BoxFit.cover,
                   errorBuilder: (_, __, ___) => _buildFallbackIcon(sourceColor),
                 )
@@ -432,11 +466,11 @@ class GameDetailsPage extends StatelessWidget {
   Future<void> _showUninstallConfirmation(BuildContext context) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => UninstallConfirmDialog(games: [game]),
+      builder: (context) => UninstallConfirmDialog(games: [widget.game]),
     );
 
     if (confirmed == true && context.mounted) {
-      context.read<GamesCubit>().uninstallGame(game);
+      context.read<GamesCubit>().uninstallGame(widget.game);
       context.pop(); // Go back to list
     }
   }
@@ -504,6 +538,7 @@ class _PathCard extends StatelessWidget {
     required this.icon,
     required this.color,
     required this.onOpen,
+    this.sizeBytes,
   });
 
   final String title;
@@ -511,6 +546,7 @@ class _PathCard extends StatelessWidget {
   final IconData icon;
   final Color color;
   final VoidCallback onOpen;
+  final int? sizeBytes;
 
   @override
   Widget build(BuildContext context) {
@@ -539,12 +575,34 @@ class _PathCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.bold,
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      title,
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    if (sizeBytes != null) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.surface,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          sizeBytes!.toHumanReadableSize(),
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.onSurface,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
                 const SizedBox(height: 2),
                 Text(

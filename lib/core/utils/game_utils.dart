@@ -77,4 +77,34 @@ class GameUtils {
       await Process.run('explorer', [path]);
     }
   }
+
+  /// Get directory size in bytes
+  static Future<int> getDirectorySize(String path) async {
+    final dir = Directory(path);
+    if (!dir.existsSync()) return 0;
+
+    try {
+      // Use du -sb on Linux for fast size calculation
+      if (Platform.isLinux) {
+        final result = await Process.run('du', ['-sb', path]);
+        if (result.exitCode == 0) {
+          // Output format: "123456\t/path/to/dir"
+          final output = (result.stdout as String).trim();
+          final sizeStr = output.split(RegExp(r'\s+')).first;
+          return int.tryParse(sizeStr) ?? 0;
+        }
+      }
+
+      // Fallback for other platforms (recurisve walk)
+      int totalSize = 0;
+      await for (final entity in dir.list(recursive: true, followLinks: false)) {
+        if (entity is File) {
+          totalSize += await entity.length();
+        }
+      }
+      return totalSize;
+    } catch (e) {
+      return 0;
+    }
+  }
 }
