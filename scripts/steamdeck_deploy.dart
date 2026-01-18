@@ -543,9 +543,13 @@ Future<void> cmdHotAttach() async {
   final startTime = DateTime.now();
   UI.section('Fast Rebuild & Deploy');
 
-  // Build
-  UI.progress('Building release...');
-  await shell('./build_linux_docker.sh', [], workingDir: projectDir, showOutput: false);
+  // Build with progress indicator
+  UI.progress('Building release (this takes ~30s)...');
+  UI.dim('Docker is compiling your changes...');
+  print('');
+
+  // Show build output so user sees progress
+  await shell('./build_linux_docker.sh', [], workingDir: projectDir, showOutput: true);
   UI.success('Build complete');
 
   // Check connection
@@ -561,11 +565,12 @@ Future<void> cmdHotAttach() async {
   await shell('rsync', [
     '-avz',
     '--delete',
+    '--progress',
     '-e',
     'ssh -i ${Config.sshKeyPath}',
     '${buildDir.path}/',
     '${Config.ssh}:${Config.appDir}/',
-  ], showOutput: false);
+  ], showOutput: true);
   UI.success('Synced');
 
   // Kill and restart app
