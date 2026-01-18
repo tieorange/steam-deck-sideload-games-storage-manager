@@ -8,10 +8,17 @@ import 'package:game_size_manager/features/games/domain/entities/game_entity.dar
 
 /// Grid item for game library grid view
 class GameGridItem extends StatefulWidget {
-  const GameGridItem({super.key, required this.game, required this.onTap, this.index = 0});
+  const GameGridItem({
+    super.key,
+    required this.game,
+    required this.onTap,
+    required this.onSelect,
+    this.index = 0,
+  });
 
   final Game game;
   final VoidCallback onTap;
+  final VoidCallback onSelect;
   final int index;
 
   @override
@@ -100,6 +107,7 @@ class _GameGridItemState extends State<GameGridItem> with SingleTickerProviderSt
               color: Colors.transparent,
               child: InkWell(
                 onTap: widget.onTap,
+                onLongPress: widget.onSelect,
                 borderRadius: BorderRadius.circular(16),
                 splashColor: sourceColor.withValues(alpha: 0.1),
                 child: Padding(

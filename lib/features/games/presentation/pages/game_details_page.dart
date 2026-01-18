@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:game_size_manager/core/constants.dart';
 import 'package:game_size_manager/core/extensions/size_formatter.dart';
-import 'package:game_size_manager/core/theme/steam_deck_constants.dart';
+
 import 'package:game_size_manager/features/games/domain/entities/game_entity.dart';
 import 'package:game_size_manager/features/games/presentation/cubit/games_cubit.dart';
 import 'package:game_size_manager/features/games/presentation/widgets/uninstall_confirm_dialog.dart';
@@ -20,7 +20,6 @@ class GameDetailsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     final sourceColor = _getSourceColor(game.source);
 
     return Scaffold(

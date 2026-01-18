@@ -17,12 +17,12 @@ class GamesCubit extends Cubit<GamesState> {
     required UninstallGameUsecase uninstallGame,
     required CalculateGameSizeUsecase calculateGameSize,
     required SearchGamesUsecase searchGames,
-  })  : _getAllGames = getAllGames,
-        _refreshGames = refreshGames,
-        _uninstallGame = uninstallGame,
-        _calculateGameSize = calculateGameSize,
-        _searchGames = searchGames,
-        super(const GamesState.initial());
+  }) : _getAllGames = getAllGames,
+       _refreshGames = refreshGames,
+       _uninstallGame = uninstallGame,
+       _calculateGameSize = calculateGameSize,
+       _searchGames = searchGames,
+       super(const GamesState.initial());
 
   final GetAllGamesUsecase _getAllGames;
   final RefreshGamesUsecase _refreshGames;
@@ -63,52 +63,63 @@ class GamesCubit extends Cubit<GamesState> {
 
     result.fold(
       (failure) => emit(GamesState.error(failure.message)),
-      (games) => emit(GamesState.loaded(
-        games: games,
-        filterSource: currentFilters.$1,
-        sortDescending: currentFilters.$2,
-        searchQuery: currentFilters.$3,
-      )),
+      (games) => emit(
+        GamesState.loaded(
+          games: games,
+          filterSource: currentFilters.$1,
+          sortDescending: currentFilters.$2,
+          searchQuery: currentFilters.$3,
+        ),
+      ),
     );
   }
-  
+
   /// Calculate size for a specific game
   Future<void> calculateSize(Game game) async {
     final result = await _calculateGameSize(game);
-    
+
     result.fold(
       (failure) {
-        _logger.warning('Failed to calculate size for ${game.title}: ${failure.message}', tag: 'GamesCubit');
+        _logger.warning(
+          'Failed to calculate size for ${game.title}: ${failure.message}',
+          tag: 'GamesCubit',
+        );
         // We don't necessarily need to emit an error state here, just log it
       },
       (updatedGame) {
         // Update the game in the list
         state.maybeWhen(
           loaded: (games, filter, sortDesc, query) {
-            final updatedGames = games.map((g) => g.id == updatedGame.id ? updatedGame : g).toList();
-            emit(GamesState.loaded(
-              games: updatedGames,
-              filterSource: filter,
-              sortDescending: sortDesc,
-              searchQuery: query,
-            ));
+            final updatedGames = games
+                .map((g) => g.id == updatedGame.id ? updatedGame : g)
+                .toList();
+            emit(
+              GamesState.loaded(
+                games: updatedGames,
+                filterSource: filter,
+                sortDescending: sortDesc,
+                searchQuery: query,
+              ),
+            );
           },
           orElse: () {},
         );
       },
     );
   }
-  
+
   /// Set search query
   void setSearchQuery(String query) {
     state.maybeWhen(
       loaded: (games, filter, sortDesc, _) {
-        emit(GamesState.loaded(
-          games: games,
-          filterSource: filter,
-          sortDescending: sortDesc,
-          searchQuery: query,
-        ));
+        emit(
+          GamesState.loaded(
+            games: games,
+            filterSource: filter,
+            sortDescending: sortDesc,
+            searchQuery: query,
+          ),
+        );
       },
       orElse: () {},
     );
@@ -118,12 +129,14 @@ class GamesCubit extends Cubit<GamesState> {
   void setFilter(GameSource? source) {
     state.maybeWhen(
       loaded: (games, _, sortDesc, query) {
-        emit(GamesState.loaded(
-          games: games,
-          filterSource: source,
-          sortDescending: sortDesc,
-          searchQuery: query,
-        ));
+        emit(
+          GamesState.loaded(
+            games: games,
+            filterSource: source,
+            sortDescending: sortDesc,
+            searchQuery: query,
+          ),
+        );
       },
       orElse: () {},
     );
@@ -133,12 +146,14 @@ class GamesCubit extends Cubit<GamesState> {
   void toggleSortOrder() {
     state.maybeWhen(
       loaded: (games, filter, sortDesc, query) {
-        emit(GamesState.loaded(
-          games: games,
-          filterSource: filter,
-          sortDescending: !sortDesc,
-          searchQuery: query,
-        ));
+        emit(
+          GamesState.loaded(
+            games: games,
+            filterSource: filter,
+            sortDescending: !sortDesc,
+            searchQuery: query,
+          ),
+        );
       },
       orElse: () {},
     );
@@ -155,12 +170,14 @@ class GamesCubit extends Cubit<GamesState> {
           return game;
         }).toList();
 
-        emit(GamesState.loaded(
-          games: updatedGames,
-          filterSource: filter,
-          sortDescending: sortDesc,
-          searchQuery: query,
-        ));
+        emit(
+          GamesState.loaded(
+            games: updatedGames,
+            filterSource: filter,
+            sortDescending: sortDesc,
+            searchQuery: query,
+          ),
+        );
       },
       orElse: () {},
     );
@@ -171,19 +188,19 @@ class GamesCubit extends Cubit<GamesState> {
     state.maybeWhen(
       loaded: (games, filter, sortDesc, query) {
         // Use the usecase logic or displayedGames logic to determine what is "visible"
-        // Since logic is in State's displayedGames, we can rely on that if we had access to it, 
+        // Since logic is in State's displayedGames, we can rely on that if we had access to it,
         // but here we are in the Cubit.
         // Replicating visibility logic: source filter + search query
-        
+
         // Filter by source
         var visible = games.filterBySource(filter);
         // Filter by search
         if (query != null && query.isNotEmpty) {
-           visible = _searchGames(visible, query); 
+          visible = _searchGames(visible, query);
         }
-        
+
         final visibleIds = visible.map((g) => g.id).toSet();
-        
+
         final updatedGames = games.map((game) {
           if (visibleIds.contains(game.id)) {
             return game.copyWith(isSelected: true);
@@ -191,12 +208,14 @@ class GamesCubit extends Cubit<GamesState> {
           return game;
         }).toList();
 
-        emit(GamesState.loaded(
-          games: updatedGames,
-          filterSource: filter,
-          sortDescending: sortDesc,
-          searchQuery: query,
-        ));
+        emit(
+          GamesState.loaded(
+            games: updatedGames,
+            filterSource: filter,
+            sortDescending: sortDesc,
+            searchQuery: query,
+          ),
+        );
       },
       orElse: () {},
     );
@@ -208,12 +227,14 @@ class GamesCubit extends Cubit<GamesState> {
       loaded: (games, filter, sortDesc, query) {
         final updatedGames = games.map((game) => game.copyWith(isSelected: false)).toList();
 
-        emit(GamesState.loaded(
-          games: updatedGames,
-          filterSource: filter,
-          sortDescending: sortDesc,
-          searchQuery: query,
-        ));
+        emit(
+          GamesState.loaded(
+            games: updatedGames,
+            filterSource: filter,
+            sortDescending: sortDesc,
+            searchQuery: query,
+          ),
+        );
       },
       orElse: () {},
     );
@@ -227,18 +248,29 @@ class GamesCubit extends Cubit<GamesState> {
     _logger.info('Uninstalling ${selectedGames.length} games', tag: 'GamesCubit');
 
     for (final game in selectedGames) {
-      final result = await _uninstallGame(game);
-      result.fold(
-        (failure) {
-          _logger.error('Failed to uninstall ${game.title}: ${failure.message}', tag: 'GamesCubit');
-        },
-        (_) {
-          _logger.info('Uninstalled: ${game.title}', tag: 'GamesCubit');
-        },
-      );
+      await _performUninstall(game);
     }
 
     // Refresh the list
     await refreshGames();
+  }
+
+  /// Uninstall a single game
+  Future<void> uninstallGame(Game game) async {
+    _logger.info('Uninstalling single game: ${game.title}', tag: 'GamesCubit');
+    await _performUninstall(game);
+    await refreshGames();
+  }
+
+  Future<void> _performUninstall(Game game) async {
+    final result = await _uninstallGame(game);
+    result.fold(
+      (failure) {
+        _logger.error('Failed to uninstall ${game.title}: ${failure.message}', tag: 'GamesCubit');
+      },
+      (_) {
+        _logger.info('Uninstalled: ${game.title}', tag: 'GamesCubit');
+      },
+    );
   }
 }

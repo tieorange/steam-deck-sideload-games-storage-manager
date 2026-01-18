@@ -7,6 +7,8 @@ import 'package:game_size_manager/core/theme/steam_deck_constants.dart';
 import 'package:game_size_manager/features/games/domain/entities/game_entity.dart';
 import 'package:game_size_manager/features/games/presentation/cubit/games_cubit.dart';
 import 'package:game_size_manager/features/games/presentation/cubit/games_state.dart';
+import 'package:go_router/go_router.dart';
+import 'package:game_size_manager/core/router/app_router.dart';
 import 'package:game_size_manager/features/games/presentation/widgets/game_list_item.dart';
 import 'package:game_size_manager/features/games/presentation/widgets/game_grid_item.dart';
 import 'package:game_size_manager/features/games/presentation/widgets/source_filter_chips.dart';
@@ -290,7 +292,8 @@ class _GamesPageState extends State<GamesPage> with TickerProviderStateMixin {
                       return GameListItem(
                         game: game,
                         index: index,
-                        onTap: () => cubit.toggleGameSelection(game.id),
+                        onTap: () => context.push(AppRoutes.gameDetails, extra: game),
+                        onSelect: () => cubit.toggleGameSelection(game.id),
                       );
                     }, childCount: displayedGames.length),
                   )
@@ -303,11 +306,11 @@ class _GamesPageState extends State<GamesPage> with TickerProviderStateMixin {
                     ),
                     delegate: SliverChildBuilderDelegate((context, index) {
                       final game = displayedGames[index];
-                      // Assuming GameGridItem is imported - I need to make sure import exists
                       return GameGridItem(
                         game: game,
                         index: index,
-                        onTap: () => cubit.toggleGameSelection(game.id),
+                        onTap: () => context.push(AppRoutes.gameDetails, extra: game),
+                        onSelect: () => cubit.toggleGameSelection(game.id),
                       );
                     }, childCount: displayedGames.length),
                   ),

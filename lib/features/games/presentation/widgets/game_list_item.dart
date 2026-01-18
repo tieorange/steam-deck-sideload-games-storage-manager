@@ -9,10 +9,17 @@ import 'package:game_size_manager/features/games/domain/entities/game_entity.dar
 /// Single game item in the list with animations
 /// Optimized for Steam Deck touch with 72px height
 class GameListItem extends StatefulWidget {
-  const GameListItem({super.key, required this.game, required this.onTap, this.index = 0});
+  const GameListItem({
+    super.key,
+    required this.game,
+    required this.onTap,
+    required this.onSelect,
+    this.index = 0,
+  });
 
   final Game game;
   final VoidCallback onTap;
+  final VoidCallback onSelect;
   final int index;
 
   @override
@@ -129,7 +136,7 @@ class _GameListItemState extends State<GameListItem> with SingleTickerProviderSt
                           height: 36,
                           child: Checkbox(
                             value: widget.game.isSelected,
-                            onChanged: (_) => widget.onTap(),
+                            onChanged: (_) => widget.onSelect(),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
                           ),
                         ),
