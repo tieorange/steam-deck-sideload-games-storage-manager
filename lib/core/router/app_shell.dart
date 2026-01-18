@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:game_size_manager/core/theme/steam_deck_constants.dart';
 
 import 'package:game_size_manager/core/router/app_router.dart';
 
@@ -7,7 +8,7 @@ import 'package:game_size_manager/core/router/app_router.dart';
 /// Optimized for Steam Deck with large touch targets
 class AppShell extends StatefulWidget {
   const AppShell({super.key, required this.child});
-  
+
   final Widget child;
 
   @override
@@ -16,7 +17,7 @@ class AppShell extends StatefulWidget {
 
 class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  
+
   static const _navItems = [
     _NavItem(
       icon: Icons.dashboard_outlined,
@@ -43,44 +44,39 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
       route: AppRoutes.settings,
     ),
   ];
-  
+
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 400),
-      vsync: this,
-    );
+    _controller = AnimationController(duration: const Duration(milliseconds: 400), vsync: this);
     _controller.forward();
   }
-  
+
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
   }
-  
+
   int _getCurrentIndex(BuildContext context) {
     final location = GoRouterState.of(context).matchedLocation;
     return _navItems.indexWhere((item) => item.route == location);
   }
-  
+
   @override
   Widget build(BuildContext context) {
     final currentIndex = _getCurrentIndex(context);
     final theme = Theme.of(context);
-    
+
     return Scaffold(
       body: widget.child,
       bottomNavigationBar: SlideTransition(
         position: Tween<Offset>(
           begin: const Offset(0, 1),
           end: Offset.zero,
-        ).animate(CurvedAnimation(
-          parent: _controller, 
-          curve: Curves.easeOutCubic,
-        )),
+        ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic)),
         child: Container(
+          height: SteamDeckConstants.compactNavBarHeight,
           decoration: BoxDecoration(
             color: theme.colorScheme.surface,
             boxShadow: [
@@ -92,15 +88,16 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
             ],
           ),
           child: SafeArea(
+            top: false,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: _navItems.asMap().entries.map((entry) {
                   final index = entry.key;
                   final item = entry.value;
                   final isSelected = currentIndex == index;
-                  
+
                   return _NavButton(
                     item: item,
                     isSelected: isSelected,
@@ -117,12 +114,8 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
 }
 
 class _NavButton extends StatefulWidget {
-  const _NavButton({
-    required this.item,
-    required this.isSelected,
-    required this.onTap,
-  });
-  
+  const _NavButton({required this.item, required this.isSelected, required this.onTap});
+
   final _NavItem item;
   final bool isSelected;
   final VoidCallback onTap;
@@ -134,30 +127,28 @@ class _NavButton extends StatefulWidget {
 class _NavButtonState extends State<_NavButton> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
-  
+
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 150),
-      vsync: this,
-    );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.9).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _controller = AnimationController(duration: const Duration(milliseconds: 150), vsync: this);
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.9,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
-  
+
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
   }
-  
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    
+
     return GestureDetector(
       onTapDown: (_) => _controller.forward(),
       onTapUp: (_) {
@@ -170,35 +161,37 @@ class _NavButtonState extends State<_NavButton> with SingleTickerProviderStateMi
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeOut,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(
-            color: widget.isSelected 
-              ? colorScheme.primaryContainer.withValues(alpha: 0.8)
-              : Colors.transparent,
-            borderRadius: BorderRadius.circular(16),
+            color: widget.isSelected
+                ? colorScheme.primaryContainer.withValues(alpha: 0.8)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 200),
                 child: Icon(
                   widget.isSelected ? widget.item.selectedIcon : widget.item.icon,
                   key: ValueKey(widget.isSelected),
-                  size: 24,
-                  color: widget.isSelected 
-                    ? colorScheme.primary 
-                    : colorScheme.onSurface.withValues(alpha: 0.6),
+                  size: 22,
+                  color: widget.isSelected
+                      ? colorScheme.primary
+                      : colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
               ),
               const SizedBox(height: 2),
               AnimatedDefaultTextStyle(
                 duration: const Duration(milliseconds: 200),
                 style: theme.textTheme.labelSmall!.copyWith(
-                  color: widget.isSelected 
-                    ? colorScheme.primary 
-                    : colorScheme.onSurface.withValues(alpha: 0.6),
+                  color: widget.isSelected
+                      ? colorScheme.primary
+                      : colorScheme.onSurface.withValues(alpha: 0.6),
                   fontWeight: widget.isSelected ? FontWeight.bold : FontWeight.normal,
+                  fontSize: 10,
                 ),
                 child: Text(widget.item.label),
               ),
@@ -217,7 +210,7 @@ class _NavItem {
     required this.label,
     required this.route,
   });
-  
+
   final IconData icon;
   final IconData selectedIcon;
   final String label;
