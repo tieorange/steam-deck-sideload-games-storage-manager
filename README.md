@@ -1,20 +1,56 @@
-# Game Size Manager (Steam Deck)
+# 🎮 Game Size Manager (Steam Deck)
 
-A Flutter application designed for the Steam Deck to manage disk space for games installed via non-Steam launchers (Heroic, Lutris, etc.).
+> **Manage your sideloaded game storage with ease.**  
+> Compatible with **Steam**, **Heroic**, **Lutris**, and **OpenGameInstaller**.
 
-## Features
-- **Unified Library**: View games from Steam, Heroic, Lutris, and OpenGameInstaller in one place.
-- **Disk Insight**: See exact install sizes and visual disk usage breakdowns.
-- **Steam Deck Optimized**: Controller support, touch-friendly UI, and dark mode.
-- **Database Caching**: Fast loading times with local SQLite caching.
-- **Filters & Search**: Quickly find games by size or source.
+A Flutter application designed specifically for the **Steam Deck** to help you visualize, sort, and manage disk space for all your games in one unified library.
 
-## Building for Steam Deck (Linux) on macOS
+---
 
-This project includes a Docker workflow to cross-compile the Linux version on macOS/Windows.
+## ✨ Features
+
+- **📂 Unified Library**  
+  View games from Steam, Heroic, Lutris, and OpenGameInstaller in a single list.
+
+- **📊 Storage Visualization**  
+  See exact installation sizes and get a visual breakdown of your disk usage.
+
+- **🎮 Steam Deck Optimized**  
+  Designed with the Deck in mind:
+  - Full controller/gamepad navigation support.
+  - Touch-friendly UI interface.
+  - Beautiful dark mode aesthetics.
+
+- **🚀 Performance**  
+  Built with local SQLite caching for instant load times.
+
+- **🔍 Smart Filtering**  
+  Quickly find games by size ("Largest First"), source, or name.
+
+---
+
+## 📥 Installation on Steam Deck
+
+You can install the latest version with a single command! 🚀  
+Open the **Konsole** (terminal) and run:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/tieorange/steam-deck-sideload-games-storage-manager/main/install.sh | bash
+```
+
+**What this does:**
+1. 📥 Downloads the latest release from GitHub.
+2. 🔨 Installs it to `~/Applications/GameSizeManager`.
+3. 🖥️ Creates a shortcut in your application menu for easy access.
+
+---
+
+## 🛠️ Building for Steam Deck (Linux) on macOS
+
+If you want to contribute or build it yourself, this project includes a Docker workflow to cross-compile the Linux version on macOS Apple Silicon.
 
 ### Prerequisites
-- Docker Desktop installed and running.
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running.
 
 ### Build Command
 Run the build script from the project root:
@@ -23,20 +59,13 @@ Run the build script from the project root:
 ./build_linux_docker.sh
 ```
 
-This will:
-1. Build a Docker image with all Linux dependencies (GTK, Flutter, etc.).
-2. Compile the Flutter app in release mode.
-3. Extract the build artifacts to `build/game-size-manager-linux.zip`.
+**The Build Process:**
+1. 🐳 Builds a Docker image with all Linux dependencies (GTK, Flutter, etc.).
+2. ⚙️ Compiles the Flutter app in **release mode** (x64 architecture).
+3. 📦 Extracts the build artifacts to `build/game-size-manager-linux.zip`.
 
-## Installation on Steam Deck
+---
 
-You can install the latest version with a single command. Open the Konsole (terminal) and run:
+## 📜 License
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/tieorange/steam-deck-sideload-games-storage-manager/main/install.sh | bash
-```
-
-This will:
-1. Download the latest release.
-2. Install it to `~/Applications/GameSizeManager`.
-3. Create a shortcut in your application menu.
+This project is open source. Feel free to contribute!
