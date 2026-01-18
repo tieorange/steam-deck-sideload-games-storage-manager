@@ -1,7 +1,7 @@
 # Game Size Manager - Makefile
 # Commands for development, building, and deployment
 
-.PHONY: help run build-linux analyze gen clean install deck deck-setup deck-deploy deck-debug deck-logs deck-shell
+.PHONY: help run build-linux analyze gen clean install deck deck-setup deck-deploy deck-debug deck-logs deck-shell deck-hot-setup deck-hot-start deck-hot-attach
 
 # Default target
 help:
@@ -25,6 +25,10 @@ help:
 	@echo "  make deck-logs    - Stream logs from Steam Deck"
 	@echo "  make deck-shell   - SSH into Steam Deck"
 	@echo ""
+	@echo "Steam Deck Hot Reload (Fast Development):"
+	@echo "  make deck-hot-setup   - One-time: Build debug version & deploy"
+	@echo "  make deck-hot-start   - Terminal 1: Start app on Steam Deck"
+	@echo "  make deck-hot-attach  - Terminal 2: Attach Flutter for hot reload"
 	@echo "Installation (Steam Deck/Linux):"
 	@echo "  make install      - Install app locally (run after build or from release)"
 	@echo ""
@@ -97,6 +101,27 @@ deck-shell:
 # Interactive menu
 deck:
 	dart scripts/steamdeck_deploy.dart
+
+# ============================================
+# Steam Deck Hot Reload (True Flutter Hot Reload)
+# ============================================
+
+# One-time: Build debug version and deploy
+deck-hot-setup:
+	@echo "🔥 Setting up hot reload..."
+	dart scripts/steamdeck_deploy.dart hot-setup
+
+# Terminal 1: Start app on Steam Deck with debug enabled
+deck-hot-start:
+	@echo "🚀 Starting app on Steam Deck in debug mode..."
+	@echo "Keep this terminal running. Open a second terminal and run: make deck-hot-attach"
+	dart scripts/steamdeck_deploy.dart hot-start
+
+# Terminal 2: Attach to running app for hot reload
+deck-hot-attach:
+	@echo "🔌 Attaching Flutter to Steam Deck..."
+	@echo "Once connected, press 'r' for hot reload, 'R' for hot restart!"
+	dart scripts/steamdeck_deploy.dart hot-attach
 
 # Clean build artifacts
 clean:

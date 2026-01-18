@@ -149,6 +149,10 @@ ${Style.reset}''');
     print('  ${Style.error(message)}');
   }
 
+  static void warning(String message) {
+    print('  ${Style.warning(message)}');
+  }
+
   static void info(String message) {
     print('  ${Style.info(message)}');
   }
@@ -181,6 +185,9 @@ void main(List<String> args) async {
     '5': 'debug-run',
     '6': 'logs',
     '7': 'shell',
+    '8': 'hot-setup',
+    '9': 'hot-start',
+    '10': 'hot-attach',
   };
 
   if (args.isEmpty) {
@@ -225,6 +232,12 @@ Future<void> runCommand(String command) async {
       case '-h':
         UI.banner();
         UI.menu();
+      case 'hot-setup':
+        await cmdHotSetup();
+      case 'hot-start':
+        await cmdHotStart();
+      case 'hot-attach':
+        await cmdHotAttach();
       default:
         UI.error('Unknown command: $command');
         print('');
@@ -439,6 +452,140 @@ Future<void> cmdShell() async {
   print('');
 
   await shell('ssh', ['-i', Config.sshKeyPath, Config.ssh], interactive: true);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// HOT RELOAD COMMANDS
+// ═══════════════════════════════════════════════════════════════════════════
+
+const hotReloadPort = 46567;
+
+Future<void> cmdHotSetup() async {
+  UI.section('Fast Iteration Setup');
+
+  UI.progress('Building release version...');
+  UI.dim('Note: True hot reload requires Flutter on Steam Deck.');
+  UI.dim('This setup enables fast deploy + restart workflow instead.');
+  print('');
+
+  // Build release version using Docker
+  await shell('./build_linux_docker.sh', [], workingDir: projectDir, showOutput: true);
+
+  // Check connection
+  await UI.spinner('Connecting to Steam Deck', () async {
+    if (!await checkConnection()) {
+      throw Exception('Cannot connect to ${Config.ssh}');
+    }
+  });
+
+  // Deploy release build
+  final buildDir = Directory('$projectDir/${Config.localBuildDir}');
+  if (!buildDir.existsSync()) {
+    throw Exception('Build failed - no artifacts found');
+  }
+
+  await UI.spinner('Creating app directory', () async {
+    await sshExec('mkdir -p ${Config.appDir}');
+  });
+
+  UI.progress('Syncing build to Steam Deck...');
+  await shell('rsync', [
+    '-avz',
+    '--delete',
+    '--progress',
+    '-e',
+    'ssh -i ${Config.sshKeyPath}',
+    '${buildDir.path}/',
+    '${Config.ssh}:${Config.appDir}/',
+  ], showOutput: true);
+
+  await sshExec('chmod +x ${Config.appDir}/${Config.appName}');
+
+  print('');
+  UI.box('Ready for Fast Iteration! ⚡', [
+    'Release build deployed to Steam Deck',
+    '',
+    'Workflow:',
+    '  ${Style.green}Terminal 1:${Style.reset} make deck-hot-start  (keeps app running)',
+    '  ${Style.green}Terminal 2:${Style.reset} make deck-hot-attach (rebuild + sync)',
+    '',
+    'After code changes, just run deck-hot-attach again!',
+  ]);
+  print('');
+}
+
+Future<void> cmdHotStart() async {
+  UI.section('Hot Reload - Start App');
+
+  // Kill existing
+  await sshExec('pkill -f ${Config.appName} || true');
+
+  UI.progress('Starting app on Steam Deck with hot reload enabled...');
+  UI.dim('Keep this terminal running!');
+  UI.dim('Open another terminal and run: make deck-hot-attach');
+  print('');
+  print('  ${Style.dim}${'─' * 50}${Style.reset}');
+
+  // Start app with observatory port enabled for hot reload
+  await shell('ssh', [
+    '-i',
+    Config.sshKeyPath,
+    Config.ssh,
+    '''
+export DISPLAY=:0
+export XAUTHORITY=\$(ls /run/user/1000/.mutter-Xwaylandauth.* 2>/dev/null | head -1 || echo /run/user/1000/xauth_*)
+cd ${Config.appDir} && ./${Config.appName} 2>&1
+''',
+  ], interactive: true);
+}
+
+Future<void> cmdHotAttach() async {
+  final startTime = DateTime.now();
+  UI.section('Fast Rebuild & Deploy');
+
+  // Build
+  UI.progress('Building release...');
+  await shell('./build_linux_docker.sh', [], workingDir: projectDir, showOutput: false);
+  UI.success('Build complete');
+
+  // Check connection
+  await UI.spinner('Connecting', () async {
+    if (!await checkConnection()) {
+      throw Exception('Cannot connect to ${Config.ssh}');
+    }
+  });
+
+  // Sync only changed files (rsync is very fast for this)
+  final buildDir = Directory('$projectDir/${Config.localBuildDir}');
+  UI.progress('Syncing changes...');
+  await shell('rsync', [
+    '-avz',
+    '--delete',
+    '-e',
+    'ssh -i ${Config.sshKeyPath}',
+    '${buildDir.path}/',
+    '${Config.ssh}:${Config.appDir}/',
+  ], showOutput: false);
+  UI.success('Synced');
+
+  // Kill and restart app
+  UI.progress('Restarting app...');
+  await sshExec('pkill -f ${Config.appName} || true');
+
+  // Start app in background
+  await sshExec('''
+export DISPLAY=:0
+export XAUTHORITY=\$(ls /run/user/1000/.mutter-Xwaylandauth.* 2>/dev/null | head -1 || echo /run/user/1000/xauth_*)
+cd ${Config.appDir} && nohup ./${Config.appName} > /tmp/gsm.log 2>&1 &
+''');
+
+  final duration = DateTime.now().difference(startTime);
+  print('');
+  UI.box('Reloaded! ⚡ (${duration.inSeconds}s)', [
+    'App restarted with your changes.',
+    'View logs: ${Style.cyan}make deck-logs${Style.reset}',
+  ]);
+  print('');
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

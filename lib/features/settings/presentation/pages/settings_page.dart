@@ -42,7 +42,7 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(title: const Text('Settings222')),
       body: BlocBuilder<SettingsCubit, SettingsState>(
         builder: (context, state) {
           return state.when(
