@@ -1,8 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:game_size_manager/core/constants.dart';
+import 'package:game_size_manager/core/logging/logger_service.dart';
 import 'package:game_size_manager/core/theme/steam_deck_constants.dart';
 import 'package:game_size_manager/features/settings/presentation/cubit/settings_cubit.dart';
 import 'package:game_size_manager/features/settings/presentation/cubit/settings_state.dart';
@@ -18,20 +21,16 @@ class SettingsPage extends StatefulWidget {
   State<SettingsPage> createState() => _SettingsPageState();
 }
 
-class _SettingsPageState extends State<SettingsPage> 
-    with SingleTickerProviderStateMixin {
+class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  
+
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 600),
-      vsync: this,
-    );
+    _controller = AnimationController(duration: const Duration(milliseconds: 600), vsync: this);
     _controller.forward();
   }
-  
+
   @override
   void dispose() {
     _controller.dispose();
@@ -41,11 +40,9 @@ class _SettingsPageState extends State<SettingsPage>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-      ),
+      appBar: AppBar(title: const Text('Settings')),
       body: BlocBuilder<SettingsCubit, SettingsState>(
         builder: (context, state) {
           return state.when(
@@ -69,9 +66,9 @@ class _SettingsPageState extends State<SettingsPage>
                   slideOffset: const Offset(0.05, 0),
                   child: _buildThemeCard(context, settings, theme),
                 ),
-                
+
                 const SizedBox(height: SteamDeckConstants.sectionGap),
-                
+
                 // Behavior Section
                 AnimatedCard(
                   controller: _controller,
@@ -86,9 +83,9 @@ class _SettingsPageState extends State<SettingsPage>
                   slideOffset: const Offset(0.05, 0),
                   child: _buildBehaviorCard(context, settings, theme),
                 ),
-                
+
                 const SizedBox(height: SteamDeckConstants.sectionGap),
-                
+
                 // About Section
                 AnimatedCard(
                   controller: _controller,
@@ -110,19 +107,17 @@ class _SettingsPageState extends State<SettingsPage>
       ),
     );
   }
-  
+
   Widget _buildSectionHeader(ThemeData theme, IconData icon, String title) {
     return Row(
       children: [
         Icon(icon, color: theme.colorScheme.primary, size: 22),
         const SizedBox(width: 8),
-        Text(title, style: theme.textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.w600,
-        )),
+        Text(title, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
       ],
     );
   }
-  
+
   Widget _buildThemeCard(BuildContext context, settings, ThemeData theme) {
     return Container(
       decoration: BoxDecoration(
@@ -141,10 +136,7 @@ class _SettingsPageState extends State<SettingsPage>
                     color: theme.colorScheme.primaryContainer.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(
-                    Icons.brightness_6_rounded,
-                    color: theme.colorScheme.primary,
-                  ),
+                  child: Icon(Icons.brightness_6_rounded, color: theme.colorScheme.primary),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -170,28 +162,28 @@ class _SettingsPageState extends State<SettingsPage>
             child: Row(
               children: [
                 _buildThemeButton(
-                  context, 
-                  Icons.settings_suggest_rounded, 
-                  'System', 
-                  ThemeMode.system, 
+                  context,
+                  Icons.settings_suggest_rounded,
+                  'System',
+                  ThemeMode.system,
                   settings.themeMode,
                   theme,
                 ),
                 const SizedBox(width: 12),
                 _buildThemeButton(
-                  context, 
-                  Icons.light_mode_rounded, 
-                  'Light', 
-                  ThemeMode.light, 
+                  context,
+                  Icons.light_mode_rounded,
+                  'Light',
+                  ThemeMode.light,
                   settings.themeMode,
                   theme,
                 ),
                 const SizedBox(width: 12),
                 _buildThemeButton(
-                  context, 
-                  Icons.dark_mode_rounded, 
-                  'Dark', 
-                  ThemeMode.dark, 
+                  context,
+                  Icons.dark_mode_rounded,
+                  'Dark',
+                  ThemeMode.dark,
                   settings.themeMode,
                   theme,
                 ),
@@ -202,22 +194,22 @@ class _SettingsPageState extends State<SettingsPage>
       ),
     );
   }
-  
+
   Widget _buildThemeButton(
-    BuildContext context, 
-    IconData icon, 
-    String label, 
-    ThemeMode mode, 
+    BuildContext context,
+    IconData icon,
+    String label,
+    ThemeMode mode,
     ThemeMode currentMode,
     ThemeData theme,
   ) {
     final isSelected = mode == currentMode;
-    
+
     return Expanded(
       child: Material(
-        color: isSelected 
-          ? theme.colorScheme.primaryContainer 
-          : theme.colorScheme.surfaceContainerHighest,
+        color: isSelected
+            ? theme.colorScheme.primaryContainer
+            : theme.colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(12),
         child: InkWell(
           onTap: () => context.read<SettingsCubit>().setThemeMode(mode),
@@ -227,25 +219,23 @@ class _SettingsPageState extends State<SettingsPage>
             padding: const EdgeInsets.symmetric(vertical: 16),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
-              border: isSelected 
-                ? Border.all(color: theme.colorScheme.primary, width: 2)
-                : null,
+              border: isSelected ? Border.all(color: theme.colorScheme.primary, width: 2) : null,
             ),
             child: Column(
               children: [
                 Icon(
                   icon,
-                  color: isSelected 
-                    ? theme.colorScheme.primary 
-                    : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                  color: isSelected
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   label,
                   style: theme.textTheme.labelMedium?.copyWith(
-                    color: isSelected 
-                      ? theme.colorScheme.primary 
-                      : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                    color: isSelected
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                   ),
                 ),
@@ -256,7 +246,7 @@ class _SettingsPageState extends State<SettingsPage>
       ),
     );
   }
-  
+
   Widget _buildBehaviorCard(BuildContext context, settings, ThemeData theme) {
     return Container(
       decoration: BoxDecoration(
@@ -290,7 +280,7 @@ class _SettingsPageState extends State<SettingsPage>
       ),
     );
   }
-  
+
   Widget _buildSwitchTile(
     BuildContext context, {
     required IconData icon,
@@ -332,16 +322,13 @@ class _SettingsPageState extends State<SettingsPage>
                 ],
               ),
             ),
-            Switch(
-              value: value,
-              onChanged: onChanged,
-            ),
+            Switch(value: value, onChanged: onChanged),
           ],
         ),
       ),
     );
   }
-  
+
   Widget _buildAboutCard(BuildContext context, ThemeData theme) {
     return Container(
       decoration: BoxDecoration(
@@ -379,7 +366,12 @@ class _SettingsPageState extends State<SettingsPage>
               ),
             ),
           ),
-          Divider(height: 1, indent: 16, endIndent: 16, color: theme.colorScheme.outline.withValues(alpha: 0.1)),
+          Divider(
+            height: 1,
+            indent: 16,
+            endIndent: 16,
+            color: theme.colorScheme.outline.withValues(alpha: 0.1),
+          ),
           ListTile(
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             leading: Container(
@@ -388,19 +380,33 @@ class _SettingsPageState extends State<SettingsPage>
                 color: theme.colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(Icons.code_rounded, color: theme.colorScheme.onSurface.withValues(alpha: 0.7)),
+              child: Icon(
+                Icons.code_rounded,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+              ),
             ),
             title: const Text('Source Code'),
             subtitle: const Text('View on GitHub'),
-            trailing: Icon(Icons.arrow_forward_ios_rounded, size: 16, color: theme.colorScheme.onSurface.withValues(alpha: 0.4)),
+            trailing: Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 16,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+            ),
             onTap: () async {
-              final uri = Uri.parse('https://github.com/${AppConstants.githubOwner}/${AppConstants.githubRepo}');
+              final uri = Uri.parse(
+                'https://github.com/${AppConstants.githubOwner}/${AppConstants.githubRepo}',
+              );
               if (await canLaunchUrl(uri)) {
                 await launchUrl(uri, mode: LaunchMode.externalApplication);
               }
             },
           ),
-          Divider(height: 1, indent: 16, endIndent: 16, color: theme.colorScheme.outline.withValues(alpha: 0.1)),
+          Divider(
+            height: 1,
+            indent: 16,
+            endIndent: 16,
+            color: theme.colorScheme.outline.withValues(alpha: 0.1),
+          ),
           ListTile(
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             leading: Container(
@@ -413,19 +419,105 @@ class _SettingsPageState extends State<SettingsPage>
             ),
             title: const Text('Check for Updates'),
             subtitle: const Text('Version 1.0.0'),
-            trailing: Icon(Icons.arrow_forward_ios_rounded, size: 16, color: theme.colorScheme.onSurface.withValues(alpha: 0.4)),
+            trailing: Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 16,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+            ),
             onTap: () {
-              showDialog(
-                context: context,
-                builder: (_) => const UpdateCheckDialog(),
-              );
+              showDialog(context: context, builder: (_) => const UpdateCheckDialog());
+            },
+          ),
+          Divider(
+            height: 1,
+            indent: 16,
+            endIndent: 16,
+            color: theme.colorScheme.outline.withValues(alpha: 0.1),
+          ),
+          ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            leading: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.tertiaryContainer.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(Icons.bug_report_rounded, color: theme.colorScheme.tertiary),
+            ),
+            title: const Text('Export Logs'),
+            subtitle: const Text('View logs for debugging'),
+            trailing: Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 16,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+            ),
+            onTap: () async {
+              final logPath = await LoggerService.instance.getLogFilePath();
+              if (context.mounted) {
+                if (logPath != null) {
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Application Logs'),
+                      content: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Logs are stored at:'),
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.surfaceContainerHighest,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              logPath,
+                              style: theme.textTheme.bodySmall?.copyWith(fontFamily: 'monospace'),
+                            ),
+                          ),
+                        ],
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('Close'),
+                        ),
+                        FilledButton.icon(
+                          onPressed: () async {
+                            // Open parent folder
+                            final dir = Directory(
+                              logPath,
+                            ).parent; // Actually just get directory of file, assuming imports
+                            // Since we didn't import path package here yet, let's fix imports first or use simple string manipulation or io
+                            // Let's rely on imports added in Instruction
+                            // Wait, I can't assume imports are added unless I add them.
+                            // I will use String manipulation if p.dirname is not available easily without import,
+                            // BUT I WILL ADD IMPORTS in the tool.
+
+                            // Using launchUrl for directory
+                            // Uri.directory is available in dart:core/io
+                            await launchUrl(Uri.directory(dir.path));
+                          },
+                          icon: const Icon(Icons.folder_open),
+                          label: const Text('Open Folder'),
+                        ),
+                      ],
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(const SnackBar(content: Text('No log file found')));
+                }
+              }
             },
           ),
         ],
       ),
     );
   }
-  
+
   String _getThemeModeName(ThemeMode mode) {
     switch (mode) {
       case ThemeMode.system:

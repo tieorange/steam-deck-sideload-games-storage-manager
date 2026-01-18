@@ -4,7 +4,7 @@ class AppConstants {
 
   // App info
   static const String appName = 'Game Size Manager';
-  static const String appVersion = '1.0.0';
+  static const String appVersion = '1.0.1';
 
   // GitHub repo for auto-update
   // GitHub repo for auto-update
