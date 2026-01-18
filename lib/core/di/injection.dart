@@ -21,6 +21,7 @@ import 'package:game_size_manager/features/games/presentation/cubit/games_cubit.
 import 'package:game_size_manager/features/settings/data/repositories/settings_repository_impl.dart';
 import 'package:game_size_manager/features/settings/domain/repositories/settings_repository.dart';
 import 'package:game_size_manager/features/settings/presentation/cubit/settings_cubit.dart';
+import 'package:game_size_manager/features/storage/presentation/cubit/storage_cubit.dart';
 
 final sl = GetIt.instance;
 
@@ -86,5 +87,9 @@ Future<void> init() async {
   
   sl.registerFactory(
     () => SettingsCubit(sl()),
+  );
+  
+  sl.registerFactory(
+    () => StorageCubit(sl(), sl()),
   );
 }

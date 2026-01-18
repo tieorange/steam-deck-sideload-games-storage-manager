@@ -12,6 +12,7 @@ class PlatformService {
   
   /// Home directory
   String get homeDir => Platform.environment['HOME'] ?? '/home/deck';
+  String get homePath => homeDir; // Alias for consistency
   
   // ============================================
   // Heroic Games Launcher Paths

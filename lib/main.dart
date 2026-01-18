@@ -12,6 +12,7 @@ import 'package:game_size_manager/features/games/presentation/cubit/games_cubit.
 import 'package:game_size_manager/features/settings/presentation/cubit/settings_cubit.dart';
 import 'package:game_size_manager/features/settings/presentation/cubit/settings_state.dart';
 import 'package:game_size_manager/features/settings/presentation/widgets/update_widgets.dart';
+import 'package:game_size_manager/core/widgets/global_error_boundary.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -59,7 +60,9 @@ class GameSizeManagerApp extends StatelessWidget {
             darkTheme: AppTheme.darkTheme,
             themeMode: themeMode,
             routerConfig: AppRouter.router,
-            builder: (context, child) => UpdateBanner(child: child ?? const SizedBox()),
+            builder: (context, child) => GlobalErrorBoundary(
+              child: UpdateBanner(child: child ?? const SizedBox()),
+            ),
           );
         },
       ),
