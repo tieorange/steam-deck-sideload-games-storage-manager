@@ -359,7 +359,7 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
             subtitle: Padding(
               padding: const EdgeInsets.only(top: 4),
               child: Text(
-                'Version 1.0.0',
+                'Version ${AppConstants.appVersion}',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
@@ -418,7 +418,7 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
               child: Icon(Icons.system_update_rounded, color: theme.colorScheme.primary),
             ),
             title: const Text('Check for Updates'),
-            subtitle: const Text('Version 1.0.0'),
+            subtitle: const Text('Version ${AppConstants.appVersion}'),
             trailing: Icon(
               Icons.arrow_forward_ios_rounded,
               size: 16,

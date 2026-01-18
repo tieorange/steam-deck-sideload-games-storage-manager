@@ -165,6 +165,45 @@ class PlatformService {
   }
 
   // ============================================
+  // Storage Paths
+  // ============================================
+
+  /// Get list of removable drive paths
+  /// Scans /run/media/$USER and standard locations
+  Future<List<String>> getRemovableDrives() async {
+    final drives = <String>[];
+    if (!isLinux) return drives;
+
+    try {
+      // 1. Check /run/media/$USER
+      final user = Platform.environment['USER'] ?? 'deck';
+      final runMedia = Directory('/run/media/$user');
+
+      if (await runMedia.exists()) {
+        await for (final entity in runMedia.list()) {
+          if (entity is Directory) {
+            drives.add(entity.path);
+          }
+        }
+      }
+
+      // 2. Check legacy Steam Deck path
+      final legacySd = Directory('/run/media/mmcblk0p1');
+      if (await legacySd.exists() && !drives.contains(legacySd.path)) {
+        drives.add(legacySd.path);
+      }
+
+      // 3. /media/SteamDeck/SDCARD (Symlink often found on Deck)
+      // Note: This often points to one of the above, so we might duplicate check
+      // but DiskSizeService is cheap for paths that are the same.
+    } catch (e, s) {
+      _logger.error('Failed to enumerate drives', error: e, stackTrace: s);
+    }
+
+    return drives;
+  }
+
+  // ============================================
   // Utility Methods
   // ============================================
 

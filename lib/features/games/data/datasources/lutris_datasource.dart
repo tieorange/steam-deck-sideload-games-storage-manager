@@ -16,12 +16,6 @@ class LutrisDatasource {
   final PlatformService _platform;
   final LoggerService _logger;
 
-  /// Initialize sqflite FFI for desktop
-  void _initSqflite() {
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
-  }
-
   /// Get all installed Lutris games from pga.db
   Future<Result<List<Game>>> getGames() async {
     _logger.info('============ LUTRIS DETECTION ============', tag: 'Lutris');
@@ -34,7 +28,7 @@ class LutrisDatasource {
     }
 
     try {
-      _initSqflite();
+      // sqflite initialized in main.dart
 
       final db = await openDatabase(dbPath, readOnly: true);
 

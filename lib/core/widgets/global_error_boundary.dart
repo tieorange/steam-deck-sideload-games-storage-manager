@@ -3,10 +3,7 @@ import 'package:game_size_manager/core/logging/logger_service.dart';
 
 /// Catches uncaught Flutter errors and shows a friendly UI.
 class GlobalErrorBoundary extends StatefulWidget {
-  const GlobalErrorBoundary({
-    super.key,
-    required this.child,
-  });
+  const GlobalErrorBoundary({super.key, required this.child});
 
   final Widget child;
 
@@ -18,17 +15,26 @@ class _GlobalErrorBoundaryState extends State<GlobalErrorBoundary> {
   final _logger = LoggerService.instance;
   bool _hasError = false;
   FlutterErrorDetails? _errorDetails;
+  void Function(FlutterErrorDetails)? _previousErrorHandler;
 
   @override
   void initState() {
     super.initState();
     // Catch errors from the framework
+    _previousErrorHandler = FlutterError.onError;
     FlutterError.onError = _handleFlutterError;
+  }
+
+  @override
+  void dispose() {
+    // Restore previous handler to avoid leaks (especially in tests)
+    FlutterError.onError = _previousErrorHandler;
+    super.dispose();
   }
 
   void _handleFlutterError(FlutterErrorDetails details) {
     _logger.error('Uncaught Flutter Error', error: details.exception, stackTrace: details.stack);
-    
+
     // In dev, let standard logging happen too
     FlutterError.presentError(details);
 
@@ -39,8 +45,8 @@ class _GlobalErrorBoundaryState extends State<GlobalErrorBoundary> {
       });
     }
   }
-  
-  // Also catch async errors if we wrap the app correctly, 
+
+  // Also catch async errors if we wrap the app correctly,
   // though runZonedGuarded is usually done in main.dart.
   // This widget primarily handles widget build errors.
 
@@ -49,21 +55,19 @@ class _GlobalErrorBoundaryState extends State<GlobalErrorBoundary> {
     if (_hasError) {
       return _buildErrorApp(context);
     }
-    
+
     // Custom error widget for build errors that occur below this widget
     ErrorWidget.builder = (FlutterErrorDetails details) {
       _logger.error('Build Error', error: details.exception, stackTrace: details.stack);
       return Material(child: _buildErrorScreen(details));
     };
-    
+
     return widget.child;
   }
-  
+
   Widget _buildErrorApp(BuildContext context) {
     return MaterialApp(
-      home: Scaffold(
-        body: _buildErrorScreen(_errorDetails!),
-      ),
+      home: Scaffold(body: _buildErrorScreen(_errorDetails!)),
       debugShowCheckedModeBanner: false,
     );
   }
@@ -88,20 +92,20 @@ class _GlobalErrorBoundaryState extends State<GlobalErrorBoundary> {
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.grey),
             ),
-             const SizedBox(height: 32),
+            const SizedBox(height: 32),
             FilledButton.icon(
               onPressed: () {
-                 // Hard restart or just reset state?
-                 // For now, reset error state
-                 setState(() {
-                   _hasError = false;
-                   _errorDetails = null;
-                 });
+                // Hard restart or just reset state?
+                // For now, reset error state
+                setState(() {
+                  _hasError = false;
+                  _errorDetails = null;
+                });
               },
               icon: const Icon(Icons.refresh_rounded),
               label: const Text('Try Again'),
             ),
-             const SizedBox(height: 24),
+            const SizedBox(height: 24),
             if (details.exceptionAsString().isNotEmpty)
               Container(
                 padding: const EdgeInsets.all(12),

@@ -16,15 +16,19 @@ class GameDatabase {
     return _database!;
   }
 
+  Future<void> close() async {
+    final db = _database;
+    if (db != null) {
+      await db.close();
+      _database = null;
+    }
+  }
+
   Future<Database> _initDB(String filePath) async {
     final dbPath = await getApplicationSupportDirectory();
     final path = join(dbPath.path, filePath);
 
-    return await openDatabase(
-      path,
-      version: 1,
-      onCreate: _createDB,
-    );
+    return await openDatabase(path, version: 1, onCreate: _createDB);
   }
 
   Future<void> _createDB(Database db, int version) async {
@@ -43,32 +47,24 @@ class GameDatabase {
   Future<void> insertGames(List<Game> games) async {
     final db = await database;
     final batch = db.batch();
-    
+
     // Clear existing data? Or upsert?
     // Strategy: Clear all and re-insert is simplest for caching "current state"
     // But if we want to preserve things, upsert is better.
     // Given this is a cache of "what's installed", clearing and refilling matches "refresh".
     // But we might want to just upsert to keep data if refresh fails?
     // Let's use INSERT OR REPLACE.
-    
+
     for (final game in games) {
-      batch.insert(
-        'games',
-        _gameToMap(game),
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+      batch.insert('games', _gameToMap(game), conflictAlgorithm: ConflictAlgorithm.replace);
     }
-    
+
     await batch.commit(noResult: true);
   }
-  
+
   Future<void> deleteGame(String id) async {
     final db = await database;
-    await db.delete(
-      'games',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    await db.delete('games', where: 'id = ?', whereArgs: [id]);
   }
 
   Future<void> clearGames() async {
@@ -82,7 +78,7 @@ class GameDatabase {
 
     return maps.map(_mapToGame).toList();
   }
-  
+
   Map<String, dynamic> _gameToMap(Game game) {
     return {
       'id': game.id,
@@ -93,7 +89,7 @@ class GameDatabase {
       'icon_path': game.iconPath,
     };
   }
-  
+
   Game _mapToGame(Map<String, dynamic> map) {
     return Game(
       id: map['id'] as String,

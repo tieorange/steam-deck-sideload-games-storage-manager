@@ -4,12 +4,12 @@ class AppConstants {
 
   // App info
   static const String appName = 'Game Size Manager';
-  static const String appVersion = '1.0.1';
 
   // GitHub repo for auto-update
   // GitHub repo for auto-update
   static const String githubOwner = 'tieorange';
   static const String githubRepo = 'steam-deck-sideload-games-storage-manager';
+  static const String appVersion = '1.0.0';
 
   // Storage thresholds (percentage)
   static const double storageWarningThreshold = 70.0;

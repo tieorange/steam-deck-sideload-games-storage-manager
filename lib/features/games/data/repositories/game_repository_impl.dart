@@ -131,15 +131,8 @@ class GameRepositoryImpl implements GameRepository {
       // Clear old cache and insert new
       // Alternatively, we could just upsert, but we want to remove uninstalled games too.
       // So clear + insert is safer for "refresh".
-      // But if we clear, we lose "Calculate Size" results for games that don't provide it by default?
-      // Wait, if we refresh from source, we get size=0 for GOG games.
-      // If we cached a calculated size, we lose it!
-      // IMPROVEMENT: Merge with existing cache logic.
-      // 1. Get existing cache.
-      // 2. Map existing games by ID.
-      // 3. For each new game, if it exists in cache and size > 0, preserve size?
-      //    Only if source size is 0.
-
+      // Sync cache: replace all games to ensure stale entries are removed
+      // First, preserve calculated sizes if not available in fresh data
       final cachedGames = await _database.getAllGames();
       final cachedMap = {for (var g in cachedGames) g.id: g};
 
@@ -153,20 +146,10 @@ class GameRepositoryImpl implements GameRepository {
         return game;
       }).toList();
 
+      // Perform full sync inside a transaction (if supported) or just clear and insert
+      // Clearing first is safer to remove ghosts
+      await _database.clearGames();
       await _database.insertGames(mergedGames);
-
-      // We aren't deleting games that are no longer found...
-      // If we want to fully sync, we should probably delete games not in mergedGames?
-      // But insertGames only upserts.
-      // Let's clear and re-insert to be sure we don't keep ghosts.
-      // But clearing first risks losing data if insert fails.
-      // Transaction would be best but GameDatabase doesn't expose transaction.
-      // I'll stick to insert for now, maybe explicit delete of others later?
-      // Actually, standard sync is:
-      // 1. Get all current keys from Source.
-      // 2. Delete Db keys NOT in Source keys.
-      // 3. Upsert Source data.
-      // I'll leave basic upsert for now to avoid complexity in this step.
 
       return Right(mergedGames);
     } catch (e, s) {

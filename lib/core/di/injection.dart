@@ -27,10 +27,10 @@ final sl = GetIt.instance;
 
 Future<void> init() async {
   // External
-  sl.registerLazySingleton(() => http.Client());
+  sl.registerLazySingleton(() => http.Client(), dispose: (client) => client.close());
   final sharedPreferences = await SharedPreferences.getInstance();
   sl.registerLazySingleton(() => sharedPreferences);
-  
+
   // Database
   sl.registerLazySingleton(() => GameDatabase.instance);
 
@@ -58,14 +58,10 @@ Future<void> init() async {
     );
   } else {
     // Use Mock Repository for macOS development if not strictly testing full integration
-    sl.registerLazySingleton<GameRepository>(
-      () => MockGameRepository(),
-    );
+    sl.registerLazySingleton<GameRepository>(() => MockGameRepository());
   }
-  
-  sl.registerLazySingleton<SettingsRepository>(
-    () => SettingsRepositoryImpl(sl()),
-  );
+
+  sl.registerLazySingleton<SettingsRepository>(() => SettingsRepositoryImpl(sl()));
 
   // Use Cases
   sl.registerLazySingleton(() => GetAllGamesUsecase(sl()));
@@ -84,12 +80,8 @@ Future<void> init() async {
       searchGames: sl(),
     ),
   );
-  
-  sl.registerFactory(
-    () => SettingsCubit(sl()),
-  );
-  
-  sl.registerFactory(
-    () => StorageCubit(sl(), sl()),
-  );
+
+  sl.registerFactory(() => SettingsCubit(sl()));
+
+  sl.registerFactory(() => StorageCubit(sl(), sl()));
 }
