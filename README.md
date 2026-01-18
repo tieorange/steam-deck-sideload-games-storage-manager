@@ -66,6 +66,48 @@ Run the build script from the project root:
 
 ---
 
+## 🔧 Remote Debugging on Steam Deck
+
+For developers: quickly deploy and debug the app on your Steam Deck via SSH.
+
+### Prerequisites
+1. **SSH enabled on Steam Deck**: Gaming Mode → Settings → Developer → Enable SSH
+2. **Same network**: Your Mac and Steam Deck must be on the same WiFi/LAN
+
+### Quick Start
+
+```bash
+# 1. One-time setup - generates SSH keys
+make deck-setup
+
+# 2. Build, deploy, and run with live logs
+make deck-debug
+
+# 3. Quick iteration (skip build, just run)
+make deck-run
+```
+
+### All Commands
+
+| Command | Description |
+|---------|-------------|
+| `make deck` | Interactive menu (recommended) |
+| `make deck-setup` | Setup SSH keys (run once) |
+| `make deck-deploy` | Build & deploy to Steam Deck |
+| `make deck-debug` | Build, deploy & run with live debug logs |
+| `make deck-run` | Deploy & run (skip build, faster iteration) |
+| `make deck-logs` | Stream logs from running app |
+| `make deck-shell` | SSH into Steam Deck |
+
+### Configuration
+
+Edit `scripts/steamdeck_deploy.dart` to change:
+- `host` - Steam Deck hostname (default: `steamdeck.local`)
+- `user` - SSH user (default: `deck`)
+- `appDir` - Install location (default: `~/Applications/GameSizeManager`)
+
+---
+
 ## 📜 License
 
 This project is open source. Feel free to contribute!

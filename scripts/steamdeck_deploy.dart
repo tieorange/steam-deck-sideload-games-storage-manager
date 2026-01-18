@@ -5,8 +5,8 @@
 /// A beautiful CLI for deploying and debugging Flutter apps on Steam Deck.
 ///
 /// Usage:
-///   dart scripts/deck.dart         # Interactive menu
-///   dart scripts/deck.dart deploy  # Direct command
+///   dart scripts/steamdeck_deploy.dart         # Interactive menu
+///   dart scripts/steamdeck_deploy.dart deploy  # Direct command
 
 import 'dart:io';
 import 'dart:async';
@@ -79,9 +79,10 @@ ${Style.reset}''');
     ${Style.green}1${Style.reset}  ${Style.bold}setup${Style.reset}     Setup SSH keys ${Style.dim}(run once)${Style.reset}
     ${Style.green}2${Style.reset}  ${Style.bold}deploy${Style.reset}    Build & deploy to Steam Deck
     ${Style.green}3${Style.reset}  ${Style.bold}debug${Style.reset}     Build, deploy & run with live logs
-    ${Style.green}4${Style.reset}  ${Style.bold}run${Style.reset}       Quick run ${Style.dim}(skip build)${Style.reset}
-    ${Style.green}5${Style.reset}  ${Style.bold}logs${Style.reset}      Stream logs from Steam Deck
-    ${Style.green}6${Style.reset}  ${Style.bold}shell${Style.reset}     SSH into Steam Deck
+    ${Style.green}4${Style.reset}  ${Style.bold}run${Style.reset}       Quick run ${Style.dim}(skip build, background)${Style.reset}
+    ${Style.green}5${Style.reset}  ${Style.bold}debug-run${Style.reset} Quick debug ${Style.dim}(skip build, live logs)${Style.reset}
+    ${Style.green}6${Style.reset}  ${Style.bold}logs${Style.reset}      Stream logs from Steam Deck
+    ${Style.green}7${Style.reset}  ${Style.bold}shell${Style.reset}     SSH into Steam Deck
 
     ${Style.dim}q  exit${Style.reset}
 
@@ -177,8 +178,9 @@ void main(List<String> args) async {
     '2': 'deploy',
     '3': 'debug',
     '4': 'run',
-    '5': 'logs',
-    '6': 'shell',
+    '5': 'debug-run',
+    '6': 'logs',
+    '7': 'shell',
   };
 
   if (args.isEmpty) {
@@ -212,6 +214,8 @@ Future<void> runCommand(String command) async {
         await cmdDeploy(build: true, run: true, debug: true);
       case 'run':
         await cmdDeploy(build: false, run: true);
+      case 'debug-run':
+        await cmdDeploy(build: false, run: true, debug: true);
       case 'logs':
         await cmdLogs();
       case 'shell':
@@ -224,7 +228,9 @@ Future<void> runCommand(String command) async {
       default:
         UI.error('Unknown command: $command');
         print('');
-        print('  Run ${Style.bold}dart scripts/deck.dart${Style.reset} to see available commands.');
+        print(
+          '  Run ${Style.bold}dart scripts/steamdeck_deploy.dart${Style.reset} to see available commands.',
+        );
         exit(1);
     }
   } catch (e) {
@@ -271,12 +277,37 @@ Future<void> cmdSetup() async {
   UI.dim('You will be prompted for your Steam Deck password.');
   print('');
 
-  await shell('ssh-copy-id', ['-i', pubKeyFile.path, Config.ssh], interactive: true);
+  final copyResult = await Process.run('ssh-copy-id', [
+    '-i',
+    pubKeyFile.path,
+    Config.ssh,
+  ], workingDirectory: projectDir);
+
+  print(copyResult.stdout);
+  if (copyResult.stderr.toString().isNotEmpty) {
+    print(copyResult.stderr);
+  }
+
+  if (copyResult.exitCode != 0) {
+    print('');
+    UI.error('Failed to copy SSH key to Steam Deck');
+    print('');
+    UI.box('Troubleshooting', [
+      '1. Is Steam Deck powered on?',
+      '2. Is SSH enabled? (Gaming Mode → Settings → Developer)',
+      '3. Are you on the same WiFi network?',
+      '4. Try: ${Style.cyan}ping steamdeck.local${Style.reset}',
+    ]);
+    exit(1);
+  }
 
   // Test connection
   print('');
   await UI.spinner('Testing connection', () async {
-    await sshExec('echo connected');
+    final testResult = await sshExec('echo connected');
+    if (testResult.exitCode != 0) {
+      throw Exception('Connection test failed');
+    }
   });
 
   print('');
@@ -284,8 +315,8 @@ Future<void> cmdSetup() async {
     'SSH key configured for ${Style.cyan}${Config.ssh}${Style.reset}',
     '',
     'Next steps:',
-    '  ${Style.green}dart scripts/deck.dart deploy${Style.reset}',
-    '  ${Style.green}dart scripts/deck.dart debug${Style.reset}',
+    '  ${Style.green}make deck-deploy${Style.reset}',
+    '  ${Style.green}make deck-debug${Style.reset}',
   ]);
   print('');
 }
@@ -329,7 +360,7 @@ Future<void> cmdDeploy({bool build = false, bool run = false, bool debug = false
   await shell('rsync', [
     '-avz',
     '--delete',
-    '--info=progress2',
+    '--progress',
     '-e',
     'ssh -i ${Config.sshKeyPath}',
     '${buildDir.path}/',
@@ -362,7 +393,7 @@ Future<void> cmdDeploy({bool build = false, bool run = false, bool debug = false
           'cd ${Config.appDir} && DISPLAY=:0 nohup ./${Config.appName} > /tmp/gsm.log 2>&1 &',
         );
       });
-      UI.dim('View logs: dart scripts/deck.dart logs');
+      UI.dim('View logs: make deck-logs');
     }
   }
 

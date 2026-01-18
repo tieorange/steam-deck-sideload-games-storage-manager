@@ -82,6 +82,10 @@ deck-debug:
 deck-run:
 	dart scripts/steamdeck_deploy.dart run
 
+# !!!!!!!!!! USE THIS MOSTLY: Quick debug with live logs (skip build)
+deck-debug-run:
+	dart scripts/steamdeck_deploy.dart debug-run
+
 # Stream logs from Steam Deck
 deck-logs:
 	dart scripts/steamdeck_deploy.dart logs
