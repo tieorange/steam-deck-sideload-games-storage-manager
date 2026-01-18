@@ -372,12 +372,18 @@ Future<void> cmdDeploy({bool build = false, bool run = false, bool debug = false
 
   // Run
   if (run) {
-    print('');
+    // Kill existing and allow X display access
     await sshExec('pkill -f ${Config.appName} || true');
+
+    // Try to enable X access (may fail if not in desktop session)
+    await sshExec(
+      'export DISPLAY=:0 && export XAUTHORITY=\$(ls /run/user/1000/.mutter-Xwaylandauth.* 2>/dev/null | head -1) && xhost + 2>/dev/null || true',
+    );
 
     if (debug) {
       UI.progress('Starting app with live logs...');
       UI.dim('Press Ctrl+C to stop');
+      UI.dim('Note: Make sure you are in Desktop Mode on Steam Deck');
       print('');
       print('  ${Style.dim}${'─' * 50}${Style.reset}');
 
@@ -385,13 +391,19 @@ Future<void> cmdDeploy({bool build = false, bool run = false, bool debug = false
         '-i',
         Config.sshKeyPath,
         Config.ssh,
-        'cd ${Config.appDir} && DISPLAY=:0 ./${Config.appName} 2>&1',
+        '''
+export DISPLAY=:0
+export XAUTHORITY=\$(ls /run/user/1000/.mutter-Xwaylandauth.* 2>/dev/null | head -1 || echo /run/user/1000/xauth_*)
+cd ${Config.appDir} && ./${Config.appName} 2>&1
+''',
       ], interactive: true);
     } else {
       await UI.spinner('Starting app', () async {
-        await sshExec(
-          'cd ${Config.appDir} && DISPLAY=:0 nohup ./${Config.appName} > /tmp/gsm.log 2>&1 &',
-        );
+        await sshExec('''
+export DISPLAY=:0
+export XAUTHORITY=\$(ls /run/user/1000/.mutter-Xwaylandauth.* 2>/dev/null | head -1 || echo /run/user/1000/xauth_*)
+cd ${Config.appDir} && nohup ./${Config.appName} > /tmp/gsm.log 2>&1 &
+''');
       });
       UI.dim('View logs: make deck-logs');
     }
