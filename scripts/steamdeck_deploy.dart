@@ -1,4 +1,5 @@
 #!/usr/bin/env dart
+// ignore_for_file: avoid_print, dangling_library_doc_comments
 
 /// 🎮 Steam Deck Deploy & Debug CLI Tool
 ///

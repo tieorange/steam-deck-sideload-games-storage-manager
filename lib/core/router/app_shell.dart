@@ -23,25 +23,25 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
       icon: Icons.dashboard_outlined,
       selectedIcon: Icons.dashboard_rounded,
       label: 'Dashboard',
-      route: AppRoutes.dashboard,
+      route: AppRoutes.dashboardName,
     ),
     _NavItem(
       icon: Icons.videogame_asset_outlined,
       selectedIcon: Icons.videogame_asset_rounded,
       label: 'Games',
-      route: AppRoutes.games,
+      route: AppRoutes.gamesName,
     ),
     _NavItem(
       icon: Icons.storage_outlined,
       selectedIcon: Icons.storage_rounded,
       label: 'Storage',
-      route: AppRoutes.storage,
+      route: AppRoutes.storageName,
     ),
     _NavItem(
       icon: Icons.settings_outlined,
       selectedIcon: Icons.settings_rounded,
       label: 'Settings',
-      route: AppRoutes.settings,
+      route: AppRoutes.settingsName,
     ),
   ];
 
@@ -59,7 +59,7 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
   }
 
   int _getCurrentIndex(BuildContext context) {
-    final location = GoRouterState.of(context).matchedLocation;
+    final location = GoRouterState.of(context).name; // Check against route name
     return _navItems.indexWhere((item) => item.route == location);
   }
 
@@ -101,7 +101,7 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
                   return _NavButton(
                     item: item,
                     isSelected: isSelected,
-                    onTap: () => context.go(item.route),
+                    onTap: () => context.goNamed(item.route),
                   );
                 }).toList(),
               ),

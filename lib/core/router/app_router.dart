@@ -16,6 +16,13 @@ class AppRoutes {
   static const gameDetails = 'details';
   static const storage = '/storage';
   static const settings = '/settings';
+
+  // Route Names
+  static const dashboardName = 'dashboard';
+  static const gamesName = 'games';
+  static const gameDetailsName = 'gameDetails';
+  static const storageName = 'storage';
+  static const settingsName = 'settings';
 }
 
 /// App router configuration using GoRouter
@@ -35,15 +42,18 @@ class AppRouter {
         routes: [
           GoRoute(
             path: AppRoutes.dashboard,
+            name: AppRoutes.dashboardName,
             pageBuilder: (context, state) => const NoTransitionPage(child: DashboardPage()),
           ),
           GoRoute(
             path: AppRoutes.games,
+            name: AppRoutes.gamesName,
             pageBuilder: (context, state) => const NoTransitionPage(child: GamesPage()),
             routes: [
               GoRoute(
                 parentNavigatorKey: _rootNavigatorKey,
                 path: AppRoutes.gameDetails,
+                name: AppRoutes.gameDetailsName,
                 builder: (context, state) {
                   final game = state.extra as Game;
                   return GameDetailsPage(game: game);
@@ -53,10 +63,12 @@ class AppRouter {
           ),
           GoRoute(
             path: AppRoutes.storage,
+            name: AppRoutes.storageName,
             pageBuilder: (context, state) => const NoTransitionPage(child: StoragePage()),
           ),
           GoRoute(
             path: AppRoutes.settings,
+            name: AppRoutes.settingsName,
             pageBuilder: (context, state) => const NoTransitionPage(child: SettingsPage()),
           ),
         ],

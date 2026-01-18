@@ -11,7 +11,8 @@ import 'package:game_size_manager/features/games/domain/entities/game_entity.dar
 import 'package:game_size_manager/features/games/presentation/cubit/games_cubit.dart';
 import 'package:game_size_manager/features/games/presentation/widgets/uninstall_confirm_dialog.dart';
 
-/// Detailed view of a single game
+import 'package:game_size_manager/core/utils/game_utils.dart';
+
 class GameDetailsPage extends StatelessWidget {
   const GameDetailsPage({super.key, required this.game});
 
@@ -22,10 +23,14 @@ class GameDetailsPage extends StatelessWidget {
     final theme = Theme.of(context);
     final sourceColor = _getSourceColor(game.source);
 
+    // Calculate paths
+    final compatDataPath = GameUtils.getCompatDataPath(game);
+    final shaderCachePath = GameUtils.getShaderCachePath(game);
+    final hasExtraData = compatDataPath != null || shaderCachePath != null;
+
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          // Large App Bar with Hero Icon
           SliverAppBar(
             expandedHeight: 200,
             pinned: true,
@@ -72,8 +77,6 @@ class GameDetailsPage extends StatelessWidget {
               ),
             ),
           ),
-
-          // Content
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(24),
@@ -110,6 +113,51 @@ class GameDetailsPage extends StatelessWidget {
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Action Buttons Row
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              if (GameUtils.getProtonDbUrl(game) != null)
+                                _ActionButton(
+                                  icon: Icons.public,
+                                  label: 'ProtonDB',
+                                  onTap: () =>
+                                      GameUtils.launchUrlString(GameUtils.getProtonDbUrl(game)!),
+                                  color: theme.colorScheme.primary,
+                                ),
+                              const SizedBox(width: 8),
+                              _ActionButton(
+                                icon: Icons.folder_open,
+                                label: 'Files',
+                                onTap: () => GameUtils.openFileExplorer(game.installPath),
+                                color: theme.colorScheme.secondary,
+                              ),
+                              const SizedBox(width: 8),
+                              _ActionButton(
+                                icon: Icons.info_outline,
+                                label: 'Wiki',
+                                onTap: () =>
+                                    GameUtils.launchUrlString(GameUtils.getPcGamingWikiUrl(game)),
+                                color: theme.colorScheme.tertiary,
+                              ),
+                              if (GameUtils.getSteamStoreUrl(game) != null) ...[
+                                const SizedBox(width: 8),
+                                _ActionButton(
+                                  icon: Icons.shopping_bag_outlined,
+                                  label: 'Store',
+                                  onTap: () =>
+                                      GameUtils.launchUrlString(GameUtils.getSteamStoreUrl(game)!),
+                                  color: theme.colorScheme.surfaceContainerHighest,
+                                  useSurfaceColor: true,
+                                ),
+                              ],
                             ],
                           ),
                         ),
@@ -189,6 +237,34 @@ class GameDetailsPage extends StatelessWidget {
                     ),
                   ),
 
+                  // Data & Cache Section (New)
+                  if (hasExtraData) ...[
+                    const SizedBox(height: 24),
+                    Text(
+                      'Data & Cache',
+                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 12),
+                    if (compatDataPath != null)
+                      _PathCard(
+                        title: 'Compat Data (Prefix)',
+                        path: compatDataPath,
+                        icon: Icons.wine_bar,
+                        color: theme.colorScheme.tertiary,
+                        onOpen: () => GameUtils.openFileExplorer(compatDataPath),
+                      ),
+                    if (shaderCachePath != null) ...[
+                      const SizedBox(height: 8),
+                      _PathCard(
+                        title: 'Shader Cache',
+                        path: shaderCachePath,
+                        icon: Icons.memory,
+                        color: theme.colorScheme.secondary,
+                        onOpen: () => GameUtils.openFileExplorer(shaderCachePath),
+                      ),
+                    ],
+                  ],
+
                   const SizedBox(height: 24),
 
                   // Size Card
@@ -232,6 +308,38 @@ class GameDetailsPage extends StatelessWidget {
                             ),
                           ],
                         ),
+                      ],
+                    ),
+                  ),
+
+                  // Metadata Section (AppID)
+                  const SizedBox(height: 24),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'ID: ${game.id}',
+                          style: theme.textTheme.labelMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                            fontFamily: 'monospace',
+                          ),
+                        ),
+                        if (GameUtils.getSteamAppId(game) != null)
+                          Text(
+                            'AppID: ${GameUtils.getSteamAppId(game)}',
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              color: theme.colorScheme.primary,
+                              fontFamily: 'monospace',
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                       ],
                     ),
                   ),
@@ -331,5 +439,139 @@ class GameDetailsPage extends StatelessWidget {
       context.read<GamesCubit>().uninstallGame(game);
       context.pop(); // Go back to list
     }
+  }
+}
+
+class _ActionButton extends StatelessWidget {
+  const _ActionButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    required this.color,
+    this.useSurfaceColor = false,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final Color color;
+  final bool useSurfaceColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          decoration: BoxDecoration(
+            color: useSurfaceColor ? color : color.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: useSurfaceColor
+                  ? theme.colorScheme.outline.withValues(alpha: 0.1)
+                  : color.withValues(alpha: 0.3),
+              width: 1,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 18, color: useSurfaceColor ? theme.colorScheme.onSurface : color),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: theme.textTheme.labelMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: useSurfaceColor ? theme.colorScheme.onSurface : color,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PathCard extends StatelessWidget {
+  const _PathCard({
+    required this.title,
+    required this.path,
+    required this.icon,
+    required this.color,
+    required this.onOpen,
+  });
+
+  final String title;
+  final String path;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.1)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 20, color: color),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  path,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontFamily: 'monospace',
+                    fontSize: 10,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            onPressed: onOpen,
+            icon: const Icon(Icons.open_in_new_rounded, size: 18),
+            tooltip: 'Open Folder',
+            style: IconButton.styleFrom(
+              padding: const EdgeInsets.all(8),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:game_size_manager/core/database/game_database.dart';
 import 'package:game_size_manager/core/services/disk_size_service.dart';
+import 'package:game_size_manager/core/services/update_service.dart';
 import 'package:game_size_manager/core/platform/platform_service.dart';
 import 'package:game_size_manager/features/games/data/datasources/heroic_datasource.dart';
 import 'package:game_size_manager/features/games/data/datasources/ogi_datasource.dart';
@@ -21,6 +22,7 @@ import 'package:game_size_manager/features/games/presentation/cubit/games_cubit.
 import 'package:game_size_manager/features/settings/data/repositories/settings_repository_impl.dart';
 import 'package:game_size_manager/features/settings/domain/repositories/settings_repository.dart';
 import 'package:game_size_manager/features/settings/presentation/cubit/settings_cubit.dart';
+import 'package:game_size_manager/features/settings/presentation/cubit/update_cubit.dart';
 import 'package:game_size_manager/features/storage/presentation/cubit/storage_cubit.dart';
 
 final sl = GetIt.instance;
@@ -37,6 +39,7 @@ Future<void> init() async {
   // Services
   sl.registerLazySingleton(() => PlatformService.instance);
   sl.registerLazySingleton(() => DiskSizeService.instance);
+  sl.registerLazySingleton(() => UpdateService(sl()));
 
   // Data Sources
   sl.registerLazySingleton(() => HeroicDatasource(platformService: sl()));
@@ -82,6 +85,7 @@ Future<void> init() async {
   );
 
   sl.registerFactory(() => SettingsCubit(sl()));
+  sl.registerFactory(() => UpdateCubit(sl()));
 
   sl.registerFactory(() => StorageCubit(sl(), sl()));
 }

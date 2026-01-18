@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:game_size_manager/core/services/update_service.dart';
+import 'package:game_size_manager/features/settings/presentation/cubit/update_cubit.dart';
+import 'package:game_size_manager/features/settings/presentation/cubit/update_state.dart';
 
 /// Widget that shows update notification banner
 class UpdateBanner extends StatefulWidget {
   const UpdateBanner({super.key, required this.child});
-  
+
   final Widget child;
 
   @override
@@ -14,84 +16,41 @@ class UpdateBanner extends StatefulWidget {
 }
 
 class _UpdateBannerState extends State<UpdateBanner> {
-  UpdateStatus? _status;
   bool _dismissed = false;
-  bool _isChecking = false;
-  
-  @override
-  void initState() {
-    super.initState();
-    _checkForUpdates();
-  }
-  
-  Future<void> _checkForUpdates() async {
-    if (_isChecking) return;
-    
-    setState(() => _isChecking = true);
-    
-    // Small delay to not block app startup
-    await Future.delayed(const Duration(seconds: 2));
-    
-    final status = await UpdateService.instance.checkForUpdate();
-    
-    if (mounted) {
-      setState(() {
-        _status = status;
-        _isChecking = false;
-      });
-    }
-  }
-  
-  Future<void> _openDownload() async {
-    final url = _status?.downloadUrl;
-    if (url != null) {
-      final uri = Uri.parse(url);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      }
-    }
-  }
-  
+
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        if (_status?.isUpdateAvailable == true && !_dismissed)
-          _buildBanner(context),
+        BlocBuilder<UpdateCubit, UpdateState>(
+          builder: (context, state) {
+            return state.maybeWhen(
+              available: (info) =>
+                  !_dismissed ? _buildBanner(context, info) : const SizedBox.shrink(),
+              orElse: () => const SizedBox.shrink(),
+            );
+          },
+        ),
         Expanded(child: widget.child),
       ],
     );
   }
-  
-  Widget _buildBanner(BuildContext context) {
+
+  Widget _buildBanner(BuildContext context, UpdateInfo info) {
     final theme = Theme.of(context);
-    
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            theme.colorScheme.primaryContainer,
-            theme.colorScheme.secondaryContainer,
-          ],
-        ),
-      ),
+      decoration: BoxDecoration(color: theme.colorScheme.primaryContainer),
       child: SafeArea(
         bottom: false,
         child: Row(
           children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                Icons.system_update_rounded,
-                color: theme.colorScheme.primary,
-                size: 24,
-              ),
+            Icon(
+              Icons.system_update_rounded,
+              color: theme.colorScheme.onPrimaryContainer,
+              size: 24,
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -103,12 +62,13 @@ class _UpdateBannerState extends State<UpdateBanner> {
                     'Update Available',
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.onPrimaryContainer,
                     ),
                   ),
                   Text(
-                    'Version ${_status?.latestVersion} is ready',
+                    'Version ${info.latestVersion} is ready',
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                      color: theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.8),
                     ),
                   ),
                 ],
@@ -116,11 +76,13 @@ class _UpdateBannerState extends State<UpdateBanner> {
             ),
             TextButton(
               onPressed: () => setState(() => _dismissed = true),
-              child: const Text('Later'),
+              child: Text('Later', style: TextStyle(color: theme.colorScheme.onPrimaryContainer)),
             ),
             const SizedBox(width: 8),
             FilledButton.icon(
-              onPressed: _openDownload,
+              onPressed: () {
+                showDialog(context: context, builder: (_) => const UpdateCheckDialog());
+              },
               icon: const Icon(Icons.download_rounded, size: 18),
               label: const Text('Update'),
             ),
@@ -132,99 +94,66 @@ class _UpdateBannerState extends State<UpdateBanner> {
 }
 
 /// Update checker dialog
-class UpdateCheckDialog extends StatefulWidget {
+class UpdateCheckDialog extends StatelessWidget {
   const UpdateCheckDialog({super.key});
 
   @override
-  State<UpdateCheckDialog> createState() => _UpdateCheckDialogState();
+  Widget build(BuildContext context) {
+    // We assume UpdateCubit is provided globally now (in Main)
+    // But if we want to ensure checks happen on open, we might want to call check if unrelated?
+    // Actually, GLOBAL check happens on startup.
+    // When opening this dialog manually from Settings, we might want to FORCE check?
+    // Let's assume the user wants to see current status or force check.
+    // We can trigger check on init.
+
+    return _UpdateCheckDialogContent();
+  }
 }
 
-class _UpdateCheckDialogState extends State<UpdateCheckDialog> {
-  UpdateStatus? _status;
-  bool _isChecking = true;
-  
+class _UpdateCheckDialogContent extends StatefulWidget {
+  @override
+  State<_UpdateCheckDialogContent> createState() => _UpdateCheckDialogContentState();
+}
+
+class _UpdateCheckDialogContentState extends State<_UpdateCheckDialogContent> {
   @override
   void initState() {
     super.initState();
-    _checkForUpdates();
+    // Refresh check when opening dialog manually
+    context.read<UpdateCubit>().checkForUpdates();
   }
-  
-  Future<void> _checkForUpdates() async {
-    final status = await UpdateService.instance.checkForUpdate();
-    if (mounted) {
-      setState(() {
-        _status = status;
-        _isChecking = false;
-      });
-    }
-  }
-  
-  Future<void> _openDownload() async {
-    final url = _status?.downloadUrl;
-    if (url != null) {
-      final uri = Uri.parse(url);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      }
-    }
-  }
-  
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
-    return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      title: Row(
-        children: [
-          Icon(Icons.system_update_rounded, color: theme.colorScheme.primary),
-          const SizedBox(width: 12),
-          const Text('Check for Updates'),
-        ],
-      ),
-      content: _isChecking
-        ? const SizedBox(
-            height: 100,
-            child: Center(child: CircularProgressIndicator()),
-          )
-        : _buildContent(theme),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Close'),
-        ),
-        if (_status?.isUpdateAvailable == true)
-          FilledButton.icon(
-            onPressed: _openDownload,
-            icon: const Icon(Icons.download_rounded),
-            label: const Text('Download'),
+
+    return BlocConsumer<UpdateCubit, UpdateState>(
+      listener: (context, state) {
+        // Optional: result handling
+      },
+      builder: (context, state) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Row(
+            children: [
+              Icon(Icons.system_update_rounded, color: theme.colorScheme.primary),
+              const SizedBox(width: 12),
+              const Text('Check for Updates'),
+            ],
           ),
-      ],
+          content: _buildContent(context, state, theme),
+          actions: _buildActions(context, state),
+        );
+      },
     );
   }
-  
-  Widget _buildContent(ThemeData theme) {
-    if (_status?.hasError == true) {
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.error_outline_rounded, size: 48, color: theme.colorScheme.error),
-          const SizedBox(height: 16),
-          Text('Failed to check for updates', style: theme.textTheme.titleMedium),
-          const SizedBox(height: 8),
-          Text(
-            _status?.error ?? 'Unknown error',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      );
-    }
-    
-    if (_status?.isUpdateAvailable == true) {
-      return Column(
+
+  Widget _buildContent(BuildContext context, UpdateState state, ThemeData theme) {
+    return state.when(
+      initial: () => const SizedBox(height: 50),
+      checking: () =>
+          const SizedBox(height: 100, child: Center(child: CircularProgressIndicator())),
+      available: (info) => Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -244,12 +173,10 @@ class _UpdateCheckDialogState extends State<UpdateCheckDialog> {
                     children: [
                       Text(
                         'New Version Available!',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       Text(
-                        '${_status?.currentVersion} → ${_status?.latestVersion}',
+                        'v${info.latestVersion} is ready',
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: theme.colorScheme.primary,
                         ),
@@ -260,45 +187,81 @@ class _UpdateCheckDialogState extends State<UpdateCheckDialog> {
               ],
             ),
           ),
-          if (_status?.releaseNotes.isNotEmpty == true) ...[
+          if (info.changelog.isNotEmpty) ...[
             const SizedBox(height: 16),
             Text('What\'s New', style: theme.textTheme.titleSmall),
             const SizedBox(height: 8),
             Container(
               constraints: const BoxConstraints(maxHeight: 150),
               child: SingleChildScrollView(
-                child: Text(
-                  _status!.releaseNotes,
-                  style: theme.textTheme.bodySmall,
-                ),
+                child: Text(info.changelog, style: theme.textTheme.bodySmall),
               ),
             ),
           ],
         ],
-      );
-    }
-    
-    // Up to date
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.green.withValues(alpha: 0.1),
-            shape: BoxShape.circle,
+      ),
+      downloading: (progress) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          LinearProgressIndicator(value: progress),
+          const SizedBox(height: 16),
+          Text(
+            'Downloading... ${(progress * 100).toStringAsFixed(0)}%',
+            style: theme.textTheme.bodyMedium,
           ),
-          child: const Icon(Icons.check_circle_rounded, size: 48, color: Colors.green),
-        ),
-        const SizedBox(height: 16),
-        Text('You\'re up to date!', style: theme.textTheme.titleMedium),
-        const SizedBox(height: 8),
-        Text(
-          'Version ${_status?.currentVersion}',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+        ],
+      ),
+      readyToInstall: (_) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.check_circle_outline, size: 48, color: Colors.green),
+          const SizedBox(height: 16),
+          const Text('Update Downloaded!'),
+          const SizedBox(height: 8),
+          const Text('The app will restart to apply the update.'),
+        ],
+      ),
+      error: (message) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.error_outline_rounded, size: 48, color: theme.colorScheme.error),
+          const SizedBox(height: 16),
+          Text('Failed to update', style: theme.textTheme.titleMedium),
+          const SizedBox(height: 8),
+          Text(
+            message,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+            ),
+            textAlign: TextAlign.center,
           ),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _buildActions(BuildContext context, UpdateState state) {
+    return state.maybeWhen(
+      available: (info) => [
+        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Later')),
+        FilledButton.icon(
+          onPressed: () => context.read<UpdateCubit>().downloadUpdate(info.downloadUrl),
+          icon: const Icon(Icons.download_rounded),
+          label: const Text('Download'),
         ),
+      ],
+      readyToInstall: (file) => [
+        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
+        FilledButton.icon(
+          onPressed: () => context.read<UpdateCubit>().applyUpdate(file),
+          icon: const Icon(Icons.restart_alt_rounded),
+          label: const Text('Restart & Install'),
+        ),
+      ],
+      downloading: (_) => [],
+      checking: () => [],
+      orElse: () => [
+        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Close')),
       ],
     );
   }

@@ -292,7 +292,7 @@ class _GamesPageState extends State<GamesPage> with TickerProviderStateMixin {
                       return GameListItem(
                         game: game,
                         index: index,
-                        onTap: () => context.push(AppRoutes.gameDetails, extra: game),
+                        onTap: () => context.pushNamed(AppRoutes.gameDetailsName, extra: game),
                         onSelect: () => cubit.toggleGameSelection(game.id),
                       );
                     }, childCount: displayedGames.length),
@@ -309,7 +309,7 @@ class _GamesPageState extends State<GamesPage> with TickerProviderStateMixin {
                       return GameGridItem(
                         game: game,
                         index: index,
-                        onTap: () => context.push(AppRoutes.gameDetails, extra: game),
+                        onTap: () => context.pushNamed(AppRoutes.gameDetailsName, extra: game),
                         onSelect: () => cubit.toggleGameSelection(game.id),
                       );
                     }, childCount: displayedGames.length),
