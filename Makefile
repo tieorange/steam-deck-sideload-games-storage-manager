@@ -1,7 +1,7 @@
 # Game Size Manager - Makefile
 # Commands for development, building, and deployment
 
-.PHONY: help run build-linux analyze gen clean install
+.PHONY: help run build-linux analyze gen clean install deck deck-setup deck-deploy deck-debug deck-logs deck-shell
 
 # Default target
 help:
@@ -16,11 +16,17 @@ help:
 	@echo "Building:"
 	@echo "  make build-linux  - Build Linux release using Docker (M-chip compatible)"
 	@echo ""
+	@echo "Steam Deck Remote Debug (via SSH):"
+	@echo "  make deck         - Interactive menu (recommended)"
+	@echo "  make deck-setup   - One-time: Setup SSH keys for Steam Deck"
+	@echo "  make deck-deploy  - Build & deploy to Steam Deck"
+	@echo "  make deck-debug   - Build, deploy & run with live debug logs"
+	@echo "  make deck-run     - Deploy & run (no build)"
+	@echo "  make deck-logs    - Stream logs from Steam Deck"
+	@echo "  make deck-shell   - SSH into Steam Deck"
+	@echo ""
 	@echo "Installation (Steam Deck/Linux):"
 	@echo "  make install      - Install app locally (run after build or from release)"
-	@echo ""
-	@echo "Deployment:"
-	@echo "  make deploy       - Deploy to Steam Deck via SSH"
 	@echo ""
 	@echo "Cleanup:"
 	@echo "  make clean        - Clean build artifacts"
@@ -56,11 +62,37 @@ install:
 	@echo "📦 Installing app locally..."
 	./scripts/install_local.sh
 
-# Deploy to Steam Deck
-deploy:
-	@echo "🚀 Deploying to Steam Deck..."
-	@read -p "Enter Steam Deck IP or hostname (e.g., steamdeck.local): " DECK_HOST; \
-	scp -r build/linux/x64/release/bundle/* deck@$$DECK_HOST:~/Applications/GameSizeManager/
+# ============================================
+# Steam Deck Remote Deploy & Debug
+# ============================================
+
+# One-time setup: Generate and copy SSH keys
+deck-setup:
+	dart scripts/steamdeck_deploy.dart setup
+
+# Build and deploy to Steam Deck
+deck-deploy:
+	dart scripts/steamdeck_deploy.dart deploy
+
+# Full debug cycle: build, deploy, run with live logs
+deck-debug:
+	dart scripts/steamdeck_deploy.dart debug
+
+# Quick deploy and run (skip build)
+deck-run:
+	dart scripts/steamdeck_deploy.dart run
+
+# Stream logs from Steam Deck
+deck-logs:
+	dart scripts/steamdeck_deploy.dart logs
+
+# SSH into Steam Deck
+deck-shell:
+	dart scripts/steamdeck_deploy.dart shell
+
+# Interactive menu
+deck:
+	dart scripts/steamdeck_deploy.dart
 
 # Clean build artifacts
 clean:
