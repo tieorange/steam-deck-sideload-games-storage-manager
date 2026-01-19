@@ -51,15 +51,18 @@ curl -fsSL https://raw.githubusercontent.com/tieorange/steam-deck-sideload-games
 
 ### Build from Source
 
-**Requirements:** Docker Desktop (for cross-compiling on macOS)
+**Requirements:** Docker Desktop (must be running).
 
 ```bash
 # Clone the repo
 git clone https://github.com/tieorange/steam-deck-sideload-games-storage-manager.git
 cd steam-deck-sideload-games-storage-manager
 
-# Build for Steam Deck (creates build/game-size-manager-linux.zip)
-./build_linux_docker.sh
+# Build for Steam Deck (Linux) on macOS
+# This uses Docker to compile the app and creates 'game_size_manager_linux.zip'
+make build-linux
+# OR directly:
+./build_linux_on_mac.sh
 ```
 
 ### Remote Debug on Steam Deck
