@@ -2,7 +2,7 @@ name: game_size_manager
 description: "Steam Deck app to manage game storage across multiple launchers"
 publish_to: 'none'
 
-version: 1.0.5+6
+version: 1.0.6+7
 
 environment:
   sdk: ^3.9.2
