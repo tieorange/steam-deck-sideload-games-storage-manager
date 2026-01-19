@@ -17,6 +17,7 @@ _$SettingsImpl _$$SettingsImplFromJson(Map<String, dynamic> json) =>
       ogiLibraryPath: json['ogiLibraryPath'] as String?,
       confirmBeforeUninstall: json['confirmBeforeUninstall'] as bool? ?? true,
       sortBySizeDescending: json['sortBySizeDescending'] as bool? ?? true,
+      defaultViewMode: json['defaultViewMode'] as String? ?? 'list',
     );
 
 Map<String, dynamic> _$$SettingsImplToJson(_$SettingsImpl instance) =>
@@ -28,6 +29,7 @@ Map<String, dynamic> _$$SettingsImplToJson(_$SettingsImpl instance) =>
       'ogiLibraryPath': instance.ogiLibraryPath,
       'confirmBeforeUninstall': instance.confirmBeforeUninstall,
       'sortBySizeDescending': instance.sortBySizeDescending,
+      'defaultViewMode': instance.defaultViewMode,
     };
 
 const _$ThemeModeEnumMap = {

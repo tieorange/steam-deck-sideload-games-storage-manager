@@ -1,0 +1,57 @@
+name: Build and Release Steam Deck App
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libsqlite3-dev
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Get Dependencies
+        run: flutter pub get
+
+      - name: Build Linux
+        run: flutter build linux --release
+
+      - name: Zip Artifact
+        run: |
+          cd build/linux/x64/release/bundle
+          zip -r ../../../../../game_size_manager_linux.zip .
+          cd ../../../../..
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: game_size_manager_linux.zip
+          body: |
+            ## 🚀 What's New
+            
+            - ✨ **View Mode Persistence**: Your preference for List/Grid view is now saved!
+            - 🎨 **UI Polish**: Compacted dashboard cards, optimized bottom navigation height (64px), and improved hover effects.
+            - 🍏 **MacOS Fixes**: Resolved crash on update and permission issues.
+            - 🐛 **Bug Fixes**: Addressed navigation errors and context issues.
+            
+            *Built automatically for Steam Deck (Linux)*
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

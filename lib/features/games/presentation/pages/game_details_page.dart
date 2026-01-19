@@ -348,6 +348,8 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
 
                   // Metadata Section (AppID)
                   const SizedBox(height: 24),
+                  // Metadata Section (AppID, Launch Options, Proton)
+                  const SizedBox(height: 24),
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
@@ -355,25 +357,97 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
                       color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'ID: ${game.id}',
-                          style: theme.textTheme.labelMedium?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                            fontFamily: 'monospace',
-                          ),
-                        ),
-                        if (GameUtils.getSteamAppId(game) != null)
-                          Text(
-                            'AppID: ${GameUtils.getSteamAppId(game)}',
-                            style: theme.textTheme.labelMedium?.copyWith(
-                              color: theme.colorScheme.primary,
-                              fontFamily: 'monospace',
-                              fontWeight: FontWeight.bold,
+                        // IDs Row
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'ID: ${game.id}',
+                              style: theme.textTheme.labelMedium?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                                fontFamily: 'monospace',
+                              ),
                             ),
+                            if (GameUtils.getSteamAppId(game) != null)
+                              Text(
+                                'AppID: ${GameUtils.getSteamAppId(game)}',
+                                style: theme.textTheme.labelMedium?.copyWith(
+                                  color: theme.colorScheme.primary,
+                                  fontFamily: 'monospace',
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                          ],
+                        ),
+
+                        // Proton Version
+                        if (game.protonVersion != null && game.protonVersion!.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          const Divider(height: 16, thickness: 0.5),
+                          Row(
+                            children: [
+                              Icon(Icons.science, size: 16, color: theme.colorScheme.secondary),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Proton: ',
+                                style: theme.textTheme.labelMedium?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                              Expanded(
+                                child: Text(
+                                  game.protonVersion!,
+                                  style: theme.textTheme.labelMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
                           ),
+                        ],
+
+                        // Launch Options
+                        if (game.launchOptions != null && game.launchOptions!.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          const Divider(height: 16, thickness: 0.5),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(Icons.terminal, size: 16, color: theme.colorScheme.tertiary),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Launch Options:',
+                                    style: theme.textTheme.labelMedium?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.surface,
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: SelectableText(
+                                  game.launchOptions!,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    fontFamily: 'monospace',
+                                    color: theme.colorScheme.onSurface,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ],
                     ),
                   ),

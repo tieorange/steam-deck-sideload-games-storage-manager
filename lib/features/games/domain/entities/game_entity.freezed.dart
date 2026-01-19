@@ -39,6 +39,12 @@ mixin _$Game {
   /// Path to game icon (optional)
   String? get iconPath => throw _privateConstructorUsedError;
 
+  /// Custom launch options (optional)
+  String? get launchOptions => throw _privateConstructorUsedError;
+
+  /// Proton version for compatibility (optional)
+  String? get protonVersion => throw _privateConstructorUsedError;
+
   /// Whether this game is selected for batch operations
   bool get isSelected => throw _privateConstructorUsedError;
 
@@ -63,6 +69,8 @@ abstract class $GameCopyWith<$Res> {
     String installPath,
     int sizeBytes,
     String? iconPath,
+    String? launchOptions,
+    String? protonVersion,
     bool isSelected,
   });
 }
@@ -88,6 +96,8 @@ class _$GameCopyWithImpl<$Res, $Val extends Game>
     Object? installPath = null,
     Object? sizeBytes = null,
     Object? iconPath = freezed,
+    Object? launchOptions = freezed,
+    Object? protonVersion = freezed,
     Object? isSelected = null,
   }) {
     return _then(
@@ -116,6 +126,14 @@ class _$GameCopyWithImpl<$Res, $Val extends Game>
                 ? _value.iconPath
                 : iconPath // ignore: cast_nullable_to_non_nullable
                       as String?,
+            launchOptions: freezed == launchOptions
+                ? _value.launchOptions
+                : launchOptions // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            protonVersion: freezed == protonVersion
+                ? _value.protonVersion
+                : protonVersion // ignore: cast_nullable_to_non_nullable
+                      as String?,
             isSelected: null == isSelected
                 ? _value.isSelected
                 : isSelected // ignore: cast_nullable_to_non_nullable
@@ -141,6 +159,8 @@ abstract class _$$GameImplCopyWith<$Res> implements $GameCopyWith<$Res> {
     String installPath,
     int sizeBytes,
     String? iconPath,
+    String? launchOptions,
+    String? protonVersion,
     bool isSelected,
   });
 }
@@ -163,6 +183,8 @@ class __$$GameImplCopyWithImpl<$Res>
     Object? installPath = null,
     Object? sizeBytes = null,
     Object? iconPath = freezed,
+    Object? launchOptions = freezed,
+    Object? protonVersion = freezed,
     Object? isSelected = null,
   }) {
     return _then(
@@ -191,6 +213,14 @@ class __$$GameImplCopyWithImpl<$Res>
             ? _value.iconPath
             : iconPath // ignore: cast_nullable_to_non_nullable
                   as String?,
+        launchOptions: freezed == launchOptions
+            ? _value.launchOptions
+            : launchOptions // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        protonVersion: freezed == protonVersion
+            ? _value.protonVersion
+            : protonVersion // ignore: cast_nullable_to_non_nullable
+                  as String?,
         isSelected: null == isSelected
             ? _value.isSelected
             : isSelected // ignore: cast_nullable_to_non_nullable
@@ -210,6 +240,8 @@ class _$GameImpl implements _Game {
     required this.installPath,
     required this.sizeBytes,
     this.iconPath,
+    this.launchOptions,
+    this.protonVersion,
     this.isSelected = false,
   });
 
@@ -240,6 +272,14 @@ class _$GameImpl implements _Game {
   @override
   final String? iconPath;
 
+  /// Custom launch options (optional)
+  @override
+  final String? launchOptions;
+
+  /// Proton version for compatibility (optional)
+  @override
+  final String? protonVersion;
+
   /// Whether this game is selected for batch operations
   @override
   @JsonKey()
@@ -247,7 +287,7 @@ class _$GameImpl implements _Game {
 
   @override
   String toString() {
-    return 'Game(id: $id, title: $title, source: $source, installPath: $installPath, sizeBytes: $sizeBytes, iconPath: $iconPath, isSelected: $isSelected)';
+    return 'Game(id: $id, title: $title, source: $source, installPath: $installPath, sizeBytes: $sizeBytes, iconPath: $iconPath, launchOptions: $launchOptions, protonVersion: $protonVersion, isSelected: $isSelected)';
   }
 
   @override
@@ -264,6 +304,10 @@ class _$GameImpl implements _Game {
                 other.sizeBytes == sizeBytes) &&
             (identical(other.iconPath, iconPath) ||
                 other.iconPath == iconPath) &&
+            (identical(other.launchOptions, launchOptions) ||
+                other.launchOptions == launchOptions) &&
+            (identical(other.protonVersion, protonVersion) ||
+                other.protonVersion == protonVersion) &&
             (identical(other.isSelected, isSelected) ||
                 other.isSelected == isSelected));
   }
@@ -278,6 +322,8 @@ class _$GameImpl implements _Game {
     installPath,
     sizeBytes,
     iconPath,
+    launchOptions,
+    protonVersion,
     isSelected,
   );
 
@@ -303,6 +349,8 @@ abstract class _Game implements Game {
     required final String installPath,
     required final int sizeBytes,
     final String? iconPath,
+    final String? launchOptions,
+    final String? protonVersion,
     final bool isSelected,
   }) = _$GameImpl;
 
@@ -331,6 +379,14 @@ abstract class _Game implements Game {
   /// Path to game icon (optional)
   @override
   String? get iconPath;
+
+  /// Custom launch options (optional)
+  @override
+  String? get launchOptions;
+
+  /// Proton version for compatibility (optional)
+  @override
+  String? get protonVersion;
 
   /// Whether this game is selected for batch operations
   @override

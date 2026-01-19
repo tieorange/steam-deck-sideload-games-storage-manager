@@ -48,8 +48,9 @@ class UpdateService {
 
         if (latestVersion > currentVersion) {
           final List<dynamic> assets = json['assets'];
+          final String assetName = Platform.isMacOS ? 'macos.zip' : 'linux.zip';
           final String? downloadUrl = assets.firstWhere(
-            (asset) => (asset['name'] as String).endsWith('linux.zip'),
+            (asset) => (asset['name'] as String).toLowerCase().endsWith(assetName),
             orElse: () => null,
           )?['browser_download_url'];
 
@@ -113,9 +114,6 @@ class UpdateService {
     await extractDir.create();
 
     // Decode zip
-    // Note: 'archive' package decoding can be slow for large files on main thread.
-    // For a smoother UI, this could be moved to an isolate.
-    // But for simplicity, we do it here.
     final bytes = await zipFile.readAsBytes();
     final archive = ZipDecoder().decodeBytes(bytes);
 
@@ -131,54 +129,118 @@ class UpdateService {
       }
     }
 
-    // Locate the inner bundle content
-    // Typically the zip might contain a folder like 'steam-deck-release' or just the files.
-    // We look for 'game_size_manager' executable.
-    Directory sourceDir = extractDir;
-    final nestedDir = Directory(path.join(extractDir.path, 'steam-deck-release'));
-    if (await nestedDir.exists()) {
-      sourceDir = nestedDir;
+    // Determine Source and Target Paths
+    String sourcePath = extractDir.path;
+    String targetPath;
+    String executableName;
+
+    if (Platform.isMacOS) {
+      // MacOS: Target is the .app bundle
+      // Executable: .../GameSizeManager.app/Contents/MacOS/game_size_manager
+      // We want to replace .../GameSizeManager.app
+
+      // Target: Go up 3 levels from executable
+      // executable -> MacOS -> Contents -> .app
+      final executablePath = Platform.resolvedExecutable;
+      targetPath = File(executablePath).parent.parent.parent.path;
+
+      // Source: Find .app in extracted files
+      // Zip might contain "macos/GameSizeManager.app" or just "GameSizeManager.app"
+      final entries = extractDir.listSync(recursive: true);
+      final appBundle = entries.firstWhere(
+        (e) => e.path.endsWith('.app') && e is Directory,
+        orElse: () => extractDir, // Fallback (dangerous?)
+      );
+      sourcePath = appBundle.path;
+
+      // Determine app name for 'open' command
+      executableName = path.basename(targetPath); // e.g., app_name.app
+    } else {
+      // Linux: Target is the directory containing the executable
+      final executablePath = Platform.resolvedExecutable;
+      targetPath = File(executablePath).parent.path;
+      executableName = path.basename(executablePath);
+
+      // Source: Look for inner folder (e.g. steam-deck-release) or use root
+      final nestedDir = Directory(path.join(extractDir.path, 'steam-deck-release'));
+      if (await nestedDir.exists()) {
+        sourcePath = nestedDir.path;
+      }
     }
 
-    // Now execute the shell script to swap directories and restart
-    // We assume the app is installed in ~/Applications/GameSizeManager
-    // or wherever the current executable is running from.
-    final executablePath = Platform.resolvedExecutable;
-    final currentAppDir = File(executablePath).parent.path;
-    final executableName = path.basename(executablePath);
-
     final scriptPath = path.join(tempDir.path, 'update_helper.sh');
-    final scriptContent =
-        '''
+
+    // Script Content
+    String scriptContent;
+
+    if (Platform.isMacOS) {
+      scriptContent =
+          '''
 #!/bin/bash
 PID=$pid
-NEW_DIR="${sourceDir.path}"
-TARGET_DIR="$currentAppDir"
-EXECUTABLE_NAME="$executableName"
+SOURCE="$sourcePath"
+TARGET="$targetPath"
+APP_NAME="$executableName"
 
-# Wait for app to exit
+# Wait for exit
 while kill -0 \$PID 2>/dev/null; do sleep 0.5; done
 
-# Replace
-rm -rf "\$TARGET_DIR"/*
-cp -r "\$NEW_DIR"/* "\$TARGET_DIR"
+# Remove old app and copy new one
+rm -rf "\$TARGET"
+cp -R "\$SOURCE" "\$TARGET"
+
+# Remove quarantine (fix for "damaged" or secinit crash)
+xattr -cr "\$TARGET"
 
 # Cleanup
-rm -rf "\$NEW_DIR"
+rm -rf "\$SOURCE"
 rm "\$0"
 
-# Restart
-nohup "\$TARGET_DIR/\$EXECUTABLE_NAME" > /dev/null 2>&1 &
+# Relaunch
+open "\$TARGET"
 ''';
+    } else {
+      // Linux Logic
+      scriptContent =
+          '''
+#!/bin/bash
+PID=$pid
+SOURCE="$sourcePath"
+TARGET="$targetPath"
+EXECUTABLE="$executableName"
+
+# Wait for exit
+while kill -0 \$PID 2>/dev/null; do sleep 0.5; done
+
+# Replace content
+rm -rf "\$TARGET"/*
+cp -r "\$SOURCE"/* "\$TARGET"
+
+# Cleanup
+rm -rf "\$SOURCE"
+rm "\$0"
+
+# Relaunch
+nohup "\$TARGET/\$EXECUTABLE" > /dev/null 2>&1 &
+''';
+    }
 
     final scriptFile = File(scriptPath);
     await scriptFile.writeAsString(scriptContent);
 
-    // chmod +x
-    await Process.run('chmod', ['+x', scriptPath]);
+    // chmod +x (optional if running with bash, but good practice)
+    try {
+      await Process.run('chmod', ['+x', scriptPath]);
+    } catch (e) {
+      LoggerService.instance.warning('Failed to chmod update script: $e');
+    }
 
-    // Run detached
-    await Process.start(scriptPath, [], mode: ProcessStartMode.detached);
+    // Run detached via bash to avoid permission issues
+    if (Platform.isMacOS || Platform.isLinux) {
+      await Process.start('/bin/bash', [scriptPath], mode: ProcessStartMode.detached);
+    } else {
+      await Process.start(scriptPath, [], mode: ProcessStartMode.detached);
+    }
 
     // Exit app
     exit(0);

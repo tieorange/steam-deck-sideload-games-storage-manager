@@ -722,10 +722,10 @@ class __$$UpdateReadyToInstallImplCopyWithImpl<$Res>
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({Object? zipFile = freezed}) {
+  $Res call({Object? zipFile = null}) {
     return _then(
       _$UpdateReadyToInstallImpl(
-        freezed == zipFile
+        null == zipFile
             ? _value.zipFile
             : zipFile // ignore: cast_nullable_to_non_nullable
                   as File,
@@ -752,12 +752,11 @@ class _$UpdateReadyToInstallImpl implements UpdateReadyToInstall {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$UpdateReadyToInstallImpl &&
-            const DeepCollectionEquality().equals(other.zipFile, zipFile));
+            (identical(other.zipFile, zipFile) || other.zipFile == zipFile));
   }
 
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, const DeepCollectionEquality().hash(zipFile));
+  int get hashCode => Object.hash(runtimeType, zipFile);
 
   /// Create a copy of UpdateState
   /// with the given fields replaced by the non-null parameter values.

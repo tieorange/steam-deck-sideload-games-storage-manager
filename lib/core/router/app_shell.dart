@@ -23,25 +23,25 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
       icon: Icons.dashboard_outlined,
       selectedIcon: Icons.dashboard_rounded,
       label: 'Dashboard',
-      route: AppRoutes.dashboardName,
+      route: AppRoutes.dashboard, // Changed to path
     ),
     _NavItem(
       icon: Icons.videogame_asset_outlined,
       selectedIcon: Icons.videogame_asset_rounded,
       label: 'Games',
-      route: AppRoutes.gamesName,
+      route: AppRoutes.games, // Changed to path
     ),
     _NavItem(
       icon: Icons.storage_outlined,
       selectedIcon: Icons.storage_rounded,
       label: 'Storage',
-      route: AppRoutes.storageName,
+      route: AppRoutes.storage, // Changed to path
     ),
     _NavItem(
       icon: Icons.settings_outlined,
       selectedIcon: Icons.settings_rounded,
       label: 'Settings',
-      route: AppRoutes.settingsName,
+      route: AppRoutes.settings, // Changed to path
     ),
   ];
 
@@ -59,8 +59,8 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
   }
 
   int _getCurrentIndex(BuildContext context) {
-    final location = GoRouterState.of(context).name; // Check against route name
-    return _navItems.indexWhere((item) => item.route == location);
+    final String location = GoRouterState.of(context).uri.path;
+    return _navItems.indexWhere((item) => location.startsWith(item.route));
   }
 
   @override
@@ -101,7 +101,7 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
                   return _NavButton(
                     item: item,
                     isSelected: isSelected,
-                    onTap: () => context.goNamed(item.route),
+                    onTap: () => context.go(item.route), // Use go with path
                   );
                 }).toList(),
               ),
@@ -127,6 +127,7 @@ class _NavButton extends StatefulWidget {
 class _NavButtonState extends State<_NavButton> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
+  bool _isHovered = false;
 
   @override
   void initState() {
@@ -149,53 +150,64 @@ class _NavButtonState extends State<_NavButton> with SingleTickerProviderStateMi
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return GestureDetector(
-      onTapDown: (_) => _controller.forward(),
-      onTapUp: (_) {
-        _controller.reverse();
-        widget.onTap();
-      },
-      onTapCancel: () => _controller.reverse(),
-      child: ScaleTransition(
-        scale: _scaleAnimation,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOut,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-          decoration: BoxDecoration(
-            color: widget.isSelected
-                ? colorScheme.primaryContainer.withValues(alpha: 0.8)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 200),
-                child: Icon(
-                  widget.isSelected ? widget.item.selectedIcon : widget.item.icon,
-                  key: ValueKey(widget.isSelected),
-                  size: 22,
-                  color: widget.isSelected
-                      ? colorScheme.primary
-                      : colorScheme.onSurface.withValues(alpha: 0.6),
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTapDown: (_) => _controller.forward(),
+        onTapUp: (_) {
+          _controller.reverse();
+          widget.onTap();
+        },
+        onTapCancel: () => _controller.reverse(),
+        child: ScaleTransition(
+          scale: _scaleAnimation,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOut,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(
+              color: widget.isSelected
+                  ? colorScheme.primaryContainer.withValues(alpha: 0.8)
+                  : (_isHovered
+                        ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)
+                        : Colors.transparent),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  child: Icon(
+                    widget.isSelected ? widget.item.selectedIcon : widget.item.icon,
+                    key: ValueKey(widget.isSelected),
+                    size: 22,
+                    color: widget.isSelected
+                        ? colorScheme.primary
+                        : (_isHovered
+                              ? colorScheme.onSurface
+                              : colorScheme.onSurface.withValues(alpha: 0.6)),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 2),
-              AnimatedDefaultTextStyle(
-                duration: const Duration(milliseconds: 200),
-                style: theme.textTheme.labelSmall!.copyWith(
-                  color: widget.isSelected
-                      ? colorScheme.primary
-                      : colorScheme.onSurface.withValues(alpha: 0.6),
-                  fontWeight: widget.isSelected ? FontWeight.bold : FontWeight.normal,
-                  fontSize: 10,
+                const SizedBox(height: 2),
+                AnimatedDefaultTextStyle(
+                  duration: const Duration(milliseconds: 200),
+                  style: theme.textTheme.labelSmall!.copyWith(
+                    color: widget.isSelected
+                        ? colorScheme.primary
+                        : (_isHovered
+                              ? colorScheme.onSurface
+                              : colorScheme.onSurface.withValues(alpha: 0.6)),
+                    fontWeight: widget.isSelected ? FontWeight.bold : FontWeight.normal,
+                    fontSize: 10,
+                  ),
+                  child: Text(widget.item.label),
                 ),
-                child: Text(widget.item.label),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

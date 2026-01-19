@@ -18,20 +18,16 @@ class DashboardPage extends StatefulWidget {
   State<DashboardPage> createState() => _DashboardPageState();
 }
 
-class _DashboardPageState extends State<DashboardPage> 
-    with SingleTickerProviderStateMixin {
+class _DashboardPageState extends State<DashboardPage> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  
+
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 800),
-      vsync: this,
-    );
+    _controller = AnimationController(duration: const Duration(milliseconds: 800), vsync: this);
     _controller.forward();
   }
-  
+
   @override
   void dispose() {
     _controller.dispose();
@@ -68,13 +64,13 @@ class _DashboardPageState extends State<DashboardPage>
       ),
     );
   }
-  
+
   Widget _buildDashboard(BuildContext context, List<Game> games) {
     final theme = Theme.of(context);
     final totalSize = games.totalSizeBytes;
     final sortedGames = games.sortedBySize();
     final top5 = sortedGames.take(5).toList();
-    
+
     return RefreshIndicator(
       onRefresh: () => context.read<GamesCubit>().refreshGames(),
       child: ListView(
@@ -86,18 +82,18 @@ class _DashboardPageState extends State<DashboardPage>
             delay: 0.0,
             child: _buildStorageCard(theme, games, totalSize),
           ),
-          
+
           const SizedBox(height: SteamDeckConstants.sectionGap),
-          
+
           // Source Breakdown with animation
           AnimatedCard(
             controller: _controller,
             delay: 0.1,
             child: _buildSourceBreakdown(context, games, totalSize, theme),
           ),
-          
+
           const SizedBox(height: SteamDeckConstants.sectionGap),
-          
+
           // Top 5 header
           AnimatedCard(
             controller: _controller,
@@ -111,7 +107,7 @@ class _DashboardPageState extends State<DashboardPage>
             ),
           ),
           const SizedBox(height: 12),
-          
+
           // Top 5 games
           for (int i = 0; i < top5.length; i++)
             AnimatedCard(
@@ -123,10 +119,10 @@ class _DashboardPageState extends State<DashboardPage>
       ),
     );
   }
-  
+
   Widget _buildStorageCard(ThemeData theme, List<Game> games, int totalSize) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -137,9 +133,7 @@ class _DashboardPageState extends State<DashboardPage>
           ],
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: theme.colorScheme.primary.withValues(alpha: 0.3),
-        ),
+        border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -152,11 +146,7 @@ class _DashboardPageState extends State<DashboardPage>
                   color: theme.colorScheme.primary.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(
-                  Icons.folder_open_rounded,
-                  color: theme.colorScheme.primary,
-                  size: 32,
-                ),
+                child: Icon(Icons.folder_open_rounded, color: theme.colorScheme.primary, size: 32),
               ),
               const SizedBox(width: 16),
               Text('Total Games Storage', style: theme.textTheme.titleLarge),
@@ -176,8 +166,8 @@ class _DashboardPageState extends State<DashboardPage>
               _buildStatChip(theme, Icons.games_rounded, '${games.length} games'),
               const SizedBox(width: 12),
               _buildStatChip(
-                theme, 
-                Icons.source_rounded, 
+                theme,
+                Icons.source_rounded,
                 '${games.map((g) => g.source).toSet().length} sources',
               ),
             ],
@@ -186,7 +176,7 @@ class _DashboardPageState extends State<DashboardPage>
       ),
     );
   }
-  
+
   Widget _buildStatChip(ThemeData theme, IconData icon, String text) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -204,12 +194,17 @@ class _DashboardPageState extends State<DashboardPage>
       ),
     );
   }
-  
-  Widget _buildSourceBreakdown(BuildContext context, List<Game> games, int totalSize, ThemeData theme) {
+
+  Widget _buildSourceBreakdown(
+    BuildContext context,
+    List<Game> games,
+    int totalSize,
+    ThemeData theme,
+  ) {
     final breakdown = _getSourceBreakdown(games);
-    
+
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(16),
@@ -233,22 +228,35 @@ class _DashboardPageState extends State<DashboardPage>
       ),
     );
   }
-  
+
   List<(String, int, int, Color)> _getSourceBreakdown(List<Game> games) {
     final breakdown = <(String, int, int, Color)>[];
-    
+
     for (final source in games.map((g) => g.source).toSet()) {
       final sourceGames = games.where((g) => g.source == source).toList();
-      breakdown.add((source.displayName, sourceGames.length, sourceGames.totalSizeBytes, _getSourceColor(source)));
+      breakdown.add((
+        source.displayName,
+        sourceGames.length,
+        sourceGames.totalSizeBytes,
+        _getSourceColor(source),
+      ));
     }
-    
+
     breakdown.sort((a, b) => b.$3.compareTo(a.$3));
     return breakdown;
   }
-  
-  Widget _buildSourceRow(BuildContext context, String name, int count, int size, Color color, int total, ThemeData theme) {
+
+  Widget _buildSourceRow(
+    BuildContext context,
+    String name,
+    int count,
+    int size,
+    Color color,
+    int total,
+    ThemeData theme,
+  ) {
     final percent = total > 0 ? (size / total) : 0.0;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -257,10 +265,7 @@ class _DashboardPageState extends State<DashboardPage>
             Container(
               width: 12,
               height: 12,
-              decoration: BoxDecoration(
-                color: color,
-                borderRadius: BorderRadius.circular(3),
-              ),
+              decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(3)),
             ),
             const SizedBox(width: 8),
             Text('$name ($count)', style: theme.textTheme.bodyMedium),
@@ -291,18 +296,16 @@ class _DashboardPageState extends State<DashboardPage>
       ],
     );
   }
-  
+
   Widget _buildGameCard(BuildContext context, Game game, int rank, ThemeData theme) {
     final color = _getSourceColor(game.source);
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: theme.colorScheme.outline.withValues(alpha: 0.1),
-        ),
+        border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.1)),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -364,7 +367,7 @@ class _DashboardPageState extends State<DashboardPage>
       ),
     );
   }
-  
+
   Color _getSourceColor(GameSource source) {
     switch (source) {
       case GameSource.heroic:
@@ -377,7 +380,7 @@ class _DashboardPageState extends State<DashboardPage>
         return const Color(0xFF2196F3);
     }
   }
-  
+
   Color _getSizeColor(int sizeBytes, ThemeData theme) {
     final gb = sizeBytes / (1024 * 1024 * 1024);
     if (gb > 80) return const Color(0xFFEF4444);

@@ -42,6 +42,9 @@ mixin _$Settings {
   /// Whether to sort by size descending by default
   bool get sortBySizeDescending => throw _privateConstructorUsedError;
 
+  /// Default view mode for games list ('list' or 'grid')
+  String get defaultViewMode => throw _privateConstructorUsedError;
+
   /// Serializes this Settings to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
 
@@ -65,6 +68,7 @@ abstract class $SettingsCopyWith<$Res> {
     String? ogiLibraryPath,
     bool confirmBeforeUninstall,
     bool sortBySizeDescending,
+    String defaultViewMode,
   });
 }
 
@@ -90,6 +94,7 @@ class _$SettingsCopyWithImpl<$Res, $Val extends Settings>
     Object? ogiLibraryPath = freezed,
     Object? confirmBeforeUninstall = null,
     Object? sortBySizeDescending = null,
+    Object? defaultViewMode = null,
   }) {
     return _then(
       _value.copyWith(
@@ -121,6 +126,10 @@ class _$SettingsCopyWithImpl<$Res, $Val extends Settings>
                 ? _value.sortBySizeDescending
                 : sortBySizeDescending // ignore: cast_nullable_to_non_nullable
                       as bool,
+            defaultViewMode: null == defaultViewMode
+                ? _value.defaultViewMode
+                : defaultViewMode // ignore: cast_nullable_to_non_nullable
+                      as String,
           )
           as $Val,
     );
@@ -144,6 +153,7 @@ abstract class _$$SettingsImplCopyWith<$Res>
     String? ogiLibraryPath,
     bool confirmBeforeUninstall,
     bool sortBySizeDescending,
+    String defaultViewMode,
   });
 }
 
@@ -168,6 +178,7 @@ class __$$SettingsImplCopyWithImpl<$Res>
     Object? ogiLibraryPath = freezed,
     Object? confirmBeforeUninstall = null,
     Object? sortBySizeDescending = null,
+    Object? defaultViewMode = null,
   }) {
     return _then(
       _$SettingsImpl(
@@ -199,6 +210,10 @@ class __$$SettingsImplCopyWithImpl<$Res>
             ? _value.sortBySizeDescending
             : sortBySizeDescending // ignore: cast_nullable_to_non_nullable
                   as bool,
+        defaultViewMode: null == defaultViewMode
+            ? _value.defaultViewMode
+            : defaultViewMode // ignore: cast_nullable_to_non_nullable
+                  as String,
       ),
     );
   }
@@ -215,6 +230,7 @@ class _$SettingsImpl implements _Settings {
     this.ogiLibraryPath,
     this.confirmBeforeUninstall = true,
     this.sortBySizeDescending = true,
+    this.defaultViewMode = 'list',
   });
 
   factory _$SettingsImpl.fromJson(Map<String, dynamic> json) =>
@@ -251,9 +267,14 @@ class _$SettingsImpl implements _Settings {
   @JsonKey()
   final bool sortBySizeDescending;
 
+  /// Default view mode for games list ('list' or 'grid')
+  @override
+  @JsonKey()
+  final String defaultViewMode;
+
   @override
   String toString() {
-    return 'Settings(themeMode: $themeMode, heroicConfigPath: $heroicConfigPath, lutrisDbPath: $lutrisDbPath, steamPath: $steamPath, ogiLibraryPath: $ogiLibraryPath, confirmBeforeUninstall: $confirmBeforeUninstall, sortBySizeDescending: $sortBySizeDescending)';
+    return 'Settings(themeMode: $themeMode, heroicConfigPath: $heroicConfigPath, lutrisDbPath: $lutrisDbPath, steamPath: $steamPath, ogiLibraryPath: $ogiLibraryPath, confirmBeforeUninstall: $confirmBeforeUninstall, sortBySizeDescending: $sortBySizeDescending, defaultViewMode: $defaultViewMode)';
   }
 
   @override
@@ -274,7 +295,9 @@ class _$SettingsImpl implements _Settings {
             (identical(other.confirmBeforeUninstall, confirmBeforeUninstall) ||
                 other.confirmBeforeUninstall == confirmBeforeUninstall) &&
             (identical(other.sortBySizeDescending, sortBySizeDescending) ||
-                other.sortBySizeDescending == sortBySizeDescending));
+                other.sortBySizeDescending == sortBySizeDescending) &&
+            (identical(other.defaultViewMode, defaultViewMode) ||
+                other.defaultViewMode == defaultViewMode));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -288,6 +311,7 @@ class _$SettingsImpl implements _Settings {
     ogiLibraryPath,
     confirmBeforeUninstall,
     sortBySizeDescending,
+    defaultViewMode,
   );
 
   /// Create a copy of Settings
@@ -313,6 +337,7 @@ abstract class _Settings implements Settings {
     final String? ogiLibraryPath,
     final bool confirmBeforeUninstall,
     final bool sortBySizeDescending,
+    final String defaultViewMode,
   }) = _$SettingsImpl;
 
   factory _Settings.fromJson(Map<String, dynamic> json) =
@@ -345,6 +370,10 @@ abstract class _Settings implements Settings {
   /// Whether to sort by size descending by default
   @override
   bool get sortBySizeDescending;
+
+  /// Default view mode for games list ('list' or 'grid')
+  @override
+  String get defaultViewMode;
 
   /// Create a copy of Settings
   /// with the given fields replaced by the non-null parameter values.

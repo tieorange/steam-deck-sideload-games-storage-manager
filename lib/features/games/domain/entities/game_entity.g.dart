@@ -13,6 +13,8 @@ _$GameImpl _$$GameImplFromJson(Map<String, dynamic> json) => _$GameImpl(
   installPath: json['installPath'] as String,
   sizeBytes: (json['sizeBytes'] as num).toInt(),
   iconPath: json['iconPath'] as String?,
+  launchOptions: json['launchOptions'] as String?,
+  protonVersion: json['protonVersion'] as String?,
   isSelected: json['isSelected'] as bool? ?? false,
 );
 
@@ -24,6 +26,8 @@ Map<String, dynamic> _$$GameImplToJson(_$GameImpl instance) =>
       'installPath': instance.installPath,
       'sizeBytes': instance.sizeBytes,
       'iconPath': instance.iconPath,
+      'launchOptions': instance.launchOptions,
+      'protonVersion': instance.protonVersion,
       'isSelected': instance.isSelected,
     };
 

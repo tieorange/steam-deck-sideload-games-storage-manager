@@ -7,6 +7,8 @@ import 'package:game_size_manager/core/theme/steam_deck_constants.dart';
 import 'package:game_size_manager/features/games/domain/entities/game_entity.dart';
 import 'package:game_size_manager/features/games/presentation/cubit/games_cubit.dart';
 import 'package:game_size_manager/features/games/presentation/cubit/games_state.dart';
+import 'package:game_size_manager/features/settings/presentation/cubit/settings_cubit.dart';
+import 'package:game_size_manager/features/settings/presentation/cubit/settings_state.dart';
 import 'package:go_router/go_router.dart';
 import 'package:game_size_manager/core/router/app_router.dart';
 import 'package:game_size_manager/features/games/presentation/widgets/game_list_item.dart';
@@ -26,7 +28,6 @@ class _GamesPageState extends State<GamesPage> with TickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   bool _isSearching = false;
-  GameViewMode _viewMode = GameViewMode.list;
 
   // Collapsible header logic
   bool _isHeaderCollapsed = false;
@@ -35,6 +36,8 @@ class _GamesPageState extends State<GamesPage> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     context.read<GamesCubit>().loadGames();
+    // Ensure settings are loaded
+    context.read<SettingsCubit>().loadSettings();
 
     _searchController.addListener(() {
       context.read<GamesCubit>().setSearchQuery(_searchController.text);
@@ -59,10 +62,9 @@ class _GamesPageState extends State<GamesPage> with TickerProviderStateMixin {
     super.dispose();
   }
 
-  void _toggleViewMode() {
-    setState(() {
-      _viewMode = _viewMode == GameViewMode.list ? GameViewMode.grid : GameViewMode.list;
-    });
+  void _toggleViewMode(BuildContext context, String currentMode) {
+    final newMode = currentMode == 'grid' ? 'list' : 'grid';
+    context.read<SettingsCubit>().setViewMode(newMode);
   }
 
   @override
@@ -70,14 +72,23 @@ class _GamesPageState extends State<GamesPage> with TickerProviderStateMixin {
     final theme = Theme.of(context);
 
     return Scaffold(
-      body: BlocBuilder<GamesCubit, GamesState>(
-        builder: (context, state) {
-          return state.when(
-            initial: () => const SizedBox.shrink(),
-            loading: () => _buildLoadingState(theme),
-            error: (message) => _buildErrorState(context, message, theme),
-            loaded: (games, filter, sortDesc, _) =>
-                _buildLoadedState(context, games, filter, sortDesc, theme),
+      body: BlocBuilder<SettingsCubit, SettingsState>(
+        builder: (context, settingsState) {
+          final viewMode = settingsState.maybeWhen(
+            loaded: (s) => s.defaultViewMode,
+            orElse: () => 'list',
+          );
+
+          return BlocBuilder<GamesCubit, GamesState>(
+            builder: (context, state) {
+              return state.when(
+                initial: () => const SizedBox.shrink(),
+                loading: () => _buildLoadingState(theme),
+                error: (message) => _buildErrorState(context, message, theme),
+                loaded: (games, filter, sortDesc, _) =>
+                    _buildLoadedState(context, games, filter, sortDesc, theme, viewMode),
+              );
+            },
           );
         },
       ),
@@ -135,6 +146,7 @@ class _GamesPageState extends State<GamesPage> with TickerProviderStateMixin {
     GameSource? filter,
     bool sortDesc,
     ThemeData theme,
+    String viewMode,
   ) {
     final cubit = context.read<GamesCubit>();
     final displayedGames = cubit.state.displayedGames;
@@ -203,12 +215,8 @@ class _GamesPageState extends State<GamesPage> with TickerProviderStateMixin {
                 onPressed: () => setState(() => _isSearching = true),
               ),
               IconButton(
-                icon: Icon(
-                  _viewMode == GameViewMode.grid
-                      ? Icons.view_list_rounded
-                      : Icons.grid_view_rounded,
-                ),
-                onPressed: _toggleViewMode,
+                icon: Icon(viewMode == 'grid' ? Icons.view_list_rounded : Icons.grid_view_rounded),
+                onPressed: () => _toggleViewMode(context, viewMode),
                 tooltip: 'Switch View',
               ),
               IconButton(
@@ -285,7 +293,7 @@ class _GamesPageState extends State<GamesPage> with TickerProviderStateMixin {
               SteamDeckConstants.pagePadding,
               100, // Bottom padding for nav/selection bar
             ),
-            sliver: _viewMode == GameViewMode.list
+            sliver: viewMode == 'list'
                 ? SliverList(
                     delegate: SliverChildBuilderDelegate((context, index) {
                       final game = displayedGames[index];

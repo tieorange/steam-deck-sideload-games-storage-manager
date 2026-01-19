@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:game_size_manager/core/router/app_router.dart';
 import 'package:game_size_manager/core/services/update_service.dart';
 import 'package:game_size_manager/features/settings/presentation/cubit/update_cubit.dart';
 import 'package:game_size_manager/features/settings/presentation/cubit/update_state.dart';
@@ -81,7 +82,10 @@ class _UpdateBannerState extends State<UpdateBanner> {
             const SizedBox(width: 8),
             FilledButton.icon(
               onPressed: () {
-                showDialog(context: context, builder: (_) => const UpdateCheckDialog());
+                final navContext = AppRouter.router.routerDelegate.navigatorKey.currentContext;
+                if (navContext != null) {
+                  showDialog(context: navContext, builder: (_) => const UpdateCheckDialog());
+                }
               },
               icon: const Icon(Icons.download_rounded, size: 18),
               label: const Text('Update'),
