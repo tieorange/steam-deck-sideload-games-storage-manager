@@ -1,19 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:game_size_manager/core/constants.dart';
 import 'package:game_size_manager/core/extensions/size_formatter.dart';
+import 'package:game_size_manager/core/router/app_router.dart';
 import 'package:game_size_manager/core/theme/steam_deck_constants.dart';
 import 'package:game_size_manager/features/games/domain/entities/game_entity.dart';
 import 'package:game_size_manager/features/games/presentation/cubit/games_cubit.dart';
 import 'package:game_size_manager/features/games/presentation/cubit/games_state.dart';
 import 'package:game_size_manager/features/settings/presentation/cubit/settings_cubit.dart';
 import 'package:game_size_manager/features/settings/presentation/cubit/settings_state.dart';
-import 'package:go_router/go_router.dart';
-import 'package:game_size_manager/core/router/app_router.dart';
-import 'package:game_size_manager/features/games/presentation/widgets/game_list_item.dart';
+import 'package:game_size_manager/features/games/presentation/widgets/error_state.dart';
 import 'package:game_size_manager/features/games/presentation/widgets/game_grid_item.dart';
+import 'package:game_size_manager/features/games/presentation/widgets/game_list_item.dart';
+import 'package:game_size_manager/features/games/presentation/widgets/loading_state.dart';
+import 'package:game_size_manager/features/games/presentation/widgets/selection_bar.dart';
 import 'package:game_size_manager/features/games/presentation/widgets/source_filter_chips.dart';
+import 'package:game_size_manager/features/games/presentation/widgets/stats_bar.dart';
 import 'package:game_size_manager/features/games/presentation/widgets/uninstall_confirm_dialog.dart';
 
 /// Main games page showing list of all games sorted by size
@@ -28,15 +32,12 @@ class _GamesPageState extends State<GamesPage> with TickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   bool _isSearching = false;
-
-  // Collapsible header logic
   bool _isHeaderCollapsed = false;
 
   @override
   void initState() {
     super.initState();
     context.read<GamesCubit>().loadGames();
-    // Ensure settings are loaded
     context.read<SettingsCubit>().loadSettings();
 
     _searchController.addListener(() {
@@ -48,7 +49,6 @@ class _GamesPageState extends State<GamesPage> with TickerProviderStateMixin {
 
   void _onScroll() {
     if (!_scrollController.hasClients) return;
-
     final isCollapsed = _scrollController.offset > 40;
     if (isCollapsed != _isHeaderCollapsed) {
       setState(() => _isHeaderCollapsed = isCollapsed);
@@ -67,10 +67,22 @@ class _GamesPageState extends State<GamesPage> with TickerProviderStateMixin {
     context.read<SettingsCubit>().setViewMode(newMode);
   }
 
+  Future<void> _showUninstallConfirmation(BuildContext context) async {
+    final cubit = context.read<GamesCubit>();
+    final selectedGames = cubit.state.selectedGames;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => UninstallConfirmDialog(games: selectedGames),
+    );
+
+    if (confirmed == true) {
+      cubit.uninstallSelected();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
       body: BlocBuilder<SettingsCubit, SettingsState>(
         builder: (context, settingsState) {
@@ -83,10 +95,29 @@ class _GamesPageState extends State<GamesPage> with TickerProviderStateMixin {
             builder: (context, state) {
               return state.when(
                 initial: () => const SizedBox.shrink(),
-                loading: () => _buildLoadingState(theme),
-                error: (message) => _buildErrorState(context, message, theme),
-                loaded: (games, filter, sortDesc, _) =>
-                    _buildLoadedState(context, games, filter, sortDesc, theme, viewMode),
+                loading: () => const GamesLoadingState(),
+                error: (message) => GamesErrorState(
+                  message: message,
+                  onRetry: () => context.read<GamesCubit>().loadGames(),
+                ),
+                loaded: (games, filter, sortDesc, _) => _GamesContent(
+                  allGames: games,
+                  filter: filter,
+                  sortDesc: sortDesc,
+                  viewMode: viewMode,
+                  searchController: _searchController,
+                  scrollController: _scrollController,
+                  isSearching: _isSearching,
+                  isHeaderCollapsed: _isHeaderCollapsed,
+                  onSearchToggle: () => setState(() {
+                    _isSearching = !_isSearching;
+                    if (!_isSearching) {
+                      _searchController.clear();
+                      context.read<GamesCubit>().setSearchQuery('');
+                    }
+                  }),
+                  onViewModeToggle: () => _toggleViewMode(context, viewMode),
+                ),
               );
             },
           );
@@ -96,76 +127,69 @@ class _GamesPageState extends State<GamesPage> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildLoadingState(ThemeData theme) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(
-            width: 48,
-            height: 48,
-            child: CircularProgressIndicator(strokeWidth: 3, color: theme.colorScheme.primary),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Loading library...',
-            style: theme.textTheme.titleMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-            ),
-          ),
-        ],
-      ),
+  Widget _buildBottomBar(BuildContext context) {
+    return BlocBuilder<GamesCubit, GamesState>(
+      builder: (context, state) {
+        if (!state.hasSelection) return const SizedBox.shrink();
+
+        return SelectionBar(
+          selectedCount: state.selectedGames.length,
+          selectedSizeBytes: state.selectedSizeBytes,
+          onClear: () => context.read<GamesCubit>().deselectAll(),
+          onUninstall: () => _showUninstallConfirmation(context),
+        );
+      },
     );
   }
+}
 
-  Widget _buildErrorState(BuildContext context, String message, ThemeData theme) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.error_outline_rounded, size: 48, color: theme.colorScheme.error),
-            const SizedBox(height: 16),
-            Text(message, textAlign: TextAlign.center),
-            const SizedBox(height: 16),
-            FilledButton.icon(
-              onPressed: () => context.read<GamesCubit>().loadGames(),
-              icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Retry'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+/// Main content area for the games page
+class _GamesContent extends StatelessWidget {
+  const _GamesContent({
+    required this.allGames,
+    required this.filter,
+    required this.sortDesc,
+    required this.viewMode,
+    required this.searchController,
+    required this.scrollController,
+    required this.isSearching,
+    required this.isHeaderCollapsed,
+    required this.onSearchToggle,
+    required this.onViewModeToggle,
+  });
 
-  Widget _buildLoadedState(
-    BuildContext context,
-    List<Game> allGames,
-    GameSource? filter,
-    bool sortDesc,
-    ThemeData theme,
-    String viewMode,
-  ) {
+  final List<Game> allGames;
+  final GameSource? filter;
+  final bool sortDesc;
+  final String viewMode;
+  final TextEditingController searchController;
+  final ScrollController scrollController;
+  final bool isSearching;
+  final bool isHeaderCollapsed;
+  final VoidCallback onSearchToggle;
+  final VoidCallback onViewModeToggle;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final cubit = context.read<GamesCubit>();
     final displayedGames = cubit.state.displayedGames;
     final totalSize = displayedGames.totalSizeBytes;
 
     return CustomScrollView(
-      controller: _scrollController,
+      controller: scrollController,
       slivers: [
-        // Compact App Bar with Filters
+        // App Bar with Filters
         SliverAppBar(
           floating: true,
           pinned: true,
-          elevation: _isHeaderCollapsed ? 2 : 0,
+          elevation: isHeaderCollapsed ? 2 : 0,
           backgroundColor: theme.colorScheme.surface,
           surfaceTintColor: theme.colorScheme.surfaceTint,
           toolbarHeight: 56,
-          title: _isSearching
+          title: isSearching
               ? TextField(
-                  controller: _searchController,
+                  controller: searchController,
                   autofocus: true,
                   decoration: InputDecoration(
                     hintText: 'Search...',
@@ -179,8 +203,7 @@ class _GamesPageState extends State<GamesPage> with TickerProviderStateMixin {
                   children: [
                     Text('Games', style: theme.textTheme.titleLarge),
                     const SizedBox(width: 12),
-                    // Collapsed stats pill
-                    if (_isHeaderCollapsed)
+                    if (isHeaderCollapsed)
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
@@ -198,25 +221,13 @@ class _GamesPageState extends State<GamesPage> with TickerProviderStateMixin {
                   ],
                 ),
           actions: [
-            if (_isSearching)
-              IconButton(
-                icon: const Icon(Icons.close_rounded),
-                onPressed: () {
-                  setState(() {
-                    _isSearching = false;
-                    _searchController.clear();
-                  });
-                  cubit.setSearchQuery('');
-                },
-              )
+            if (isSearching)
+              IconButton(icon: const Icon(Icons.close_rounded), onPressed: onSearchToggle)
             else ...[
-              IconButton(
-                icon: const Icon(Icons.search_rounded),
-                onPressed: () => setState(() => _isSearching = true),
-              ),
+              IconButton(icon: const Icon(Icons.search_rounded), onPressed: onSearchToggle),
               IconButton(
                 icon: Icon(viewMode == 'grid' ? Icons.view_list_rounded : Icons.grid_view_rounded),
-                onPressed: () => _toggleViewMode(context, viewMode),
+                onPressed: onViewModeToggle,
                 tooltip: 'Switch View',
               ),
               IconButton(
@@ -239,46 +250,13 @@ class _GamesPageState extends State<GamesPage> with TickerProviderStateMixin {
           ),
         ),
 
-        // Stats bar (scrolls away)
+        // Stats bar
         SliverToBoxAdapter(
-          child: AnimatedOpacity(
-            duration: const Duration(milliseconds: 200),
-            opacity: _isHeaderCollapsed ? 0.0 : 1.0,
-            child: _isHeaderCollapsed
-                ? const SizedBox.shrink()
-                : Container(
-                    height: SteamDeckConstants.compactStatsBarHeight,
-                    padding: const EdgeInsets.symmetric(horizontal: SteamDeckConstants.pagePadding),
-                    child: Row(
-                      children: [
-                        Text(
-                          '${displayedGames.length} games',
-                          style: theme.textTheme.labelMedium?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 8),
-                          child: Text('•'),
-                        ),
-                        Text(
-                          totalSize.toHumanReadableSize(),
-                          style: theme.textTheme.labelLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: theme.colorScheme.primary,
-                          ),
-                        ),
-                        const Spacer(),
-                        // Selection hint
-                        Text(
-                          'Sort: ${sortDesc ? "Largest" : "Smallest"}',
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+          child: StatsBar(
+            gameCount: displayedGames.length,
+            totalSizeBytes: totalSize,
+            sortDescending: sortDesc,
+            isCollapsed: isHeaderCollapsed,
           ),
         ),
 
@@ -291,7 +269,7 @@ class _GamesPageState extends State<GamesPage> with TickerProviderStateMixin {
               SteamDeckConstants.pagePadding,
               8,
               SteamDeckConstants.pagePadding,
-              100, // Bottom padding for nav/selection bar
+              100,
             ),
             sliver: viewMode == 'list'
                 ? SliverList(
@@ -325,93 +303,5 @@ class _GamesPageState extends State<GamesPage> with TickerProviderStateMixin {
           ),
       ],
     );
-  }
-
-  Widget _buildBottomBar(BuildContext context) {
-    return BlocBuilder<GamesCubit, GamesState>(
-      builder: (context, state) {
-        if (!state.hasSelection) return const SizedBox.shrink();
-
-        final theme = Theme.of(context);
-        final selectedCount = state.selectedGames.length;
-
-        return Container(
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerHighest,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.2),
-                blurRadius: 10,
-                offset: const Offset(0, -2),
-              ),
-            ],
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: SafeArea(
-            top: false,
-            child: Row(
-              children: [
-                Expanded(
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primary,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          '$selectedCount',
-                          style: TextStyle(
-                            color: theme.colorScheme.onPrimary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        state.selectedSizeBytes.toHumanReadableSize(),
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: theme.colorScheme.onSurface,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                TextButton(
-                  onPressed: () => context.read<GamesCubit>().deselectAll(),
-                  child: const Text('Clear'),
-                ),
-                const SizedBox(width: 8),
-                FilledButton.icon(
-                  onPressed: () => _showUninstallConfirmation(context),
-                  icon: const Icon(Icons.delete_outline_rounded, size: 20),
-                  label: const Text('Uninstall'),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: theme.colorScheme.error,
-                    foregroundColor: theme.colorScheme.onError,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Future<void> _showUninstallConfirmation(BuildContext context) async {
-    final cubit = context.read<GamesCubit>();
-    final selectedGames = cubit.state.selectedGames;
-
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => UninstallConfirmDialog(games: selectedGames),
-    );
-
-    if (confirmed == true) {
-      cubit.uninstallSelected();
-    }
   }
 }
