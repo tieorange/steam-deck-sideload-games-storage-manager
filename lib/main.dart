@@ -6,6 +6,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'package:game_size_manager/core/di/injection.dart';
 import 'package:game_size_manager/core/logging/logger_service.dart';
+import 'package:game_size_manager/core/platform/platform_service.dart';
 import 'package:game_size_manager/core/router/app_router.dart';
 import 'package:game_size_manager/core/theme/app_theme.dart';
 import 'package:game_size_manager/features/games/presentation/cubit/games_cubit.dart';
@@ -15,22 +16,37 @@ import 'package:game_size_manager/features/settings/presentation/cubit/update_cu
 import 'package:game_size_manager/features/settings/presentation/widgets/update_widgets.dart';
 import 'package:game_size_manager/core/widgets/global_error_boundary.dart';
 
+import 'dart:async';
+
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  runZonedGuarded(
+    () async {
+      WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize FFI for SQLite on desktop
-  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
-  }
+      // Initialize FFI for SQLite on desktop
+      if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+        sqfliteFfiInit();
+        databaseFactory = databaseFactoryFfi;
+      }
 
-  // Initialize logging
-  await LoggerService.instance.init();
+      // Initialize logging
+      await LoggerService.instance.init();
+      await PlatformService.instance.init();
 
-  // Configure dependency injection
-  await init();
+      // Configure dependency injection
+      await init();
 
-  runApp(const GameSizeManagerApp());
+      runApp(const GameSizeManagerApp());
+    },
+    (error, stack) {
+      LoggerService.instance.error(
+        'Uncaught Async Error',
+        error: error,
+        stackTrace: stack,
+        tag: 'Main',
+      );
+    },
+  );
 }
 
 class GameSizeManagerApp extends StatelessWidget {

@@ -2,7 +2,7 @@ name: game_size_manager
 description: "Steam Deck app to manage game storage across multiple launchers"
 publish_to: 'none'
 
-version: 1.0.3+4
+version: 1.0.4+5
 
 environment:
   sdk: ^3.9.2
@@ -53,6 +53,10 @@ dependencies:
   version: ^3.0.2
   http: ^1.2.2
   url_launcher: ^6.3.1
+  
+  # Log sharing
+  resend_dart: ^1.0.1
+  sentry_flutter: ^9.10.0
 
 dev_dependencies:
   flutter_test:

@@ -41,6 +41,8 @@ class LutrisDatasource {
 
       final games = <Game>[];
 
+      _logger.debug('Query returned ${results.length} rows', tag: 'Lutris');
+
       for (final row in results) {
         final id = row['id']?.toString() ?? '';
         final name = row['name'] as String? ?? 'Unknown';
@@ -48,6 +50,7 @@ class LutrisDatasource {
         final directory = row['directory'] as String?;
 
         if (directory != null && directory.isNotEmpty) {
+          _logger.debug('Found Lutris game: $name ($slug) at $directory', tag: 'Lutris');
           games.add(
             Game(
               id: 'lutris_$slug',
@@ -57,6 +60,8 @@ class LutrisDatasource {
               sizeBytes: 0, // Needs calculation
             ),
           );
+        } else {
+          _logger.warning('Skipping Lutris game $name: directory is empty/null', tag: 'Lutris');
         }
       }
 

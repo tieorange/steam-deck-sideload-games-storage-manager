@@ -24,7 +24,7 @@ $DOCKER_CMD run --rm \
   /bin/bash -c "
     echo '📥 Installing build dependencies...' && \
     sudo apt-get update && \
-    sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libsqlite3-dev zip && \
+    sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libsqlite3-dev libcurl4-openssl-dev zip && \
     echo '📥 Getting dependencies...' && \
     flutter config --no-analytics && \
     flutter pub get && \

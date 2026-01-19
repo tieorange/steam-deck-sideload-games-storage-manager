@@ -27,10 +27,16 @@ class SteamDatasource {
     try {
       final games = <Game>[];
       final libraryPaths = _platform.allSteamLibraryPaths;
+      _logger.info('Checking ${libraryPaths.length} Steam library folders', tag: 'Steam');
 
       for (final libraryPath in libraryPaths) {
         final dir = Directory(libraryPath);
-        if (!dir.existsSync()) continue;
+        if (!dir.existsSync()) {
+          _logger.warning('Steam library path not found: $libraryPath', tag: 'Steam');
+          continue;
+        }
+
+        _logger.debug('Scanning Steam library: $libraryPath', tag: 'Steam');
 
         await for (final entity in dir.list()) {
           if (entity is File &&
@@ -39,10 +45,11 @@ class SteamDatasource {
             try {
               final game = await _parseAppManifest(entity);
               if (game != null) {
+                _logger.debug('Found Steam game: ${game.title} (ID: ${game.id})', tag: 'Steam');
                 games.add(game);
               }
             } catch (e) {
-              _logger.warning('Failed to parse: ${entity.path}', tag: 'Steam');
+              _logger.warning('Failed to parse (exception): ${entity.path}', tag: 'Steam');
             }
           }
         }

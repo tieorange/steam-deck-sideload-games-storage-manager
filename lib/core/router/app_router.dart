@@ -6,6 +6,7 @@ import 'package:game_size_manager/features/games/presentation/pages/games_page.d
 import 'package:game_size_manager/features/games/presentation/pages/game_details_page.dart';
 import 'package:game_size_manager/features/storage/presentation/pages/storage_page.dart';
 import 'package:game_size_manager/features/settings/presentation/pages/settings_page.dart';
+import 'package:game_size_manager/features/settings/presentation/pages/log_viewer_page.dart';
 import 'package:game_size_manager/core/router/app_shell.dart';
 import 'package:game_size_manager/features/games/domain/entities/game_entity.dart';
 
@@ -16,6 +17,7 @@ class AppRoutes {
   static const gameDetails = 'details';
   static const storage = '/storage';
   static const settings = '/settings';
+  static const logs = 'logs';
 
   // Route Names
   static const dashboardName = 'dashboard';
@@ -23,6 +25,7 @@ class AppRoutes {
   static const gameDetailsName = 'gameDetails';
   static const storageName = 'storage';
   static const settingsName = 'settings';
+  static const logsName = 'logs';
 }
 
 /// App router configuration using GoRouter
@@ -70,6 +73,14 @@ class AppRouter {
             path: AppRoutes.settings,
             name: AppRoutes.settingsName,
             pageBuilder: (context, state) => const NoTransitionPage(child: SettingsPage()),
+            routes: [
+              GoRoute(
+                parentNavigatorKey: _rootNavigatorKey,
+                path: AppRoutes.logs,
+                name: AppRoutes.logsName,
+                builder: (context, state) => const LogViewerPage(),
+              ),
+            ],
           ),
         ],
       ),

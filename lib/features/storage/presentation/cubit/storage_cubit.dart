@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:game_size_manager/core/services/disk_size_service.dart';
 import 'package:game_size_manager/core/platform/platform_service.dart';
 import 'package:game_size_manager/features/storage/presentation/cubit/storage_state.dart';
+import 'package:game_size_manager/core/logging/logger_service.dart';
 
 class StorageCubit extends Cubit<StorageState> {
   StorageCubit(this._diskSizeService, this._platformService) : super(const StorageState.initial());
@@ -11,6 +12,7 @@ class StorageCubit extends Cubit<StorageState> {
   final PlatformService _platformService;
 
   Future<void> loadStorageInfo() async {
+    LoggerService.instance.info('Loading storage info...', tag: 'StorageCubit');
     emit(const StorageState.loading());
 
     try {
@@ -65,6 +67,11 @@ class StorageCubit extends Cubit<StorageState> {
         }
       }
 
+      LoggerService.instance.info(
+        'Storage loaded: ${drives.length} drives (Internal + ${drives.length - 1} external)',
+        tag: 'StorageCubit',
+      );
+
       emit(
         StorageState.loaded(
           totalBytes: totalBytes,
@@ -73,7 +80,13 @@ class StorageCubit extends Cubit<StorageState> {
           drives: drives,
         ),
       );
-    } catch (e) {
+    } catch (e, stack) {
+      LoggerService.instance.error(
+        'Failed to load storage info',
+        error: e,
+        stackTrace: stack,
+        tag: 'StorageCubit',
+      );
       emit(StorageState.error(e.toString()));
     }
   }

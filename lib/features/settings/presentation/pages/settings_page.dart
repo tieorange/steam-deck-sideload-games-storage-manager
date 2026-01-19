@@ -1,14 +1,15 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:go_router/go_router.dart';
+
+import 'package:game_size_manager/core/router/app_router.dart';
 
 import 'package:game_size_manager/core/constants.dart';
-import 'package:game_size_manager/core/logging/logger_service.dart';
 import 'package:game_size_manager/core/theme/steam_deck_constants.dart';
 import 'package:game_size_manager/features/settings/presentation/cubit/settings_cubit.dart';
 import 'package:game_size_manager/features/settings/presentation/cubit/settings_state.dart';
+import 'package:game_size_manager/features/settings/presentation/widgets/send_logs_dialog.dart';
 import 'package:game_size_manager/features/settings/presentation/widgets/update_widgets.dart';
 
 import 'package:game_size_manager/core/widgets/animated_card.dart';
@@ -439,78 +440,47 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
             leading: Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: theme.colorScheme.tertiaryContainer.withValues(alpha: 0.5),
+                color: theme.colorScheme.secondaryContainer.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(Icons.bug_report_rounded, color: theme.colorScheme.tertiary),
+              child: Icon(Icons.terminal_rounded, color: theme.colorScheme.secondary),
             ),
-            title: const Text('Export Logs'),
-            subtitle: const Text('View logs for debugging'),
+            title: const Text('View Logs'),
+            subtitle: const Text('Debug application issues'),
             trailing: Icon(
               Icons.arrow_forward_ios_rounded,
               size: 16,
               color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
             ),
-            onTap: () async {
-              final logPath = await LoggerService.instance.getLogFilePath();
-              if (context.mounted) {
-                if (logPath != null) {
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Application Logs'),
-                      content: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('Logs are stored at:'),
-                          const SizedBox(height: 8),
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.surfaceContainerHighest,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              logPath,
-                              style: theme.textTheme.bodySmall?.copyWith(fontFamily: 'monospace'),
-                            ),
-                          ),
-                        ],
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text('Close'),
-                        ),
-                        FilledButton.icon(
-                          onPressed: () async {
-                            // Open parent folder
-                            final dir = Directory(
-                              logPath,
-                            ).parent; // Actually just get directory of file, assuming imports
-                            // Since we didn't import path package here yet, let's fix imports first or use simple string manipulation or io
-                            // Let's rely on imports added in Instruction
-                            // Wait, I can't assume imports are added unless I add them.
-                            // I will use String manipulation if p.dirname is not available easily without import,
-                            // BUT I WILL ADD IMPORTS in the tool.
-
-                            // Using launchUrl for directory
-                            // Uri.directory is available in dart:core/io
-                            await launchUrl(Uri.directory(dir.path));
-                          },
-                          icon: const Icon(Icons.folder_open),
-                          label: const Text('Open Folder'),
-                        ),
-                      ],
-                    ),
-                  );
-                } else {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(const SnackBar(content: Text('No log file found')));
-                }
-              }
+            onTap: () {
+              context.pushNamed(AppRoutes.logsName);
+            },
+          ),
+          Divider(
+            height: 1,
+            indent: 16,
+            endIndent: 16,
+            color: theme.colorScheme.outline.withValues(alpha: 0.1),
+          ),
+          ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            leading: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.tertiaryContainer.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(Icons.bug_report_rounded, color: theme.colorScheme.tertiary),
+            ),
+            title: const Text('Send Logs to Developer'),
+            subtitle: const Text('Help us fix bugs by sharing logs'),
+            trailing: Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 16,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+            ),
+            onTap: () {
+              showDialog(context: context, builder: (_) => const SendLogsDialog());
             },
           ),
         ],

@@ -29,15 +29,21 @@ class UpdateService {
   UpdateService(this._client);
 
   Future<UpdateInfo> checkForUpdates() async {
+    LoggerService.instance.info('Checking for updates...', tag: 'UpdateService');
     try {
       final PackageInfo packageInfo = await PackageInfo.fromPlatform();
       final currentVersion = Version.parse(packageInfo.version);
+      LoggerService.instance.info('Current version: $currentVersion', tag: 'UpdateService');
 
       final url = Uri.parse(
         'https://api.github.com/repos/${AppConstants.githubOwner}/${AppConstants.githubRepo}/releases/latest',
       );
 
       final response = await _client.get(url);
+      LoggerService.instance.debug(
+        'GitHub API response code: ${response.statusCode}',
+        tag: 'UpdateService',
+      );
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> json = jsonDecode(response.body);
@@ -46,23 +52,43 @@ class UpdateService {
         final String versionStr = tagName.startsWith('v') ? tagName.substring(1) : tagName;
         final latestVersion = Version.parse(versionStr);
 
+        LoggerService.instance.info('Latest version found: $latestVersion', tag: 'UpdateService');
+
         if (latestVersion > currentVersion) {
           final List<dynamic> assets = json['assets'];
           final String assetName = Platform.isMacOS ? 'macos.zip' : 'linux.zip';
+          LoggerService.instance.debug('Looking for asset: $assetName', tag: 'UpdateService');
+
           final String? downloadUrl = assets.firstWhere(
             (asset) => (asset['name'] as String).toLowerCase().endsWith(assetName),
             orElse: () => null,
           )?['browser_download_url'];
 
           if (downloadUrl != null) {
+            LoggerService.instance.info(
+              'Update available! URL: $downloadUrl',
+              tag: 'UpdateService',
+            );
             return UpdateInfo(
               hasUpdate: true,
               latestVersion: versionStr,
               downloadUrl: downloadUrl,
               changelog: json['body'] ?? '',
             );
+          } else {
+            LoggerService.instance.warning(
+              'Update exists but no matching asset found',
+              tag: 'UpdateService',
+            );
           }
+        } else {
+          LoggerService.instance.info('App is up to date', tag: 'UpdateService');
         }
+      } else {
+        LoggerService.instance.warning(
+          'Failed to fetch releases: ${response.statusCode}',
+          tag: 'UpdateService',
+        );
       }
       return UpdateInfo(
         hasUpdate: false,
@@ -70,14 +96,20 @@ class UpdateService {
         downloadUrl: '',
         changelog: '',
       );
-    } catch (e) {
-      LoggerService.instance.error('Error checking for updates', error: e);
+    } catch (e, stack) {
+      LoggerService.instance.error(
+        'Error checking for updates',
+        error: e,
+        stackTrace: stack,
+        tag: 'UpdateService',
+      );
       // On error, assume no update to avoid blocking user
       return UpdateInfo(hasUpdate: false, latestVersion: '', downloadUrl: '', changelog: '');
     }
   }
 
   Future<File> downloadUpdate(String url, Function(double) onProgress) async {
+    LoggerService.instance.info('Downloading update from $url...', tag: 'UpdateService');
     final request = http.Request('GET', Uri.parse(url));
     final response = await _client.send(request);
 
@@ -100,10 +132,12 @@ class UpdateService {
     }).asFuture();
 
     await sink.close();
+    LoggerService.instance.info('Download complete: ${file.path}', tag: 'UpdateService');
     return file;
   }
 
   Future<void> applyUpdate(File zipFile) async {
+    LoggerService.instance.info('Applying update from ${zipFile.path}', tag: 'UpdateService');
     final tempDir = await getTemporaryDirectory();
     final extractDir = Directory(path.join(tempDir.path, 'update_extracted'));
 
@@ -241,6 +275,8 @@ nohup "\$TARGET/\$EXECUTABLE" > /dev/null 2>&1 &
     } else {
       await Process.start(scriptPath, [], mode: ProcessStartMode.detached);
     }
+
+    LoggerService.instance.info('Update script launched. Exiting app.', tag: 'UpdateService');
 
     // Exit app
     exit(0);

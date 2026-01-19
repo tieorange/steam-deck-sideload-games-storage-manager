@@ -14,6 +14,41 @@ class PlatformService {
   String get homeDir => Platform.environment['HOME'] ?? '/home/deck';
   String get homePath => homeDir; // Alias for consistency
 
+  /// Initialize the service and log all critical paths
+  Future<void> init() async {
+    _logger.info('Initializing PlatformService...', tag: 'Platform');
+    _logger.info(
+      'OS: ${Platform.operatingSystem} (${Platform.operatingSystemVersion})',
+      tag: 'Platform',
+    );
+    _logger.info('HOME: $homeDir', tag: 'Platform');
+
+    // Log all critical paths status
+    _logPathCheck('Heroic Config', heroicConfigPath);
+    _logPathCheck('Legendary Config', legendaryInstalledJsonPath);
+    _logPathCheck('Lutris DB', lutrisDbPath);
+    _logPathCheck('Steam UserData', steamUserDataPath);
+    _logPathCheck('Steam Apps', steamAppsPath);
+    _logPathCheck('OGI Library', ogiLibraryPath);
+
+    // Log detected status
+    logPlatformInfo();
+  }
+
+  void _logPathCheck(String name, String? path) {
+    if (path == null) {
+      _logger.warning('$name: Not found (path is null)', tag: 'Platform');
+      return;
+    }
+
+    final exists = Directory(path).existsSync() || File(path).existsSync();
+    if (exists) {
+      _logger.info('✓ $name: Found at $path', tag: 'Platform');
+    } else {
+      _logger.warning('✗ $name: Not found at $path', tag: 'Platform');
+    }
+  }
+
   // ============================================
   // Heroic Games Launcher Paths
   // ============================================
