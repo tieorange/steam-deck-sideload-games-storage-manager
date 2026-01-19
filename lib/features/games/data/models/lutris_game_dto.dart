@@ -7,8 +7,15 @@ class LutrisGameDto {
   final String name;
   final String slug;
   final String? directory;
+  final String? gamePath;
 
-  const LutrisGameDto({required this.id, required this.name, required this.slug, this.directory});
+  const LutrisGameDto({
+    required this.id,
+    required this.name,
+    required this.slug,
+    this.directory,
+    this.gamePath,
+  });
 
   factory LutrisGameDto.fromMap(Map<String, Object?> map) {
     return LutrisGameDto(
@@ -21,14 +28,29 @@ class LutrisGameDto {
     );
   }
 
+  /// Create a copy with updated fields
+  LutrisGameDto copyWith({String? gamePath}) {
+    return LutrisGameDto(
+      id: id,
+      name: name,
+      slug: slug,
+      directory: directory,
+      gamePath: gamePath ?? this.gamePath,
+    );
+  }
+
   Game toEntity() {
     final safeSlug = slug.isNotEmpty ? slug : id;
+
+    // Use gamePath if available, fall back to directory (prefix)
+    // gamePath comes from YAML config, directory comes from pga.db (usually prefix)
+    final installPath = gamePath ?? directory ?? '';
 
     return Game(
       id: 'lutris_$safeSlug',
       title: name,
       source: GameSource.lutris,
-      installPath: directory ?? '',
+      installPath: installPath,
       sizeBytes: 0,
     );
   }

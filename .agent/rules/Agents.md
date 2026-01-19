@@ -102,3 +102,39 @@ When working on datasources, understand how we detect games for each launcher:
     *   `_logger.info()`: High-level checkpoints ("Loaded 500 games").
     *   `_logger.error()`: Actual failures with stack traces.
 *   **Paths**: Always access files via `PlatformService` (never hardcode `/home/deck`).
+
+---
+
+## 6. Releasing & Publishing
+
+### Step 1: Update Version
+1.  Open `pubspec.yaml`.
+2.  Increment `version: x.y.z+n` (e.g., `1.0.1+2` -> `1.0.2+3`).
+3.  Run `flutter pub get`.
+
+### Step 2: Build Linux Release (Docker)
+Since we are on Mac, we **MUST** use Docker to build the Linux binary (to link against the correct GLIBC version for Steam Deck).
+
+```bash
+make build-linux
+```
+*   **Input**: Source code in current directory.
+*   **Output**: `build/game_size_manager_linux.zip`.
+*   **Mechanism**: Runs `build_linux_docker.sh`, which uses a `linux/amd64` Docker container to compile.
+
+### Step 3: Publish to GitHub
+1.  Go to **GitHub Releases**.
+2.  Draft a new release.
+3.  **Tag**: `vX.Y.Z` (matching pubspec).
+4.  **Title**: `vX.Y.Z - [Codename/Feature]`.
+5.  **Description**: Add a changelog (use emojis!).
+6.  **Attachments**: Upload the `game_size_manager_linux.zip` created in Step 2.
+7.  **Publish**.
+
+### Step 4: Verify Install Command
+Users install via the "1-click" command in README. Ensure `install.sh` in the repository main branch is up to date if you changed installation logic.
+
+**User Command**:
+```bash
+curl -fsSL https://raw.githubusercontent.com/tieorange/steam-deck-sideload-games-storage-manager/main/install.sh | bash
+```

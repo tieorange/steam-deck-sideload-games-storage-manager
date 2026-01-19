@@ -45,6 +45,9 @@ mixin _$Game {
   /// Proton version for compatibility (optional)
   String? get protonVersion => throw _privateConstructorUsedError;
 
+  /// Storage location (internal or SD card)
+  StorageLocation get storageLocation => throw _privateConstructorUsedError;
+
   /// Whether this game is selected for batch operations
   bool get isSelected => throw _privateConstructorUsedError;
 
@@ -71,6 +74,7 @@ abstract class $GameCopyWith<$Res> {
     String? iconPath,
     String? launchOptions,
     String? protonVersion,
+    StorageLocation storageLocation,
     bool isSelected,
   });
 }
@@ -98,6 +102,7 @@ class _$GameCopyWithImpl<$Res, $Val extends Game>
     Object? iconPath = freezed,
     Object? launchOptions = freezed,
     Object? protonVersion = freezed,
+    Object? storageLocation = null,
     Object? isSelected = null,
   }) {
     return _then(
@@ -134,6 +139,10 @@ class _$GameCopyWithImpl<$Res, $Val extends Game>
                 ? _value.protonVersion
                 : protonVersion // ignore: cast_nullable_to_non_nullable
                       as String?,
+            storageLocation: null == storageLocation
+                ? _value.storageLocation
+                : storageLocation // ignore: cast_nullable_to_non_nullable
+                      as StorageLocation,
             isSelected: null == isSelected
                 ? _value.isSelected
                 : isSelected // ignore: cast_nullable_to_non_nullable
@@ -161,6 +170,7 @@ abstract class _$$GameImplCopyWith<$Res> implements $GameCopyWith<$Res> {
     String? iconPath,
     String? launchOptions,
     String? protonVersion,
+    StorageLocation storageLocation,
     bool isSelected,
   });
 }
@@ -185,6 +195,7 @@ class __$$GameImplCopyWithImpl<$Res>
     Object? iconPath = freezed,
     Object? launchOptions = freezed,
     Object? protonVersion = freezed,
+    Object? storageLocation = null,
     Object? isSelected = null,
   }) {
     return _then(
@@ -221,6 +232,10 @@ class __$$GameImplCopyWithImpl<$Res>
             ? _value.protonVersion
             : protonVersion // ignore: cast_nullable_to_non_nullable
                   as String?,
+        storageLocation: null == storageLocation
+            ? _value.storageLocation
+            : storageLocation // ignore: cast_nullable_to_non_nullable
+                  as StorageLocation,
         isSelected: null == isSelected
             ? _value.isSelected
             : isSelected // ignore: cast_nullable_to_non_nullable
@@ -242,6 +257,7 @@ class _$GameImpl implements _Game {
     this.iconPath,
     this.launchOptions,
     this.protonVersion,
+    this.storageLocation = StorageLocation.internal,
     this.isSelected = false,
   });
 
@@ -280,6 +296,11 @@ class _$GameImpl implements _Game {
   @override
   final String? protonVersion;
 
+  /// Storage location (internal or SD card)
+  @override
+  @JsonKey()
+  final StorageLocation storageLocation;
+
   /// Whether this game is selected for batch operations
   @override
   @JsonKey()
@@ -287,7 +308,7 @@ class _$GameImpl implements _Game {
 
   @override
   String toString() {
-    return 'Game(id: $id, title: $title, source: $source, installPath: $installPath, sizeBytes: $sizeBytes, iconPath: $iconPath, launchOptions: $launchOptions, protonVersion: $protonVersion, isSelected: $isSelected)';
+    return 'Game(id: $id, title: $title, source: $source, installPath: $installPath, sizeBytes: $sizeBytes, iconPath: $iconPath, launchOptions: $launchOptions, protonVersion: $protonVersion, storageLocation: $storageLocation, isSelected: $isSelected)';
   }
 
   @override
@@ -308,6 +329,8 @@ class _$GameImpl implements _Game {
                 other.launchOptions == launchOptions) &&
             (identical(other.protonVersion, protonVersion) ||
                 other.protonVersion == protonVersion) &&
+            (identical(other.storageLocation, storageLocation) ||
+                other.storageLocation == storageLocation) &&
             (identical(other.isSelected, isSelected) ||
                 other.isSelected == isSelected));
   }
@@ -324,6 +347,7 @@ class _$GameImpl implements _Game {
     iconPath,
     launchOptions,
     protonVersion,
+    storageLocation,
     isSelected,
   );
 
@@ -351,6 +375,7 @@ abstract class _Game implements Game {
     final String? iconPath,
     final String? launchOptions,
     final String? protonVersion,
+    final StorageLocation storageLocation,
     final bool isSelected,
   }) = _$GameImpl;
 
@@ -387,6 +412,10 @@ abstract class _Game implements Game {
   /// Proton version for compatibility (optional)
   @override
   String? get protonVersion;
+
+  /// Storage location (internal or SD card)
+  @override
+  StorageLocation get storageLocation;
 
   /// Whether this game is selected for batch operations
   @override

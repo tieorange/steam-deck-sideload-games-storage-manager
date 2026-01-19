@@ -143,6 +143,14 @@ class _GameGridItemState extends State<GameGridItem> with SingleTickerProviderSt
                               ],
                             ),
                           ),
+                          if (widget.game.storageLocation != StorageLocation.unknown) ...[
+                            const SizedBox(width: 4),
+                            Icon(
+                              _getStorageIcon(widget.game.storageLocation),
+                              size: 14,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ],
                           Text(
                             widget.game.sizeBytes.toHumanReadableSize(),
                             style: theme.textTheme.labelSmall?.copyWith(
@@ -248,5 +256,18 @@ class _GameGridItemState extends State<GameGridItem> with SingleTickerProviderSt
     if (gb > 50) return const Color(0xFFF59E0B);
     if (gb > 30) return const Color(0xFFEAB308);
     return colorScheme.primary;
+  }
+
+  IconData _getStorageIcon(StorageLocation location) {
+    switch (location) {
+      case StorageLocation.internal:
+        return Icons.storage_rounded;
+      case StorageLocation.sdCard:
+        return Icons.sd_card_rounded;
+      case StorageLocation.external:
+        return Icons.usb_rounded;
+      case StorageLocation.unknown:
+        return Icons.help_outline_rounded;
+    }
   }
 }

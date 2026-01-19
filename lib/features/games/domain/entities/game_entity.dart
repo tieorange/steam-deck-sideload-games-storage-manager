@@ -5,6 +5,14 @@ import 'package:game_size_manager/core/constants.dart';
 part 'game_entity.freezed.dart';
 part 'game_entity.g.dart';
 
+/// Storage location type
+enum StorageLocation {
+  internal, // Internal SSD (/home/deck)
+  sdCard, // MicroSD card (/run/media/...)
+  external, // Other external drive
+  unknown, // Could not determine
+}
+
 /// Game entity representing an installed game
 @freezed
 class Game with _$Game {
@@ -32,6 +40,9 @@ class Game with _$Game {
 
     /// Proton version for compatibility (optional)
     String? protonVersion,
+
+    /// Storage location (internal or SD card)
+    @Default(StorageLocation.internal) StorageLocation storageLocation,
 
     /// Whether this game is selected for batch operations
     @Default(false) bool isSelected,

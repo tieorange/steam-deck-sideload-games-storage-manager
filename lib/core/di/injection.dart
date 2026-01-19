@@ -61,6 +61,7 @@ Future<void> init() async {
         steamDatasource: sl(),
         diskSizeService: sl(),
         localDatasource: sl(), // Inject LocalDatasource instead of GameDatabase
+        platformService: sl(),
       ),
     );
   } else {

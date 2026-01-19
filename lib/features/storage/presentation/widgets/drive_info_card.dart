@@ -75,15 +75,17 @@ class DriveInfoCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                drive.usedBytes.toHumanReadableSize(),
+                '${drive.usedBytes.toHumanReadableSize()} used of ${drive.totalBytes.toHumanReadableSize()}',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                  fontWeight: FontWeight.w500,
                 ),
               ),
               Text(
-                drive.totalBytes.toHumanReadableSize(),
+                '${(drive.totalBytes - drive.usedBytes).toHumanReadableSize()} free',
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                  color: theme.colorScheme.primary, // Highlight free space
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ],

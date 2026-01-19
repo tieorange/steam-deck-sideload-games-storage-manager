@@ -8,6 +8,8 @@ import 'package:game_size_manager/features/games/domain/usecases/refresh_games_u
 import 'package:game_size_manager/features/games/domain/usecases/search_games_usecase.dart';
 import 'package:game_size_manager/features/games/domain/usecases/uninstall_game_usecase.dart';
 import 'package:game_size_manager/features/games/presentation/cubit/games_state.dart';
+import 'package:game_size_manager/features/games/presentation/cubit/refresh_state.dart';
+import 'package:game_size_manager/core/constants/fun_phrases.dart';
 
 /// Cubit for managing the games list
 class GamesCubit extends Cubit<GamesState> {
@@ -53,13 +55,53 @@ class GamesCubit extends Cubit<GamesState> {
   Future<void> refreshGames() async {
     // Keep current filter while refreshing
     final currentFilters = state.maybeWhen(
-      loaded: (_, filter, sortDesc, query) => (filter, sortDesc, query),
+      loaded: (_, filter, sortDesc, query, __) => (filter, sortDesc, query),
       orElse: () => (null, true, null),
     );
 
-    emit(const GamesState.loading());
+    final funPhrase = FunPhrases.getRandom();
+    final startTime = DateTime.now();
 
-    final result = await _refreshGames();
+    void updateProgress(String phase, double progress) {
+      // Calculate estimated time remaining
+      // Very rough estimate based on progress
+      Duration? eta;
+      if (progress > 0) {
+        final elapsed = DateTime.now().difference(startTime);
+        final totalEst = Duration(milliseconds: (elapsed.inMilliseconds / progress).round());
+        eta = totalEst - elapsed;
+        if (eta.isNegative) eta = Duration.zero;
+      }
+
+      final progressState = RefreshProgressState(
+        currentPhase: phase,
+        progressPercent: progress,
+        funPhrase: funPhrase,
+        estimatedTimeRemaining: eta,
+      );
+
+      state.maybeWhen(
+        loaded: (games, filter, sortDesc, query, _) {
+          emit(
+            GamesState.loaded(
+              games: games,
+              filterSource: filter,
+              sortDescending: sortDesc,
+              searchQuery: query,
+              refreshProgress: progressState,
+            ),
+          );
+        },
+        orElse: () {
+          emit(GamesState.loading(progress: progressState));
+        },
+      );
+    }
+
+    // Initial loading state
+    updateProgress('Starting...', 0.0);
+
+    final result = await _refreshGames(onProgress: updateProgress);
 
     result.fold(
       (failure) => emit(GamesState.error(failure.message)),
@@ -69,6 +111,7 @@ class GamesCubit extends Cubit<GamesState> {
           filterSource: currentFilters.$1,
           sortDescending: currentFilters.$2,
           searchQuery: currentFilters.$3,
+          refreshProgress: null, // Clear progress
         ),
       ),
     );
@@ -89,7 +132,7 @@ class GamesCubit extends Cubit<GamesState> {
       (updatedGame) {
         // Update the game in the list
         state.maybeWhen(
-          loaded: (games, filter, sortDesc, query) {
+          loaded: (games, filter, sortDesc, query, _) {
             final updatedGames = games
                 .map((g) => g.id == updatedGame.id ? updatedGame : g)
                 .toList();
@@ -111,13 +154,14 @@ class GamesCubit extends Cubit<GamesState> {
   /// Set search query
   void setSearchQuery(String query) {
     state.maybeWhen(
-      loaded: (games, filter, sortDesc, _) {
+      loaded: (games, filter, sortDesc, _, __) {
         emit(
           GamesState.loaded(
             games: games,
             filterSource: filter,
             sortDescending: sortDesc,
             searchQuery: query,
+            refreshProgress: null,
           ),
         );
       },
@@ -128,13 +172,14 @@ class GamesCubit extends Cubit<GamesState> {
   /// Filter games by source
   void setFilter(GameSource? source) {
     state.maybeWhen(
-      loaded: (games, _, sortDesc, query) {
+      loaded: (games, _, sortDesc, query, __) {
         emit(
           GamesState.loaded(
             games: games,
             filterSource: source,
             sortDescending: sortDesc,
             searchQuery: query,
+            refreshProgress: null,
           ),
         );
       },
@@ -145,13 +190,14 @@ class GamesCubit extends Cubit<GamesState> {
   /// Toggle sort order
   void toggleSortOrder() {
     state.maybeWhen(
-      loaded: (games, filter, sortDesc, query) {
+      loaded: (games, filter, sortDesc, query, __) {
         emit(
           GamesState.loaded(
             games: games,
             filterSource: filter,
             sortDescending: !sortDesc,
             searchQuery: query,
+            refreshProgress: null,
           ),
         );
       },
@@ -162,7 +208,7 @@ class GamesCubit extends Cubit<GamesState> {
   /// Toggle selection of a game
   void toggleGameSelection(String gameId) {
     state.maybeWhen(
-      loaded: (games, filter, sortDesc, query) {
+      loaded: (games, filter, sortDesc, query, __) {
         final updatedGames = games.map((game) {
           if (game.id == gameId) {
             return game.toggleSelected();
@@ -176,6 +222,7 @@ class GamesCubit extends Cubit<GamesState> {
             filterSource: filter,
             sortDescending: sortDesc,
             searchQuery: query,
+            refreshProgress: null,
           ),
         );
       },
@@ -186,7 +233,7 @@ class GamesCubit extends Cubit<GamesState> {
   /// Select all visible games
   void selectAll() {
     state.maybeWhen(
-      loaded: (games, filter, sortDesc, query) {
+      loaded: (games, filter, sortDesc, query, __) {
         // Use the usecase logic or displayedGames logic to determine what is "visible"
         // Since logic is in State's displayedGames, we can rely on that if we had access to it,
         // but here we are in the Cubit.
@@ -214,6 +261,7 @@ class GamesCubit extends Cubit<GamesState> {
             filterSource: filter,
             sortDescending: sortDesc,
             searchQuery: query,
+            refreshProgress: null,
           ),
         );
       },
@@ -224,7 +272,7 @@ class GamesCubit extends Cubit<GamesState> {
   /// Deselect all games
   void deselectAll() {
     state.maybeWhen(
-      loaded: (games, filter, sortDesc, query) {
+      loaded: (games, filter, sortDesc, query, __) {
         final updatedGames = games.map((game) => game.copyWith(isSelected: false)).toList();
 
         emit(
@@ -233,6 +281,7 @@ class GamesCubit extends Cubit<GamesState> {
             filterSource: filter,
             sortDescending: sortDesc,
             searchQuery: query,
+            refreshProgress: null,
           ),
         );
       },
@@ -240,36 +289,44 @@ class GamesCubit extends Cubit<GamesState> {
     );
   }
 
-  /// Uninstall selected games
-  Future<void> uninstallSelected() async {
+  /// Uninstall selected games and return total bytes freed
+  Future<int> uninstallSelected() async {
     final selectedGames = state.selectedGames;
-    if (selectedGames.isEmpty) return;
+    if (selectedGames.isEmpty) return 0;
 
     _logger.info('Uninstalling ${selectedGames.length} games', tag: 'GamesCubit');
 
+    int totalFreedBytes = 0;
+
     for (final game in selectedGames) {
-      await _performUninstall(game);
+      if (await _performUninstall(game)) {
+        totalFreedBytes += game.sizeBytes;
+      }
     }
 
     // Refresh the list
     await refreshGames();
+    return totalFreedBytes;
   }
 
-  /// Uninstall a single game
-  Future<void> uninstallGame(Game game) async {
+  /// Uninstall a single game (returns bytes freed)
+  Future<int> uninstallGame(Game game) async {
     _logger.info('Uninstalling single game: ${game.title}', tag: 'GamesCubit');
-    await _performUninstall(game);
+    final success = await _performUninstall(game);
     await refreshGames();
+    return success ? game.sizeBytes : 0;
   }
 
-  Future<void> _performUninstall(Game game) async {
+  Future<bool> _performUninstall(Game game) async {
     final result = await _uninstallGame(game);
-    result.fold(
+    return result.fold(
       (failure) {
         _logger.error('Failed to uninstall ${game.title}: ${failure.message}', tag: 'GamesCubit');
+        return false;
       },
       (_) {
         _logger.info('Uninstalled: ${game.title}', tag: 'GamesCubit');
+        return true;
       },
     );
   }

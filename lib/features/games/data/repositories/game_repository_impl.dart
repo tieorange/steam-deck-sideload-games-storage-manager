@@ -12,6 +12,7 @@ import 'package:game_size_manager/features/games/domain/repositories/game_reposi
 import 'package:game_size_manager/core/error/failures.dart';
 import 'package:game_size_manager/core/logging/logger_service.dart';
 import 'package:game_size_manager/core/services/disk_size_service.dart';
+import 'package:game_size_manager/core/platform/platform_service.dart';
 import 'package:game_size_manager/core/constants.dart';
 
 /// Real implementation of GameRepository with SQLite Caching
@@ -22,6 +23,7 @@ class GameRepositoryImpl implements GameRepository {
   final SteamDatasource _steam;
   final DiskSizeService _diskSizeService;
   final GameLocalDatasource _localDatasource;
+  final PlatformService _platformService;
   final LoggerService _logger;
 
   GameRepositoryImpl({
@@ -31,6 +33,7 @@ class GameRepositoryImpl implements GameRepository {
     required SteamDatasource steamDatasource,
     required DiskSizeService diskSizeService,
     required GameLocalDatasource localDatasource,
+    PlatformService? platformService,
     LoggerService? logger,
   }) : _heroic = heroicDatasource,
        _ogi = ogiDatasource,
@@ -38,6 +41,7 @@ class GameRepositoryImpl implements GameRepository {
        _steam = steamDatasource,
        _diskSizeService = diskSizeService,
        _localDatasource = localDatasource,
+       _platformService = platformService ?? PlatformService.instance,
        _logger = logger ?? LoggerService.instance;
 
   @override
@@ -78,9 +82,16 @@ class GameRepositoryImpl implements GameRepository {
   }
 
   @override
-  Future<Result<List<Game>>> refreshGames() async {
+  Future<Result<List<Game>>> refreshGames({
+    void Function(String message, double progress)? onProgress,
+  }) async {
     _logger.info('Refreshing all games...', tag: 'GameRepo');
+
+    onProgress?.call('Initializing...', 0.1);
+
     final allGames = <Game>[];
+
+    onProgress?.call('Fetching from launchers...', 0.2);
 
     // 1. Fetch from all sources in parallel
     final results = await Future.wait([
@@ -89,6 +100,8 @@ class GameRepositoryImpl implements GameRepository {
       _lutris.getGames(),
       _steam.getGames(),
     ]);
+
+    onProgress?.call('Processing results...', 0.4);
 
     // 2. Process results
     for (final result in results) {
@@ -105,22 +118,31 @@ class GameRepositoryImpl implements GameRepository {
     try {
       final sizedGames = await Future.wait(
         allGames.map((game) async {
-          if (game.sizeBytes == 0 && game.installPath.isNotEmpty) {
+          var updatedGame = game;
+
+          // Detect storage location
+          final storageLocation = await _detectStorageLocation(game.installPath);
+          updatedGame = updatedGame.copyWith(storageLocation: storageLocation);
+
+          if (updatedGame.sizeBytes == 0 && updatedGame.installPath.isNotEmpty) {
             try {
               // Basic size calculation if not provided
               // This might be slow for many games, so user might see "calculating..." or initially 0
               // Ideally this should be backgrounded.
               // For now, check if directory exists first
-              final dir = Directory(game.installPath);
+              final dir = Directory(updatedGame.installPath);
               if (await dir.exists()) {
-                final size = await _diskSizeService.calculateDirectorySize(game.installPath);
-                return game.copyWith(sizeBytes: size);
+                final size = await _diskSizeService.calculateDirectorySize(updatedGame.installPath);
+                updatedGame = updatedGame.copyWith(sizeBytes: size);
               }
             } catch (e) {
-              _logger.warning('Failed to calculate size for ${game.title}: $e', tag: 'GameRepo');
+              _logger.warning(
+                'Failed to calculate size for ${updatedGame.title}: $e',
+                tag: 'GameRepo',
+              );
             }
           }
-          return game;
+          return updatedGame;
         }),
       );
 
@@ -139,6 +161,28 @@ class GameRepositoryImpl implements GameRepository {
       );
       return Left(UnexpectedFailure(e.toString(), s));
     }
+  }
+
+  Future<StorageLocation> _detectStorageLocation(String path) async {
+    if (path.isEmpty) return StorageLocation.unknown;
+
+    // Check if path starts with typical SD card mount point
+    // Usually /run/media/...
+    if (path.startsWith('/run/media')) {
+      return StorageLocation.sdCard;
+    }
+
+    // Could check specific drives if needed, but heuristic above is good for Deck
+    // Also internal is usually /home/deck or /var/lib/flatpak etc.
+    if (path.startsWith(_platformService.homeDir) ||
+        path.startsWith('/var') ||
+        path.startsWith('/usr')) {
+      return StorageLocation.internal;
+    }
+
+    // Default to external if not internal and not clearly SD
+    // Or return unknown? Let's assume external/other
+    return StorageLocation.external;
   }
 
   @override

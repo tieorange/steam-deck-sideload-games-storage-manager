@@ -8,7 +8,7 @@ import 'package:game_size_manager/features/games/domain/repositories/game_reposi
 /// Mock repository for macOS development and testing
 class MockGameRepository implements GameRepository {
   MockGameRepository();
-  
+
   // Sample game data for testing UI
   final List<Game> _mockGames = [
     const Game(
@@ -96,36 +96,39 @@ class MockGameRepository implements GameRepository {
       sizeBytes: 30 * 1024 * 1024 * 1024, // 30 GB
     ),
   ];
-  
+
   @override
   Future<Result<List<Game>>> getGames() async {
     // Simulate network delay
     await Future.delayed(const Duration(milliseconds: 500));
     return Right(_mockGames);
   }
-  
+
   @override
   Future<Result<List<Game>>> getGamesBySource(GameSource source) async {
     await Future.delayed(const Duration(milliseconds: 200));
     return Right(_mockGames.where((g) => g.source == source).toList());
   }
-  
+
   @override
   Future<Result<Game>> calculateGameSize(Game game) async {
     // Mock games already have sizes
     await Future.delayed(const Duration(milliseconds: 100));
     return Right(game);
   }
-  
+
   @override
   Future<Result<void>> uninstallGame(Game game) async {
     await Future.delayed(const Duration(milliseconds: 500));
     _mockGames.removeWhere((g) => g.id == game.id);
     return const Right(null);
   }
-  
+
   @override
-  Future<Result<List<Game>>> refreshGames() async {
+  Future<Result<List<Game>>> refreshGames({void Function(String, double)? onProgress}) async {
+    if (onProgress != null) {
+      onProgress('Scanning...', 0.2);
+    }
     return getGames();
   }
 }

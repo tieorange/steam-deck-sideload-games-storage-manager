@@ -56,9 +56,9 @@ class _DashboardPageState extends State<DashboardPage> with SingleTickerProvider
               });
               return const Center(child: CircularProgressIndicator());
             },
-            loading: () => const Center(child: CircularProgressIndicator()),
+            loading: (_) => const Center(child: CircularProgressIndicator()),
             error: (message) => Center(child: Text('Error: $message')),
-            loaded: (games, _, __, ___) => _buildDashboard(context, games),
+            loaded: (games, _, __, ___, ____) => _buildDashboard(context, games),
           );
         },
       ),

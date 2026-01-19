@@ -20,12 +20,13 @@ mixin _$GamesState {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function() initial,
-    required TResult Function() loading,
+    required TResult Function(RefreshProgressState? progress) loading,
     required TResult Function(
       List<Game> games,
       GameSource? filterSource,
       bool sortDescending,
       String? searchQuery,
+      RefreshProgressState? refreshProgress,
     )
     loaded,
     required TResult Function(String message) error,
@@ -33,12 +34,13 @@ mixin _$GamesState {
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? initial,
-    TResult? Function()? loading,
+    TResult? Function(RefreshProgressState? progress)? loading,
     TResult? Function(
       List<Game> games,
       GameSource? filterSource,
       bool sortDescending,
       String? searchQuery,
+      RefreshProgressState? refreshProgress,
     )?
     loaded,
     TResult? Function(String message)? error,
@@ -46,12 +48,13 @@ mixin _$GamesState {
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? initial,
-    TResult Function()? loading,
+    TResult Function(RefreshProgressState? progress)? loading,
     TResult Function(
       List<Game> games,
       GameSource? filterSource,
       bool sortDescending,
       String? searchQuery,
+      RefreshProgressState? refreshProgress,
     )?
     loaded,
     TResult Function(String message)? error,
@@ -147,12 +150,13 @@ class _$GamesInitialImpl extends GamesInitial {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function() initial,
-    required TResult Function() loading,
+    required TResult Function(RefreshProgressState? progress) loading,
     required TResult Function(
       List<Game> games,
       GameSource? filterSource,
       bool sortDescending,
       String? searchQuery,
+      RefreshProgressState? refreshProgress,
     )
     loaded,
     required TResult Function(String message) error,
@@ -164,12 +168,13 @@ class _$GamesInitialImpl extends GamesInitial {
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? initial,
-    TResult? Function()? loading,
+    TResult? Function(RefreshProgressState? progress)? loading,
     TResult? Function(
       List<Game> games,
       GameSource? filterSource,
       bool sortDescending,
       String? searchQuery,
+      RefreshProgressState? refreshProgress,
     )?
     loaded,
     TResult? Function(String message)? error,
@@ -181,12 +186,13 @@ class _$GamesInitialImpl extends GamesInitial {
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? initial,
-    TResult Function()? loading,
+    TResult Function(RefreshProgressState? progress)? loading,
     TResult Function(
       List<Game> games,
       GameSource? filterSource,
       bool sortDescending,
       String? searchQuery,
+      RefreshProgressState? refreshProgress,
     )?
     loaded,
     TResult Function(String message)? error,
@@ -247,6 +253,10 @@ abstract class _$$GamesLoadingImplCopyWith<$Res> {
     _$GamesLoadingImpl value,
     $Res Function(_$GamesLoadingImpl) then,
   ) = __$$GamesLoadingImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({RefreshProgressState? progress});
+
+  $RefreshProgressStateCopyWith<$Res>? get progress;
 }
 
 /// @nodoc
@@ -260,78 +270,122 @@ class __$$GamesLoadingImplCopyWithImpl<$Res>
 
   /// Create a copy of GamesState
   /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({Object? progress = freezed}) {
+    return _then(
+      _$GamesLoadingImpl(
+        progress: freezed == progress
+            ? _value.progress
+            : progress // ignore: cast_nullable_to_non_nullable
+                  as RefreshProgressState?,
+      ),
+    );
+  }
+
+  /// Create a copy of GamesState
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @pragma('vm:prefer-inline')
+  $RefreshProgressStateCopyWith<$Res>? get progress {
+    if (_value.progress == null) {
+      return null;
+    }
+
+    return $RefreshProgressStateCopyWith<$Res>(_value.progress!, (value) {
+      return _then(_value.copyWith(progress: value));
+    });
+  }
 }
 
 /// @nodoc
 
 class _$GamesLoadingImpl extends GamesLoading {
-  const _$GamesLoadingImpl() : super._();
+  const _$GamesLoadingImpl({this.progress = null}) : super._();
+
+  @override
+  @JsonKey()
+  final RefreshProgressState? progress;
 
   @override
   String toString() {
-    return 'GamesState.loading()';
+    return 'GamesState.loading(progress: $progress)';
   }
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other.runtimeType == runtimeType && other is _$GamesLoadingImpl);
+        (other.runtimeType == runtimeType &&
+            other is _$GamesLoadingImpl &&
+            (identical(other.progress, progress) ||
+                other.progress == progress));
   }
 
   @override
-  int get hashCode => runtimeType.hashCode;
+  int get hashCode => Object.hash(runtimeType, progress);
+
+  /// Create a copy of GamesState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$GamesLoadingImplCopyWith<_$GamesLoadingImpl> get copyWith =>
+      __$$GamesLoadingImplCopyWithImpl<_$GamesLoadingImpl>(this, _$identity);
 
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function() initial,
-    required TResult Function() loading,
+    required TResult Function(RefreshProgressState? progress) loading,
     required TResult Function(
       List<Game> games,
       GameSource? filterSource,
       bool sortDescending,
       String? searchQuery,
+      RefreshProgressState? refreshProgress,
     )
     loaded,
     required TResult Function(String message) error,
   }) {
-    return loading();
+    return loading(progress);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? initial,
-    TResult? Function()? loading,
+    TResult? Function(RefreshProgressState? progress)? loading,
     TResult? Function(
       List<Game> games,
       GameSource? filterSource,
       bool sortDescending,
       String? searchQuery,
+      RefreshProgressState? refreshProgress,
     )?
     loaded,
     TResult? Function(String message)? error,
   }) {
-    return loading?.call();
+    return loading?.call(progress);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? initial,
-    TResult Function()? loading,
+    TResult Function(RefreshProgressState? progress)? loading,
     TResult Function(
       List<Game> games,
       GameSource? filterSource,
       bool sortDescending,
       String? searchQuery,
+      RefreshProgressState? refreshProgress,
     )?
     loaded,
     TResult Function(String message)? error,
     required TResult orElse(),
   }) {
     if (loading != null) {
-      return loading();
+      return loading(progress);
     }
     return orElse();
   }
@@ -375,8 +429,17 @@ class _$GamesLoadingImpl extends GamesLoading {
 }
 
 abstract class GamesLoading extends GamesState {
-  const factory GamesLoading() = _$GamesLoadingImpl;
+  const factory GamesLoading({final RefreshProgressState? progress}) =
+      _$GamesLoadingImpl;
   const GamesLoading._() : super._();
+
+  RefreshProgressState? get progress;
+
+  /// Create a copy of GamesState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$GamesLoadingImplCopyWith<_$GamesLoadingImpl> get copyWith =>
+      throw _privateConstructorUsedError;
 }
 
 /// @nodoc
@@ -391,7 +454,10 @@ abstract class _$$GamesLoadedImplCopyWith<$Res> {
     GameSource? filterSource,
     bool sortDescending,
     String? searchQuery,
+    RefreshProgressState? refreshProgress,
   });
+
+  $RefreshProgressStateCopyWith<$Res>? get refreshProgress;
 }
 
 /// @nodoc
@@ -412,6 +478,7 @@ class __$$GamesLoadedImplCopyWithImpl<$Res>
     Object? filterSource = freezed,
     Object? sortDescending = null,
     Object? searchQuery = freezed,
+    Object? refreshProgress = freezed,
   }) {
     return _then(
       _$GamesLoadedImpl(
@@ -431,8 +498,28 @@ class __$$GamesLoadedImplCopyWithImpl<$Res>
             ? _value.searchQuery
             : searchQuery // ignore: cast_nullable_to_non_nullable
                   as String?,
+        refreshProgress: freezed == refreshProgress
+            ? _value.refreshProgress
+            : refreshProgress // ignore: cast_nullable_to_non_nullable
+                  as RefreshProgressState?,
       ),
     );
+  }
+
+  /// Create a copy of GamesState
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @pragma('vm:prefer-inline')
+  $RefreshProgressStateCopyWith<$Res>? get refreshProgress {
+    if (_value.refreshProgress == null) {
+      return null;
+    }
+
+    return $RefreshProgressStateCopyWith<$Res>(_value.refreshProgress!, (
+      value,
+    ) {
+      return _then(_value.copyWith(refreshProgress: value));
+    });
   }
 }
 
@@ -444,6 +531,7 @@ class _$GamesLoadedImpl extends GamesLoaded {
     this.filterSource = null,
     this.sortDescending = true,
     this.searchQuery = null,
+    this.refreshProgress = null,
   }) : _games = games,
        super._();
 
@@ -464,10 +552,13 @@ class _$GamesLoadedImpl extends GamesLoaded {
   @override
   @JsonKey()
   final String? searchQuery;
+  @override
+  @JsonKey()
+  final RefreshProgressState? refreshProgress;
 
   @override
   String toString() {
-    return 'GamesState.loaded(games: $games, filterSource: $filterSource, sortDescending: $sortDescending, searchQuery: $searchQuery)';
+    return 'GamesState.loaded(games: $games, filterSource: $filterSource, sortDescending: $sortDescending, searchQuery: $searchQuery, refreshProgress: $refreshProgress)';
   }
 
   @override
@@ -481,7 +572,9 @@ class _$GamesLoadedImpl extends GamesLoaded {
             (identical(other.sortDescending, sortDescending) ||
                 other.sortDescending == sortDescending) &&
             (identical(other.searchQuery, searchQuery) ||
-                other.searchQuery == searchQuery));
+                other.searchQuery == searchQuery) &&
+            (identical(other.refreshProgress, refreshProgress) ||
+                other.refreshProgress == refreshProgress));
   }
 
   @override
@@ -491,6 +584,7 @@ class _$GamesLoadedImpl extends GamesLoaded {
     filterSource,
     sortDescending,
     searchQuery,
+    refreshProgress,
   );
 
   /// Create a copy of GamesState
@@ -505,53 +599,74 @@ class _$GamesLoadedImpl extends GamesLoaded {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function() initial,
-    required TResult Function() loading,
+    required TResult Function(RefreshProgressState? progress) loading,
     required TResult Function(
       List<Game> games,
       GameSource? filterSource,
       bool sortDescending,
       String? searchQuery,
+      RefreshProgressState? refreshProgress,
     )
     loaded,
     required TResult Function(String message) error,
   }) {
-    return loaded(games, filterSource, sortDescending, searchQuery);
+    return loaded(
+      games,
+      filterSource,
+      sortDescending,
+      searchQuery,
+      refreshProgress,
+    );
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? initial,
-    TResult? Function()? loading,
+    TResult? Function(RefreshProgressState? progress)? loading,
     TResult? Function(
       List<Game> games,
       GameSource? filterSource,
       bool sortDescending,
       String? searchQuery,
+      RefreshProgressState? refreshProgress,
     )?
     loaded,
     TResult? Function(String message)? error,
   }) {
-    return loaded?.call(games, filterSource, sortDescending, searchQuery);
+    return loaded?.call(
+      games,
+      filterSource,
+      sortDescending,
+      searchQuery,
+      refreshProgress,
+    );
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? initial,
-    TResult Function()? loading,
+    TResult Function(RefreshProgressState? progress)? loading,
     TResult Function(
       List<Game> games,
       GameSource? filterSource,
       bool sortDescending,
       String? searchQuery,
+      RefreshProgressState? refreshProgress,
     )?
     loaded,
     TResult Function(String message)? error,
     required TResult orElse(),
   }) {
     if (loaded != null) {
-      return loaded(games, filterSource, sortDescending, searchQuery);
+      return loaded(
+        games,
+        filterSource,
+        sortDescending,
+        searchQuery,
+        refreshProgress,
+      );
     }
     return orElse();
   }
@@ -600,6 +715,7 @@ abstract class GamesLoaded extends GamesState {
     final GameSource? filterSource,
     final bool sortDescending,
     final String? searchQuery,
+    final RefreshProgressState? refreshProgress,
   }) = _$GamesLoadedImpl;
   const GamesLoaded._() : super._();
 
@@ -607,6 +723,7 @@ abstract class GamesLoaded extends GamesState {
   GameSource? get filterSource;
   bool get sortDescending;
   String? get searchQuery;
+  RefreshProgressState? get refreshProgress;
 
   /// Create a copy of GamesState
   /// with the given fields replaced by the non-null parameter values.
@@ -686,12 +803,13 @@ class _$GamesErrorImpl extends GamesError {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function() initial,
-    required TResult Function() loading,
+    required TResult Function(RefreshProgressState? progress) loading,
     required TResult Function(
       List<Game> games,
       GameSource? filterSource,
       bool sortDescending,
       String? searchQuery,
+      RefreshProgressState? refreshProgress,
     )
     loaded,
     required TResult Function(String message) error,
@@ -703,12 +821,13 @@ class _$GamesErrorImpl extends GamesError {
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? initial,
-    TResult? Function()? loading,
+    TResult? Function(RefreshProgressState? progress)? loading,
     TResult? Function(
       List<Game> games,
       GameSource? filterSource,
       bool sortDescending,
       String? searchQuery,
+      RefreshProgressState? refreshProgress,
     )?
     loaded,
     TResult? Function(String message)? error,
@@ -720,12 +839,13 @@ class _$GamesErrorImpl extends GamesError {
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? initial,
-    TResult Function()? loading,
+    TResult Function(RefreshProgressState? progress)? loading,
     TResult Function(
       List<Game> games,
       GameSource? filterSource,
       bool sortDescending,
       String? searchQuery,
+      RefreshProgressState? refreshProgress,
     )?
     loaded,
     TResult Function(String message)? error,

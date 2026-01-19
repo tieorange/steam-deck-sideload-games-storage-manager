@@ -195,7 +195,16 @@ class _GameListItemState extends State<GameListItem> with SingleTickerProviderSt
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 6),
+                              // Storage Icon
+                              if (widget.game.storageLocation != StorageLocation.unknown) ...[
+                                Icon(
+                                  _getStorageIcon(widget.game.storageLocation),
+                                  size: 14,
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                                const SizedBox(width: 8),
+                              ],
                               Expanded(
                                 child: Text(
                                   widget.game.title,
@@ -308,5 +317,18 @@ class _GameListItemState extends State<GameListItem> with SingleTickerProviderSt
     // Normalize to 150GB max for visual representation
     final gb = sizeBytes / (1024 * 1024 * 1024);
     return (gb / 150).clamp(0.1, 1.0);
+  }
+
+  IconData _getStorageIcon(StorageLocation location) {
+    switch (location) {
+      case StorageLocation.internal:
+        return Icons.storage_rounded;
+      case StorageLocation.sdCard:
+        return Icons.sd_card_rounded;
+      case StorageLocation.external:
+        return Icons.usb_rounded;
+      case StorageLocation.unknown:
+        return Icons.help_outline_rounded;
+    }
   }
 }

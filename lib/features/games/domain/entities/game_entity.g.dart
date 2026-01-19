@@ -15,6 +15,9 @@ _$GameImpl _$$GameImplFromJson(Map<String, dynamic> json) => _$GameImpl(
   iconPath: json['iconPath'] as String?,
   launchOptions: json['launchOptions'] as String?,
   protonVersion: json['protonVersion'] as String?,
+  storageLocation:
+      $enumDecodeNullable(_$StorageLocationEnumMap, json['storageLocation']) ??
+      StorageLocation.internal,
   isSelected: json['isSelected'] as bool? ?? false,
 );
 
@@ -28,6 +31,7 @@ Map<String, dynamic> _$$GameImplToJson(_$GameImpl instance) =>
       'iconPath': instance.iconPath,
       'launchOptions': instance.launchOptions,
       'protonVersion': instance.protonVersion,
+      'storageLocation': _$StorageLocationEnumMap[instance.storageLocation]!,
       'isSelected': instance.isSelected,
     };
 
@@ -36,4 +40,11 @@ const _$GameSourceEnumMap = {
   GameSource.ogi: 'ogi',
   GameSource.lutris: 'lutris',
   GameSource.steam: 'steam',
+};
+
+const _$StorageLocationEnumMap = {
+  StorageLocation.internal: 'internal',
+  StorageLocation.sdCard: 'sdCard',
+  StorageLocation.external: 'external',
+  StorageLocation.unknown: 'unknown',
 };

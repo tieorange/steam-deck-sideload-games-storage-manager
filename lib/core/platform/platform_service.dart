@@ -160,6 +160,22 @@ class PlatformService {
 
   bool get isLutrisInstalled => lutrisDbPath != null;
 
+  /// Path to Lutris game config directory
+  String get lutrisFlatpakConfigPath => '$homeDir/.var/app/net.lutris.Lutris/config/lutris/games';
+
+  String get lutrisStandardConfigPath => '$homeDir/.config/lutris/games';
+
+  /// Returns Lutris game config directory (Flatpak first, then standard)
+  String? get lutrisGamesConfigPath {
+    if (Directory(lutrisFlatpakConfigPath).existsSync()) {
+      return lutrisFlatpakConfigPath;
+    }
+    if (Directory(lutrisStandardConfigPath).existsSync()) {
+      return lutrisStandardConfigPath;
+    }
+    return null;
+  }
+
   // ============================================
   // Steam Paths
   // ============================================
