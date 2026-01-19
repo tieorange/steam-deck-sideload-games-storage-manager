@@ -17,13 +17,12 @@ class SettingsCubit extends Cubit<SettingsState> {
   Future<void> loadSettings() async {
     emit(const SettingsState.loading());
 
-    try {
-      final settings = await _repository.loadSettings();
-      emit(SettingsState.loaded(settings));
-    } catch (e, s) {
-      _logger.error('Failed to load settings', error: e, stackTrace: s);
-      emit(SettingsState.error(e.toString()));
-    }
+    final result = await _repository.loadSettings();
+
+    result.fold((failure) {
+      _logger.error('Failed to load settings', error: failure);
+      emit(SettingsState.error(failure.message));
+    }, (settings) => emit(SettingsState.loaded(settings)));
   }
 
   /// Update theme mode
@@ -86,11 +85,11 @@ class SettingsCubit extends Cubit<SettingsState> {
   }
 
   Future<void> _saveSettings(Settings settings) async {
-    try {
-      await _repository.saveSettings(settings);
-      emit(SettingsState.loaded(settings));
-    } catch (e, s) {
-      _logger.error('Failed to save settings', error: e, stackTrace: s);
-    }
+    final result = await _repository.saveSettings(settings);
+
+    result.fold((failure) {
+      _logger.error('Failed to save settings', error: failure);
+      // Optionally emit error state or show notification via listener
+    }, (_) => emit(SettingsState.loaded(settings)));
   }
 }

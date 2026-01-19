@@ -1,5 +1,8 @@
+import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'package:game_size_manager/core/error/failures.dart';
 
 import 'package:game_size_manager/features/settings/domain/entities/settings_entity.dart';
 import 'package:game_size_manager/features/settings/domain/repositories/settings_repository.dart';
@@ -7,9 +10,9 @@ import 'package:game_size_manager/features/settings/domain/repositories/settings
 /// Implementation of SettingsRepository using SharedPreferences
 class SettingsRepositoryImpl implements SettingsRepository {
   SettingsRepositoryImpl(this._prefs);
-  
+
   final SharedPreferences _prefs;
-  
+
   static const _keyThemeMode = 'theme_mode';
   static const _keyHeroicPath = 'heroic_config_path';
   static const _keyLutrisPath = 'lutris_db_path';
@@ -17,51 +20,63 @@ class SettingsRepositoryImpl implements SettingsRepository {
   static const _keyOgiPath = 'ogi_library_path';
   static const _keyConfirmUninstall = 'confirm_before_uninstall';
   static const _keySortBySize = 'sort_by_size_descending';
-  
+
   @override
-  Future<Settings> loadSettings() async {
-    final themeModeIndex = _prefs.getInt(_keyThemeMode) ?? ThemeMode.dark.index;
-    
-    return Settings(
-      themeMode: ThemeMode.values[themeModeIndex],
-      heroicConfigPath: _prefs.getString(_keyHeroicPath),
-      lutrisDbPath: _prefs.getString(_keyLutrisPath),
-      steamPath: _prefs.getString(_keySteamPath),
-      ogiLibraryPath: _prefs.getString(_keyOgiPath),
-      confirmBeforeUninstall: _prefs.getBool(_keyConfirmUninstall) ?? true,
-      sortBySizeDescending: _prefs.getBool(_keySortBySize) ?? true,
-    );
+  Future<Result<Settings>> loadSettings() async {
+    try {
+      final themeModeIndex = _prefs.getInt(_keyThemeMode) ?? ThemeMode.dark.index;
+
+      final settings = Settings(
+        themeMode: ThemeMode.values[themeModeIndex],
+        heroicConfigPath: _prefs.getString(_keyHeroicPath),
+        lutrisDbPath: _prefs.getString(_keyLutrisPath),
+        steamPath: _prefs.getString(_keySteamPath),
+        ogiLibraryPath: _prefs.getString(_keyOgiPath),
+        confirmBeforeUninstall: _prefs.getBool(_keyConfirmUninstall) ?? true,
+        sortBySizeDescending: _prefs.getBool(_keySortBySize) ?? true,
+      );
+
+      return Right(settings);
+    } catch (e, s) {
+      return Left(StorageFailure('Failed to load settings: $e', s));
+    }
   }
-  
+
   @override
-  Future<void> saveSettings(Settings settings) async {
-    await _prefs.setInt(_keyThemeMode, settings.themeMode.index);
-    
-    if (settings.heroicConfigPath != null) {
-      await _prefs.setString(_keyHeroicPath, settings.heroicConfigPath!);
-    } else {
-      await _prefs.remove(_keyHeroicPath);
+  Future<Result<void>> saveSettings(Settings settings) async {
+    try {
+      await _prefs.setInt(_keyThemeMode, settings.themeMode.index);
+
+      if (settings.heroicConfigPath != null) {
+        await _prefs.setString(_keyHeroicPath, settings.heroicConfigPath!);
+      } else {
+        await _prefs.remove(_keyHeroicPath);
+      }
+
+      if (settings.lutrisDbPath != null) {
+        await _prefs.setString(_keyLutrisPath, settings.lutrisDbPath!);
+      } else {
+        await _prefs.remove(_keyLutrisPath);
+      }
+
+      if (settings.steamPath != null) {
+        await _prefs.setString(_keySteamPath, settings.steamPath!);
+      } else {
+        await _prefs.remove(_keySteamPath);
+      }
+
+      if (settings.ogiLibraryPath != null) {
+        await _prefs.setString(_keyOgiPath, settings.ogiLibraryPath!);
+      } else {
+        await _prefs.remove(_keyOgiPath);
+      }
+
+      await _prefs.setBool(_keyConfirmUninstall, settings.confirmBeforeUninstall);
+      await _prefs.setBool(_keySortBySize, settings.sortBySizeDescending);
+
+      return const Right(null);
+    } catch (e, s) {
+      return Left(StorageFailure('Failed to save settings: $e', s));
     }
-    
-    if (settings.lutrisDbPath != null) {
-      await _prefs.setString(_keyLutrisPath, settings.lutrisDbPath!);
-    } else {
-      await _prefs.remove(_keyLutrisPath);
-    }
-    
-    if (settings.steamPath != null) {
-      await _prefs.setString(_keySteamPath, settings.steamPath!);
-    } else {
-      await _prefs.remove(_keySteamPath);
-    }
-    
-    if (settings.ogiLibraryPath != null) {
-      await _prefs.setString(_keyOgiPath, settings.ogiLibraryPath!);
-    } else {
-      await _prefs.remove(_keyOgiPath);
-    }
-    
-    await _prefs.setBool(_keyConfirmUninstall, settings.confirmBeforeUninstall);
-    await _prefs.setBool(_keySortBySize, settings.sortBySizeDescending);
   }
 }

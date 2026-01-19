@@ -6,10 +6,10 @@ typedef Result<T> = Either<Failure, T>;
 /// Base failure class
 abstract class Failure {
   const Failure(this.message, [this.stackTrace]);
-  
+
   final String message;
   final StackTrace? stackTrace;
-  
+
   @override
   String toString() => '$runtimeType: $message';
 }
@@ -42,4 +42,14 @@ class ParseFailure extends Failure {
 /// Generic unexpected failure
 class UnexpectedFailure extends Failure {
   const UnexpectedFailure(super.message, [super.stackTrace]);
+}
+
+/// Storage/SharedPreferences failures
+class StorageFailure extends Failure {
+  const StorageFailure(super.message, [super.stackTrace]);
+}
+
+/// Network failures
+class NetworkFailure extends Failure {
+  const NetworkFailure(super.message, [super.stackTrace]);
 }

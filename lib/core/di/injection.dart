@@ -6,6 +6,7 @@ import 'package:game_size_manager/core/database/game_database.dart';
 import 'package:game_size_manager/core/services/disk_size_service.dart';
 import 'package:game_size_manager/core/services/update_service.dart';
 import 'package:game_size_manager/core/platform/platform_service.dart';
+import 'package:game_size_manager/features/games/data/datasources/game_local_datasource.dart';
 import 'package:game_size_manager/features/games/data/datasources/heroic_datasource.dart';
 import 'package:game_size_manager/features/games/data/datasources/ogi_datasource.dart';
 import 'package:game_size_manager/features/games/data/datasources/steam_datasource.dart';
@@ -42,6 +43,9 @@ Future<void> init() async {
   sl.registerLazySingleton(() => UpdateService(sl()));
 
   // Data Sources
+  sl.registerLazySingleton<GameLocalDatasource>(
+    () => GameLocalDatasourceImpl(sl()),
+  ); // Register Local Datasource
   sl.registerLazySingleton(() => HeroicDatasource(platformService: sl()));
   sl.registerLazySingleton(() => OgiDatasource(platformService: sl()));
   sl.registerLazySingleton(() => SteamDatasource(platformService: sl()));
@@ -56,7 +60,7 @@ Future<void> init() async {
         lutrisDatasource: sl(),
         steamDatasource: sl(),
         diskSizeService: sl(),
-        gameDatabase: sl(),
+        localDatasource: sl(), // Inject LocalDatasource instead of GameDatabase
       ),
     );
   } else {

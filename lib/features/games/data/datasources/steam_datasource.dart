@@ -2,14 +2,16 @@ import 'dart:io';
 
 import 'package:dartz/dartz.dart';
 
-import 'package:game_size_manager/core/constants.dart';
+import 'package:game_size_manager/features/games/data/models/steam_game_dto.dart';
+
 import 'package:game_size_manager/core/error/failures.dart';
 import 'package:game_size_manager/core/logging/logger_service.dart';
 import 'package:game_size_manager/core/platform/platform_service.dart';
+import 'package:game_size_manager/features/games/data/datasources/game_datasource.dart';
 import 'package:game_size_manager/features/games/domain/entities/game_entity.dart';
 
 /// Data source for Steam games
-class SteamDatasource {
+class SteamDatasource implements GameDatasource {
   SteamDatasource({PlatformService? platformService, LoggerService? logger})
     : _platform = platformService ?? PlatformService.instance,
       _logger = logger ?? LoggerService.instance;
@@ -18,6 +20,7 @@ class SteamDatasource {
   final LoggerService _logger;
 
   /// Get all installed Steam games from appmanifest files
+  @override
   Future<Result<List<Game>>> getGames() async {
     if (!_platform.isSteamInstalled) {
       _logger.info('Steam not installed', tag: 'Steam');
@@ -135,35 +138,33 @@ class SteamDatasource {
     final content = await file.readAsString();
 
     // Simple VDF parsing for the fields we need
-    final appId = _extractVdfValue(content, 'appid');
-    final name = _extractVdfValue(content, 'name');
-    final installDir = _extractVdfValue(content, 'installdir');
-    final sizeOnDisk = _extractVdfValue(content, 'SizeOnDisk');
+    final appId = _extractVdfValue(content, SteamGameDto.keyAppId);
+    final name = _extractVdfValue(content, SteamGameDto.keyName);
+    final installDir = _extractVdfValue(content, SteamGameDto.keyInstallDir);
+    final sizeOnDisk = _extractVdfValue(content, SteamGameDto.keySizeOnDisk);
 
     if (appId == null || name == null || installDir == null) {
       return null;
     }
 
-    // Get extra metadata
-    final launchOptions = await _getLaunchOptions(appId);
-    final protonVersion = await _getProtonVersion(appId);
+    try {
+      final dto = SteamGameDto.fromVdfValues(appId, name, installDir, sizeOnDisk);
 
-    // Get full install path
-    final steamappsDir = file.parent.path;
-    final commonDir = '$steamappsDir/common/$installDir';
+      // Get extra metadata
+      final launchOptions = await _getLaunchOptions(appId);
+      final protonVersion = await _getProtonVersion(appId);
 
-    // Parse size (Steam provides this in bytes as a string)
-    final sizeBytes = int.tryParse(sizeOnDisk ?? '0') ?? 0;
+      // Get full install path
+      final steamappsDir = file.parent.path;
 
-    return Game(
-      id: 'steam_$appId',
-      title: name,
-      source: GameSource.steam,
-      installPath: commonDir,
-      sizeBytes: sizeBytes,
-      launchOptions: launchOptions,
-      protonVersion: protonVersion,
-    );
+      return dto.toEntity(
+        steamAppsPath: steamappsDir,
+        launchOptions: launchOptions,
+        protonVersion: protonVersion,
+      );
+    } catch (e) {
+      return null;
+    }
   }
 
   /// Extract a value from VDF format content

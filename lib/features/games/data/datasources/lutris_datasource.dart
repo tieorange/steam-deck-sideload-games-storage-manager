@@ -1,14 +1,15 @@
 import 'package:dartz/dartz.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:game_size_manager/features/games/data/models/lutris_game_dto.dart';
 
-import 'package:game_size_manager/core/constants.dart';
 import 'package:game_size_manager/core/error/failures.dart';
 import 'package:game_size_manager/core/logging/logger_service.dart';
 import 'package:game_size_manager/core/platform/platform_service.dart';
+import 'package:game_size_manager/features/games/data/datasources/game_datasource.dart';
 import 'package:game_size_manager/features/games/domain/entities/game_entity.dart';
 
 /// Data source for Lutris games
-class LutrisDatasource {
+class LutrisDatasource implements GameDatasource {
   LutrisDatasource({PlatformService? platformService, LoggerService? logger})
     : _platform = platformService ?? PlatformService.instance,
       _logger = logger ?? LoggerService.instance;
@@ -17,6 +18,7 @@ class LutrisDatasource {
   final LoggerService _logger;
 
   /// Get all installed Lutris games from pga.db
+  @override
   Future<Result<List<Game>>> getGames() async {
     _logger.info('============ LUTRIS DETECTION ============', tag: 'Lutris');
     final dbPath = _platform.lutrisDbPath;
@@ -44,24 +46,22 @@ class LutrisDatasource {
       _logger.debug('Query returned ${results.length} rows', tag: 'Lutris');
 
       for (final row in results) {
-        final id = row['id']?.toString() ?? '';
-        final name = row['name'] as String? ?? 'Unknown';
-        final slug = row['slug'] as String? ?? id;
-        final directory = row['directory'] as String?;
-
-        if (directory != null && directory.isNotEmpty) {
-          _logger.debug('Found Lutris game: $name ($slug) at $directory', tag: 'Lutris');
-          games.add(
-            Game(
-              id: 'lutris_$slug',
-              title: name,
-              source: GameSource.lutris,
-              installPath: directory,
-              sizeBytes: 0, // Needs calculation
-            ),
-          );
-        } else {
-          _logger.warning('Skipping Lutris game $name: directory is empty/null', tag: 'Lutris');
+        try {
+          final dto = LutrisGameDto.fromMap(row);
+          if (dto.directory != null && dto.directory!.isNotEmpty) {
+            _logger.debug(
+              'Found Lutris game: ${dto.name} (${dto.slug}) at ${dto.directory}',
+              tag: 'Lutris',
+            );
+            games.add(dto.toEntity());
+          } else {
+            _logger.warning(
+              'Skipping Lutris game ${dto.name}: directory is empty/null',
+              tag: 'Lutris',
+            );
+          }
+        } catch (e) {
+          // Skip
         }
       }
 

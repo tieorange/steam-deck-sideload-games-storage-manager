@@ -3,14 +3,16 @@ import 'dart:io';
 
 import 'package:dartz/dartz.dart';
 
-import 'package:game_size_manager/core/constants.dart';
+import 'package:game_size_manager/features/games/data/models/heroic_game_dto.dart'; // Add DTO import
+
 import 'package:game_size_manager/core/error/failures.dart';
 import 'package:game_size_manager/core/logging/logger_service.dart';
 import 'package:game_size_manager/core/platform/platform_service.dart';
+import 'package:game_size_manager/features/games/data/datasources/game_datasource.dart';
 import 'package:game_size_manager/features/games/domain/entities/game_entity.dart';
 
 /// Data source for Heroic Games Launcher (Epic + GOG)
-class HeroicDatasource {
+class HeroicDatasource implements GameDatasource {
   HeroicDatasource({PlatformService? platformService, LoggerService? logger})
     : _platform = platformService ?? PlatformService.instance,
       _logger = logger ?? LoggerService.instance;
@@ -41,24 +43,20 @@ class HeroicDatasource {
       for (final entry in json.entries) {
         final gameData = entry.value as Map<String, dynamic>;
 
-        final appName = gameData['app_name'] as String? ?? entry.key;
-        final title = gameData['title'] as String? ?? appName;
-        final installPath = gameData['install_path'] as String?;
-        final installSize = gameData['install_size'] as int? ?? 0;
+        try {
+          final dto = EpicGameDto.fromJson(gameData, entry.key);
 
-        if (installPath != null) {
-          _logger.debug('Found Epic game: $title ($appName) at $installPath', tag: 'Heroic');
-          games.add(
-            Game(
-              id: 'heroic_epic_$appName',
-              title: title,
-              source: GameSource.heroic,
-              installPath: installPath,
-              sizeBytes: installSize, // Legendary provides size directly!
-            ),
-          );
-        } else {
-          _logger.debug('Skipping Epic game $title: install_path is null', tag: 'Heroic');
+          if (dto.installPath != null) {
+            _logger.debug(
+              'Found Epic game: ${dto.title ?? dto.appName} at ${dto.installPath}',
+              tag: 'Heroic',
+            );
+            games.add(dto.toEntity());
+          } else {
+            _logger.debug('Skipping Epic game ${dto.title}: install_path is null', tag: 'Heroic');
+          }
+        } catch (e) {
+          _logger.warning('Failed to parse Epic game entry: ${entry.key}', tag: 'Heroic');
         }
       }
 
@@ -96,27 +94,26 @@ class HeroicDatasource {
 
       for (final item in library) {
         final gameData = item as Map<String, dynamic>;
-        final isInstalled = gameData['is_installed'] as bool? ?? false;
 
-        if (isInstalled) {
-          final appName = gameData['app_name'] as String? ?? '';
-          final title = gameData['title'] as String? ?? appName;
-          final installPath = gameData['install_path'] as String?;
+        try {
+          final dto = GogGameDto.fromJson(gameData);
 
-          if (installPath != null && installPath.isNotEmpty) {
-            _logger.debug('Found GOG game: $title at $installPath', tag: 'Heroic');
-            games.add(
-              Game(
-                id: 'heroic_gog_$appName',
-                title: title,
-                source: GameSource.heroic,
-                installPath: installPath,
-                sizeBytes: 0, // GOG doesn't provide size, needs calculation
-              ),
-            );
-          } else {
-            _logger.debug('Skipping installed GOG game $title: path is empty', tag: 'Heroic');
+          if (dto.isInstalled) {
+            if (dto.installPath != null && dto.installPath!.isNotEmpty) {
+              _logger.debug(
+                'Found GOG game: ${dto.title ?? dto.appName} at ${dto.installPath}',
+                tag: 'Heroic',
+              );
+              games.add(dto.toEntity());
+            } else {
+              _logger.debug(
+                'Skipping installed GOG game ${dto.title}: path is empty',
+                tag: 'Heroic',
+              );
+            }
           }
+        } catch (e) {
+          _logger.warning('Failed to parse GOG game entry', tag: 'Heroic');
         }
       }
 
@@ -128,8 +125,8 @@ class HeroicDatasource {
     }
   }
 
-  /// Get all Heroic games (Epic + GOG combined)
-  Future<Result<List<Game>>> getAllGames() async {
+  @override
+  Future<Result<List<Game>>> getGames() async {
     final epicResult = await getEpicGames();
     final gogResult = await getGogGames();
 
