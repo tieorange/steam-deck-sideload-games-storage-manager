@@ -58,6 +58,11 @@ dependencies:
   resend_dart: ^1.0.1
   sentry_flutter: ^9.10.0
   crypto: ^3.0.7
+  
+  # Local Game Detector Package
+  steam_deck_games_detector:
+    path: ../steam_deck_games_detector
+
 
 dev_dependencies:
   flutter_test:

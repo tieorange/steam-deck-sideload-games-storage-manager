@@ -1,47 +1,32 @@
 import 'dart:io';
 
 import 'package:dartz/dartz.dart';
+import 'package:steam_deck_games_detector/steam_deck_games_detector.dart' as pkg;
 
-import 'package:game_size_manager/features/games/data/datasources/heroic_datasource.dart';
-import 'package:game_size_manager/features/games/data/datasources/lutris_datasource.dart';
-import 'package:game_size_manager/features/games/data/datasources/ogi_datasource.dart';
-import 'package:game_size_manager/features/games/data/datasources/steam_datasource.dart';
 import 'package:game_size_manager/features/games/data/datasources/game_local_datasource.dart';
 import 'package:game_size_manager/features/games/domain/entities/game_entity.dart';
 import 'package:game_size_manager/features/games/domain/repositories/game_repository.dart';
 import 'package:game_size_manager/core/error/failures.dart';
 import 'package:game_size_manager/core/logging/logger_service.dart';
 import 'package:game_size_manager/core/services/disk_size_service.dart';
-import 'package:game_size_manager/core/platform/platform_service.dart';
 import 'package:game_size_manager/core/constants.dart';
 
 /// Real implementation of GameRepository with SQLite Caching
 class GameRepositoryImpl implements GameRepository {
-  final HeroicDatasource _heroic;
-  final OgiDatasource _ogi;
-  final LutrisDatasource _lutris;
-  final SteamDatasource _steam;
+  final pkg.SteamDeckGamesDetector _detector;
   final DiskSizeService _diskSizeService;
   final GameLocalDatasource _localDatasource;
-  final PlatformService _platformService;
   final LoggerService _logger;
 
   GameRepositoryImpl({
-    required HeroicDatasource heroicDatasource,
-    required OgiDatasource ogiDatasource,
-    required LutrisDatasource lutrisDatasource,
-    required SteamDatasource steamDatasource,
+    required pkg.SteamDeckGamesDetector detector,
     required DiskSizeService diskSizeService,
     required GameLocalDatasource localDatasource,
-    PlatformService? platformService,
     LoggerService? logger,
-  }) : _heroic = heroicDatasource,
-       _ogi = ogiDatasource,
-       _lutris = lutrisDatasource,
-       _steam = steamDatasource,
+  }) : _detector = detector,
+
        _diskSizeService = diskSizeService,
        _localDatasource = localDatasource,
-       _platformService = platformService ?? PlatformService.instance,
        _logger = logger ?? LoggerService.instance;
 
   @override
@@ -85,108 +70,78 @@ class GameRepositoryImpl implements GameRepository {
   Future<Result<List<Game>>> refreshGames({
     void Function(String message, double progress)? onProgress,
   }) async {
-    _logger.info('Refreshing all games...', tag: 'GameRepo');
+    _logger.info('Refreshing all games via SteamDeckGamesDetector...', tag: 'GameRepo');
 
-    onProgress?.call('Initializing...', 0.1);
+    onProgress?.call('Scanning games...', 0.3);
 
-    final allGames = <Game>[];
+    // 1. Fetch from SteamDeckGamesDetector
+    final result = await _detector.getAllGames();
 
-    onProgress?.call('Fetching from launchers...', 0.2);
+    return result.fold(
+      (failure) {
+        _logger.error('Detector failed: $failure', tag: 'GameRepo');
+        // Map package failure to app failure
+        // Assuming we have a similar structure or just wrap it
+        return Left(UnexpectedFailure(failure.message, failure.stackTrace));
+      },
+      (pkgGames) async {
+        _logger.info('Found ${pkgGames.length} games from detector.', tag: 'GameRepo');
 
-    // 1. Fetch from all sources in parallel
-    final results = await Future.wait([
-      _heroic.getGames(),
-      _ogi.getGames(),
-      _lutris.getGames(),
-      _steam.getGames(),
-    ]);
+        onProgress?.call('Processing results...', 0.5);
 
-    onProgress?.call('Processing results...', 0.4);
+        // Convert to App Entities
+        final allGames = pkgGames.map((g) => Game.fromPackage(g)).toList();
 
-    // 2. Process results
-    for (final result in results) {
-      result.fold(
-        (failure) => _logger.warning('Datasource failure: ${failure.runtimeType}', tag: 'GameRepo'),
-        (games) => allGames.addAll(games),
-      );
-    }
+        // 3. Calculate sizes for games that need it
+        onProgress?.call('Calculating sizes...', 0.6);
+        try {
+          final sizedGames = await Future.wait(
+            allGames.map((game) async {
+              var updatedGame = game;
 
-    _logger.info('Found ${allGames.length} games total from sources.', tag: 'GameRepo');
+              // Storage location is already detected by package!
+              // But if size is 0, we try to calc it.
 
-    // 3. Calculate sizes for games that need it
-    onProgress?.call('Calculating sizes...', 0.6);
-    try {
-      final sizedGames = await Future.wait(
-        allGames.map((game) async {
-          var updatedGame = game;
-
-          // Detect storage location
-          final storageLocation = await _detectStorageLocation(game.installPath);
-          updatedGame = updatedGame.copyWith(storageLocation: storageLocation);
-
-          if (updatedGame.sizeBytes == 0 && updatedGame.installPath.isNotEmpty) {
-            try {
-              // Basic size calculation if not provided
-              // This might be slow for many games, so user might see "calculating..." or initially 0
-              // Ideally this should be backgrounded.
-              // For now, check if directory exists first
-              final dir = Directory(updatedGame.installPath);
-              if (await dir.exists()) {
-                final size = await _diskSizeService.calculateDirectorySize(updatedGame.installPath);
-                updatedGame = updatedGame.copyWith(sizeBytes: size);
+              if (updatedGame.sizeBytes == 0 && updatedGame.installPath.isNotEmpty) {
+                try {
+                  final dir = Directory(updatedGame.installPath);
+                  if (await dir.exists()) {
+                    final size = await _diskSizeService.calculateDirectorySize(
+                      updatedGame.installPath,
+                    );
+                    updatedGame = updatedGame.copyWith(sizeBytes: size);
+                  }
+                } catch (e) {
+                  _logger.warning(
+                    'Failed to calculate size for ${updatedGame.title}: $e',
+                    tag: 'GameRepo',
+                  );
+                }
               }
-            } catch (e) {
-              _logger.warning(
-                'Failed to calculate size for ${updatedGame.title}: $e',
-                tag: 'GameRepo',
-              );
-            }
-          }
-          return updatedGame;
-        }),
-      );
+              return updatedGame;
+            }),
+          );
 
-      onProgress?.call('Caching games...', 0.9);
+          onProgress?.call('Caching games...', 0.9);
 
-      // Cache games
-      // We clear cache then insert to ensure deleted games are removed
-      await _localDatasource.clearCache();
-      await _localDatasource.cacheGames(sizedGames);
+          // Cache games
+          await _localDatasource.clearCache();
+          await _localDatasource.cacheGames(sizedGames);
 
-      onProgress?.call('Complete!', 1.0);
+          onProgress?.call('Complete!', 1.0);
 
-      return Right(sizedGames);
-    } catch (e, s) {
-      _logger.error(
-        'Failed processing games during refresh',
-        error: e,
-        stackTrace: s,
-        tag: 'GameRepo',
-      );
-      return Left(UnexpectedFailure(e.toString(), s));
-    }
-  }
-
-  Future<StorageLocation> _detectStorageLocation(String path) async {
-    if (path.isEmpty) return StorageLocation.unknown;
-
-    // Check if path starts with typical SD card mount point
-    // Usually /run/media/...
-    if (path.startsWith('/run/media')) {
-      return StorageLocation.sdCard;
-    }
-
-    // Could check specific drives if needed, but heuristic above is good for Deck
-    // Also internal is usually /home/deck or /var/lib/flatpak etc.
-    if (path.startsWith(_platformService.homeDir) ||
-        path.startsWith('/var') ||
-        path.startsWith('/usr')) {
-      return StorageLocation.internal;
-    }
-
-    // Default to external if not internal and not clearly SD
-    // Or return unknown? Let's assume external/other
-    return StorageLocation.external;
+          return Right(sizedGames);
+        } catch (e, s) {
+          _logger.error(
+            'Failed processing games during refresh',
+            error: e,
+            stackTrace: s,
+            tag: 'GameRepo',
+          );
+          return Left(UnexpectedFailure(e.toString(), s));
+        }
+      },
+    );
   }
 
   @override
@@ -195,7 +150,9 @@ class GameRepositoryImpl implements GameRepository {
       final size = await _diskSizeService.calculateDirectorySize(game.installPath);
       // Update cache with new size
       final updatedGame = game.copyWith(sizeBytes: size);
-      await _localDatasource.cacheGames([updatedGame]); // Upsert
+
+      // Upsert requires list
+      await _localDatasource.cacheGames([updatedGame]);
       return Right(updatedGame);
     } catch (e, s) {
       return Left(FileSystemFailure('Failed to calculate size: $e', s));

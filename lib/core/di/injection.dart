@@ -1,16 +1,14 @@
 import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:steam_deck_games_detector/steam_deck_games_detector.dart';
 
 import 'package:game_size_manager/core/database/game_database.dart';
 import 'package:game_size_manager/core/services/disk_size_service.dart';
 import 'package:game_size_manager/core/services/update_service.dart';
 import 'package:game_size_manager/core/platform/platform_service.dart';
 import 'package:game_size_manager/features/games/data/datasources/game_local_datasource.dart';
-import 'package:game_size_manager/features/games/data/datasources/heroic_datasource.dart';
-import 'package:game_size_manager/features/games/data/datasources/ogi_datasource.dart';
-import 'package:game_size_manager/features/games/data/datasources/steam_datasource.dart';
-import 'package:game_size_manager/features/games/data/datasources/lutris_datasource.dart';
+
 import 'package:game_size_manager/features/games/data/repositories/game_repository_impl.dart';
 import 'package:game_size_manager/features/games/data/repositories/mock_game_repository.dart';
 import 'package:game_size_manager/features/games/domain/repositories/game_repository.dart';
@@ -46,23 +44,14 @@ Future<void> init() async {
   sl.registerLazySingleton<GameLocalDatasource>(
     () => GameLocalDatasourceImpl(sl()),
   ); // Register Local Datasource
-  sl.registerLazySingleton(() => HeroicDatasource(platformService: sl()));
-  sl.registerLazySingleton(() => OgiDatasource(platformService: sl()));
-  sl.registerLazySingleton(() => SteamDatasource(platformService: sl()));
-  sl.registerLazySingleton(() => LutrisDatasource(platformService: sl()));
+
+  // Package: SteamDeckGamesDetector
+  sl.registerLazySingleton(() => SteamDeckGamesDetector());
 
   // Repositories
   if (!PlatformService.instance.shouldUseMockData) {
     sl.registerLazySingleton<GameRepository>(
-      () => GameRepositoryImpl(
-        heroicDatasource: sl(),
-        ogiDatasource: sl(),
-        lutrisDatasource: sl(),
-        steamDatasource: sl(),
-        diskSizeService: sl(),
-        localDatasource: sl(), // Inject LocalDatasource instead of GameDatabase
-        platformService: sl(),
-      ),
+      () => GameRepositoryImpl(detector: sl(), diskSizeService: sl(), localDatasource: sl()),
     );
   } else {
     // Use Mock Repository for macOS development if not strictly testing full integration

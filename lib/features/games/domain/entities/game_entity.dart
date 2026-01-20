@@ -1,19 +1,13 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-
-import 'package:game_size_manager/core/constants.dart';
+import 'package:steam_deck_games_detector/steam_deck_games_detector.dart' as pkg;
+import 'package:steam_deck_games_detector/steam_deck_games_detector.dart'
+    show GameSource, StorageLocation;
 
 part 'game_entity.freezed.dart';
 part 'game_entity.g.dart';
 
-/// Storage location type
-enum StorageLocation {
-  internal, // Internal SSD (/home/deck)
-  sdCard, // MicroSD card (/run/media/...)
-  external, // Other external drive
-  unknown, // Could not determine
-}
-
 /// Game entity representing an installed game
+/// (App-specific wrapper extending UI state)
 @freezed
 class Game with _$Game {
   const factory Game({
@@ -49,6 +43,22 @@ class Game with _$Game {
   }) = _Game;
 
   factory Game.fromJson(Map<String, dynamic> json) => _$GameFromJson(json);
+
+  /// Create from Package Entity
+  factory Game.fromPackage(pkg.Game pkgGame) {
+    return Game(
+      id: pkgGame.id,
+      title: pkgGame.title,
+      source: pkgGame.source,
+      installPath: pkgGame.installPath,
+      sizeBytes: pkgGame.sizeBytes,
+      iconPath: pkgGame.iconPath,
+      launchOptions: pkgGame.launchOptions,
+      protonVersion: pkgGame.protonVersion,
+      storageLocation: pkgGame.storageLocation,
+      isSelected: false,
+    );
+  }
 }
 
 /// Extension methods for Game

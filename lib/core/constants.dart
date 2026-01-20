@@ -1,3 +1,7 @@
+// Export enums from package to avoid breaking changes in the app
+export 'package:steam_deck_games_detector/steam_deck_games_detector.dart'
+    show GameSource, StorageLocation;
+
 /// App-wide constants
 class AppConstants {
   AppConstants._();
@@ -25,16 +29,4 @@ class AppConstants {
 
   // Size formatting
   static const List<String> sizeUnits = ['B', 'KB', 'MB', 'GB', 'TB'];
-}
-
-/// Game sources supported by the app
-enum GameSource {
-  heroic('Heroic', 'Epic/GOG games'),
-  ogi('OGI', 'OpenGameInstaller'),
-  lutris('Lutris', 'Lutris games'),
-  steam('Steam', 'Native Steam games');
-
-  const GameSource(this.displayName, this.description);
-  final String displayName;
-  final String description;
 }

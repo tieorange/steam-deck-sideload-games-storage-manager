@@ -155,3 +155,46 @@ Users install via the "1-click" command in README. Ensure `install.sh` in the re
 ```bash
 curl -fsSL https://raw.githubusercontent.com/tieorange/steam-deck-sideload-games-storage-manager/main/install.sh | bash
 ```
+
+---
+
+## 7. External Packages & Modules
+
+### `steam_deck_games_detector`
+
+The core game detection logic has been extracted into a separate Dart package to allow for reusability and cleaner architecture.
+
+*   **Location**: `../steam_deck_games_detector` (relative to the app root).
+*   **Repo**: [steam_deck_games_detector](https://github.com/tieorange/steam_deck_games_detector)
+*   **Purpose**: Handles all logic for finding games, parsing manifests, and reading databases from Steam, Heroic, Lutris, etc.
+
+#### How to Work With It (Local Development)
+
+The app's `pubspec.yaml` uses a **path dependency** to allow for simultaneous development of the app and the package.
+
+```yaml
+dependencies:
+  steam_deck_games_detector:
+    path: ../steam_deck_games_detector
+```
+
+#### workflow: Making Changes
+
+1.  **Edit the Package**:
+    *   Open `../steam_deck_games_detector` in your editor.
+    *   Make changes to datasources, repositories, or entities.
+    *   If you changed dependencies in the package, run `dart pub get` inside the package folder.
+
+2.  **Apply Changes in App**:
+    *   Because it's a path dependency, **changes are immediate**.
+    *   **Hot Reload** in the main app often works, but if you changed method signatures or added new files, you likely need a **Hot Restart** or a full rebuild.
+    *   If you added new exports to the package, run `flutter pub get` in the main app to refresh the analysis server.
+
+3.  **Clean Architecture Mapping**:
+    *   The App's `GameRepositoryImpl` (`lib/features/games/data/repositories/game_repository_impl.dart`) is the bridge.
+    *   It calls `SteamDeckGamesDetector.getAllGames()`.
+    *   It converts `package:steam_deck_games_detector` entities into the App's internal entities (if they differ, though we aim for 1:1 parity).
+
+#### Publication
+*   Eventually, this package will be published to `pub.dev`.
+*   When that happens, we will switch `pubspec.yaml` from `path: ...` to `version: ^1.0.0`.

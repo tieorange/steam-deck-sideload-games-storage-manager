@@ -82,9 +82,14 @@ class _UpdateBannerState extends State<UpdateBanner> {
             const SizedBox(width: 8),
             FilledButton.icon(
               onPressed: () {
-                final navContext = AppRouter.router.routerDelegate.navigatorKey.currentContext;
-                if (navContext != null) {
-                  showDialog(context: navContext, builder: (_) => const UpdateCheckDialog());
+                final navigator = AppRouter.router.routerDelegate.navigatorKey.currentState;
+                if (navigator != null) {
+                  navigator.push(
+                    DialogRoute(
+                      context: navigator.context,
+                      builder: (_) => const UpdateCheckDialog(),
+                    ),
+                  );
                 }
               },
               icon: const Icon(Icons.download_rounded, size: 18),
