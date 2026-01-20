@@ -50,6 +50,8 @@ curl -fsSL https://raw.githubusercontent.com/tieorange/steam-deck-sideload-games
 ## 🛠️ For Developers
 
 ### Build from Source
+ 
+> **Note for Contributors**: Please read [`.agent/rules/Agents.md`](.agent/rules/Agents.md) for detailed architecture, launcher integration specs, and AI agent guidelines.
 
 **Requirements:** Docker Desktop (must be running).
 

@@ -60,7 +60,9 @@ When working on datasources, understand how we detect games for each launcher:
 *   **Launch Options**: Parsed from `localconfig.vdf`. Careful: simpler regex parsing is preferred over full VDF parsing for performance.
 *   **Art Fetching**:
     *   **Priority 1 (Custom)**: Checks `userdata/<user_id>/config/grid` for PNGs (e.g., `[APPID]p.png` for cover). Common for SteamGridDB.
-    *   **Priority 2 (Default)**: Checks `appcache/librarycache` for cached images (e.g., `[APPID]_library_600x900.jpg`).
+    *   **Priority 2 (Default)**: Checks `appcache/librarycache` for cached images.
+        *   **Structure**: `<librarycache_path>/[APPID]/library_600x900.jpg` (subdirectory per app).
+        *   **Subdirectory Files**: `library_600x900.jpg` (cover), `library_hero.jpg` (header), `logo.png` (logo).
 
 ### 🦸 Heroic Games Launcher (Epic & GOG)
 *   **Source**: `lib/features/games/data/datasources/heroic_datasource.dart`
@@ -68,8 +70,12 @@ When working on datasources, understand how we detect games for each launcher:
     *   **Path**: `~/.config/heroic/legendaryConfig/legendary/installed.json`
 *   **GOG**: Parses `gog_store/library.json` (Heroic's cache).
 *   **Art Fetching**:
-    *   **SHA256 Hashing**: Heroic caches images using the **SHA256 hash of the image URL** as the filename.
-    *   **Metadata Source**: We read `store_cache/legendary_library.json` (Epic) to look up the `art_square` URL, hash it, and check `~/.config/heroic/images-cache`.
+    *   **SHA256 Hashing**: Heroic caches images using the **SHA256 hash of the full image URL** as the filename.
+    *   **Resolution Strategy**:
+        1.  In `HeroicDatasource`, we fetch `art_square`, `art_cover`, and `box_art` URLs from `legendary_library.json`.
+        2.  Compute SHA256 hash for *each* URL.
+        3.  Check `~/.config/heroic/images-cache` (or Flatpak equivalent) for existence of that hash.
+        4.  Use the URL corresponding to the *first existing file* found. (Heroic often caches `art_cover` but not `art_square`).
     *   **Fallback**: Scanning the directory for `[AppName].jpg` (unreliable).
 
 ### 🍷 Lutris
