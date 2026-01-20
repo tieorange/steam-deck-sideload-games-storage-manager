@@ -31,6 +31,12 @@ class PlatformService {
     _logPathCheck('Steam Apps', steamAppsPath);
     _logPathCheck('OGI Library', ogiLibraryPath);
 
+    // Log game art cache paths
+    _logPathCheck('Steam Library Cache', steamLibraryCachePath);
+    _logPathCheck('Heroic Images Cache', heroicImagesCachePath);
+    _logPathCheck('Lutris Coverart', lutrisCoverartPath);
+    _logPathCheck('Lutris Banners', lutrisBannersPath);
+
     // Log detected status
     logPlatformInfo();
   }
@@ -144,6 +150,13 @@ class PlatformService {
 
     _logger.warning('✗ Legendary installed.json not found in any location', tag: 'Platform');
     return null; // Return null if not found - will treat as no Epic games installed
+  }
+
+  /// Path to Legendary library cache (contains detailed game info including art URLs)
+  String? get legendaryLibraryPath {
+    final heroicPath = heroicConfigPath;
+    if (heroicPath == null) return null;
+    return '$heroicPath/store_cache/legendary_library.json';
   }
 
   /// Path to GOG library cache
@@ -283,34 +296,35 @@ class PlatformService {
 
   /// Returns Lutris banners path (Flatpak first, then standard)
   String? get lutrisBannersPath {
-    // Flatpak: ~/.var/app/net.lutris.Lutris/cache/lutris/banners
-    final flatpakPath = '$homeDir/.var/app/net.lutris.Lutris/cache/lutris/banners';
+    // Flatpak: ~/.var/app/net.lutris.Lutris/data/lutris/banners
+    // Note: Lutris Flatpak uses XDG_DATA_HOME which maps to inside .var/app/.../data
+    final flatpakPath = '$homeDir/.var/app/net.lutris.Lutris/data/lutris/banners';
     if (Directory(flatpakPath).existsSync()) return flatpakPath;
 
-    // Standard: ~/.cache/lutris/banners
-    final standardPath = '$homeDir/.cache/lutris/banners';
+    // Standard: ~/.local/share/lutris/banners
+    final standardPath = '$homeDir/.local/share/lutris/banners';
     if (Directory(standardPath).existsSync()) return standardPath;
 
-    // Local share fallback: ~/.local/share/lutris/banners
-    final localSharePath = '$homeDir/.local/share/lutris/banners';
-    if (Directory(localSharePath).existsSync()) return localSharePath;
+    // Cache fallback (legacy/custom): ~/.cache/lutris/banners
+    final cachePath = '$homeDir/.cache/lutris/banners';
+    if (Directory(cachePath).existsSync()) return cachePath;
 
     return null;
   }
 
   /// Returns Lutris coverart path (Flatpak first, then standard)
   String? get lutrisCoverartPath {
-    // Flatpak: ~/.var/app/net.lutris.Lutris/cache/lutris/coverart
-    final flatpakPath = '$homeDir/.var/app/net.lutris.Lutris/cache/lutris/coverart';
+    // Flatpak: ~/.var/app/net.lutris.Lutris/data/lutris/coverart
+    final flatpakPath = '$homeDir/.var/app/net.lutris.Lutris/data/lutris/coverart';
     if (Directory(flatpakPath).existsSync()) return flatpakPath;
 
-    // Standard: ~/.cache/lutris/coverart
-    final standardPath = '$homeDir/.cache/lutris/coverart';
+    // Standard: ~/.local/share/lutris/coverart
+    final standardPath = '$homeDir/.local/share/lutris/coverart';
     if (Directory(standardPath).existsSync()) return standardPath;
 
-    // Local share fallback: ~/.local/share/lutris/coverart
-    final localSharePath = '$homeDir/.local/share/lutris/coverart';
-    if (Directory(localSharePath).existsSync()) return localSharePath;
+    // Cache fallback (legacy/custom): ~/.cache/lutris/coverart
+    final cachePath = '$homeDir/.cache/lutris/coverart';
+    if (Directory(cachePath).existsSync()) return cachePath;
 
     return null;
   }

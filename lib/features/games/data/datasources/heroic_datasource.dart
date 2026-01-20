@@ -42,8 +42,13 @@ class HeroicDatasource implements GameDatasource {
     }
 
     try {
+      // 1. Parse installed games
       final content = await file.readAsString();
       final json = jsonDecode(content) as Map<String, dynamic>;
+
+      // 2. Parse library metadata to get art URLs (Heroic uses hashed URLs for filenames)
+      final artUrls = await _getEpicArtUrls();
+      _logger.debug('Found ${artUrls.length} Art URLs from library metadata', tag: 'Heroic');
 
       final games = <Game>[];
 
@@ -53,7 +58,10 @@ class HeroicDatasource implements GameDatasource {
         try {
           var dto = EpicGameDto.fromJson(gameData, entry.key);
 
-          final iconPath = _artService.getHeroicArtPath(dto.appName);
+          // Use the art URL if available to find the cached image
+          final artUrl = artUrls[dto.appName];
+          final iconPath = _artService.getHeroicArtPath(dto.appName, artUrl: artUrl);
+
           if (iconPath != null) {
             dto = dto.copyWith(iconPath: iconPath);
           }
@@ -77,6 +85,55 @@ class HeroicDatasource implements GameDatasource {
     } catch (e, s) {
       _logger.error('Failed to parse installed.json', error: e, stackTrace: s, tag: 'Heroic');
       return Left(ParseFailure('Failed to parse Epic games: $e', s));
+    }
+  }
+
+  /// Reads legendary_library.json to get a map of appName -> art_square URL
+  Future<Map<String, String>> _getEpicArtUrls() async {
+    try {
+      final libPath = _platform.legendaryLibraryPath;
+      if (libPath == null) return {};
+
+      final file = File(libPath);
+      if (!file.existsSync()) {
+        _logger.warning('Legendary library cache not found at $libPath', tag: 'Heroic');
+        return {};
+      }
+
+      final content = await file.readAsString();
+      final json = jsonDecode(content);
+
+      final artMap = <String, String>{};
+      List<dynamic> libraryList = [];
+
+      // Heroic stores data in a 'library' key, but let's be robust
+      if (json is Map<String, dynamic>) {
+        if (json.containsKey('library') && json['library'] is List) {
+          libraryList = json['library'] as List;
+        }
+      } else if (json is List) {
+        libraryList = json;
+      }
+
+      for (final item in libraryList) {
+        if (item is Map<String, dynamic>) {
+          final appName = item['app_name'] as String?;
+          // Try detailed art_square first, fallback to other fields if necessary
+          final artUrl =
+              item['art_square'] as String? ??
+              item['art_cover'] as String? ??
+              item['box_art'] as String?;
+
+          if (appName != null && artUrl != null) {
+            artMap[appName] = artUrl;
+          }
+        }
+      }
+
+      return artMap;
+    } catch (e) {
+      _logger.warning('Failed to parse Legendary library for art URLs: $e', tag: 'Heroic');
+      return {};
     }
   }
 
