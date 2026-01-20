@@ -99,8 +99,61 @@ class GameArtService {
       return logoPath;
     }
 
+    // 3. Fallback: Deep scan for nested/hashed files (e.g. Marvel Rivals, POE)
+    // Some games use structure: [appId]/[hash]/library_600x900.jpg or [appId]/[hash].jpg
+    return _findSteamArtFallback(appId, appCachePath);
+  }
+
+  /// Deep scan of the AppCache directory to find art hidden in subdirectories or named with hashes
+  String? _findSteamArtFallback(String appId, String appCachePath) {
+    try {
+      final dir = Directory(appCachePath);
+      final entities = dir.listSync(recursive: true); // Recursive scan (usually shallow)
+
+      String? bestCover;
+      String? bestHero;
+      String? bestLogo;
+
+      for (final entity in entities) {
+        if (entity is File) {
+          final name = entity.path.split('/').last.toLowerCase();
+
+          // Standard names (even in subdirs)
+          if (name == 'library_600x900.jpg') return entity.path; // Immediate win
+          if (name == 'library_hero.jpg') bestHero ??= entity.path;
+          if (name == 'logo.png') bestLogo ??= entity.path;
+
+          // Hashed filenames in root or subdirs (heuristic for covers)
+          // e.g. 11107...c9.jpg
+          if (bestCover == null &&
+              name.endsWith('.jpg') &&
+              name.length > 30 &&
+              !name.contains('hero') &&
+              !name.contains('capsule') &&
+              !name.contains('header')) {
+            bestCover = entity.path;
+          }
+        }
+      }
+
+      if (bestCover != null) {
+        _logger.debug('Found Steam fallback cover for $appId: $bestCover', tag: _tag);
+        return bestCover;
+      }
+      if (bestHero != null) {
+        _logger.debug('Found Steam fallback hero for $appId: $bestHero', tag: _tag);
+        return bestHero;
+      }
+      if (bestLogo != null) {
+        _logger.debug('Found Steam fallback logo for $appId: $bestLogo', tag: _tag);
+        return bestLogo;
+      }
+    } catch (e) {
+      _logger.warning('Failed to deep scan Steam art for $appId: $e', tag: _tag);
+    }
+
     _logger.warning(
-      'No art found for Steam game $appId. Checked userdata/grid and library cache.',
+      'No art found for Steam game $appId. Checked userdata, library cache standard & deep scan.',
       tag: _tag,
     );
     return null;
