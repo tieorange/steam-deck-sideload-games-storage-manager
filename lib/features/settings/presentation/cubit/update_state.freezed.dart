@@ -23,6 +23,7 @@ mixin _$UpdateState {
     required TResult Function() checking,
     required TResult Function(UpdateInfo info) available,
     required TResult Function(double progress) downloading,
+    required TResult Function(String message, double progress) installing,
     required TResult Function(File zipFile) readyToInstall,
     required TResult Function(String message) error,
   }) => throw _privateConstructorUsedError;
@@ -32,6 +33,7 @@ mixin _$UpdateState {
     TResult? Function()? checking,
     TResult? Function(UpdateInfo info)? available,
     TResult? Function(double progress)? downloading,
+    TResult? Function(String message, double progress)? installing,
     TResult? Function(File zipFile)? readyToInstall,
     TResult? Function(String message)? error,
   }) => throw _privateConstructorUsedError;
@@ -41,6 +43,7 @@ mixin _$UpdateState {
     TResult Function()? checking,
     TResult Function(UpdateInfo info)? available,
     TResult Function(double progress)? downloading,
+    TResult Function(String message, double progress)? installing,
     TResult Function(File zipFile)? readyToInstall,
     TResult Function(String message)? error,
     required TResult orElse(),
@@ -51,6 +54,7 @@ mixin _$UpdateState {
     required TResult Function(UpdateChecking value) checking,
     required TResult Function(UpdateAvailable value) available,
     required TResult Function(UpdateDownloading value) downloading,
+    required TResult Function(UpdateInstalling value) installing,
     required TResult Function(UpdateReadyToInstall value) readyToInstall,
     required TResult Function(UpdateError value) error,
   }) => throw _privateConstructorUsedError;
@@ -60,6 +64,7 @@ mixin _$UpdateState {
     TResult? Function(UpdateChecking value)? checking,
     TResult? Function(UpdateAvailable value)? available,
     TResult? Function(UpdateDownloading value)? downloading,
+    TResult? Function(UpdateInstalling value)? installing,
     TResult? Function(UpdateReadyToInstall value)? readyToInstall,
     TResult? Function(UpdateError value)? error,
   }) => throw _privateConstructorUsedError;
@@ -69,6 +74,7 @@ mixin _$UpdateState {
     TResult Function(UpdateChecking value)? checking,
     TResult Function(UpdateAvailable value)? available,
     TResult Function(UpdateDownloading value)? downloading,
+    TResult Function(UpdateInstalling value)? installing,
     TResult Function(UpdateReadyToInstall value)? readyToInstall,
     TResult Function(UpdateError value)? error,
     required TResult orElse(),
@@ -144,6 +150,7 @@ class _$UpdateInitialImpl implements UpdateInitial {
     required TResult Function() checking,
     required TResult Function(UpdateInfo info) available,
     required TResult Function(double progress) downloading,
+    required TResult Function(String message, double progress) installing,
     required TResult Function(File zipFile) readyToInstall,
     required TResult Function(String message) error,
   }) {
@@ -157,6 +164,7 @@ class _$UpdateInitialImpl implements UpdateInitial {
     TResult? Function()? checking,
     TResult? Function(UpdateInfo info)? available,
     TResult? Function(double progress)? downloading,
+    TResult? Function(String message, double progress)? installing,
     TResult? Function(File zipFile)? readyToInstall,
     TResult? Function(String message)? error,
   }) {
@@ -170,6 +178,7 @@ class _$UpdateInitialImpl implements UpdateInitial {
     TResult Function()? checking,
     TResult Function(UpdateInfo info)? available,
     TResult Function(double progress)? downloading,
+    TResult Function(String message, double progress)? installing,
     TResult Function(File zipFile)? readyToInstall,
     TResult Function(String message)? error,
     required TResult orElse(),
@@ -187,6 +196,7 @@ class _$UpdateInitialImpl implements UpdateInitial {
     required TResult Function(UpdateChecking value) checking,
     required TResult Function(UpdateAvailable value) available,
     required TResult Function(UpdateDownloading value) downloading,
+    required TResult Function(UpdateInstalling value) installing,
     required TResult Function(UpdateReadyToInstall value) readyToInstall,
     required TResult Function(UpdateError value) error,
   }) {
@@ -200,6 +210,7 @@ class _$UpdateInitialImpl implements UpdateInitial {
     TResult? Function(UpdateChecking value)? checking,
     TResult? Function(UpdateAvailable value)? available,
     TResult? Function(UpdateDownloading value)? downloading,
+    TResult? Function(UpdateInstalling value)? installing,
     TResult? Function(UpdateReadyToInstall value)? readyToInstall,
     TResult? Function(UpdateError value)? error,
   }) {
@@ -213,6 +224,7 @@ class _$UpdateInitialImpl implements UpdateInitial {
     TResult Function(UpdateChecking value)? checking,
     TResult Function(UpdateAvailable value)? available,
     TResult Function(UpdateDownloading value)? downloading,
+    TResult Function(UpdateInstalling value)? installing,
     TResult Function(UpdateReadyToInstall value)? readyToInstall,
     TResult Function(UpdateError value)? error,
     required TResult orElse(),
@@ -275,6 +287,7 @@ class _$UpdateCheckingImpl implements UpdateChecking {
     required TResult Function() checking,
     required TResult Function(UpdateInfo info) available,
     required TResult Function(double progress) downloading,
+    required TResult Function(String message, double progress) installing,
     required TResult Function(File zipFile) readyToInstall,
     required TResult Function(String message) error,
   }) {
@@ -288,6 +301,7 @@ class _$UpdateCheckingImpl implements UpdateChecking {
     TResult? Function()? checking,
     TResult? Function(UpdateInfo info)? available,
     TResult? Function(double progress)? downloading,
+    TResult? Function(String message, double progress)? installing,
     TResult? Function(File zipFile)? readyToInstall,
     TResult? Function(String message)? error,
   }) {
@@ -301,6 +315,7 @@ class _$UpdateCheckingImpl implements UpdateChecking {
     TResult Function()? checking,
     TResult Function(UpdateInfo info)? available,
     TResult Function(double progress)? downloading,
+    TResult Function(String message, double progress)? installing,
     TResult Function(File zipFile)? readyToInstall,
     TResult Function(String message)? error,
     required TResult orElse(),
@@ -318,6 +333,7 @@ class _$UpdateCheckingImpl implements UpdateChecking {
     required TResult Function(UpdateChecking value) checking,
     required TResult Function(UpdateAvailable value) available,
     required TResult Function(UpdateDownloading value) downloading,
+    required TResult Function(UpdateInstalling value) installing,
     required TResult Function(UpdateReadyToInstall value) readyToInstall,
     required TResult Function(UpdateError value) error,
   }) {
@@ -331,6 +347,7 @@ class _$UpdateCheckingImpl implements UpdateChecking {
     TResult? Function(UpdateChecking value)? checking,
     TResult? Function(UpdateAvailable value)? available,
     TResult? Function(UpdateDownloading value)? downloading,
+    TResult? Function(UpdateInstalling value)? installing,
     TResult? Function(UpdateReadyToInstall value)? readyToInstall,
     TResult? Function(UpdateError value)? error,
   }) {
@@ -344,6 +361,7 @@ class _$UpdateCheckingImpl implements UpdateChecking {
     TResult Function(UpdateChecking value)? checking,
     TResult Function(UpdateAvailable value)? available,
     TResult Function(UpdateDownloading value)? downloading,
+    TResult Function(UpdateInstalling value)? installing,
     TResult Function(UpdateReadyToInstall value)? readyToInstall,
     TResult Function(UpdateError value)? error,
     required TResult orElse(),
@@ -436,6 +454,7 @@ class _$UpdateAvailableImpl implements UpdateAvailable {
     required TResult Function() checking,
     required TResult Function(UpdateInfo info) available,
     required TResult Function(double progress) downloading,
+    required TResult Function(String message, double progress) installing,
     required TResult Function(File zipFile) readyToInstall,
     required TResult Function(String message) error,
   }) {
@@ -449,6 +468,7 @@ class _$UpdateAvailableImpl implements UpdateAvailable {
     TResult? Function()? checking,
     TResult? Function(UpdateInfo info)? available,
     TResult? Function(double progress)? downloading,
+    TResult? Function(String message, double progress)? installing,
     TResult? Function(File zipFile)? readyToInstall,
     TResult? Function(String message)? error,
   }) {
@@ -462,6 +482,7 @@ class _$UpdateAvailableImpl implements UpdateAvailable {
     TResult Function()? checking,
     TResult Function(UpdateInfo info)? available,
     TResult Function(double progress)? downloading,
+    TResult Function(String message, double progress)? installing,
     TResult Function(File zipFile)? readyToInstall,
     TResult Function(String message)? error,
     required TResult orElse(),
@@ -479,6 +500,7 @@ class _$UpdateAvailableImpl implements UpdateAvailable {
     required TResult Function(UpdateChecking value) checking,
     required TResult Function(UpdateAvailable value) available,
     required TResult Function(UpdateDownloading value) downloading,
+    required TResult Function(UpdateInstalling value) installing,
     required TResult Function(UpdateReadyToInstall value) readyToInstall,
     required TResult Function(UpdateError value) error,
   }) {
@@ -492,6 +514,7 @@ class _$UpdateAvailableImpl implements UpdateAvailable {
     TResult? Function(UpdateChecking value)? checking,
     TResult? Function(UpdateAvailable value)? available,
     TResult? Function(UpdateDownloading value)? downloading,
+    TResult? Function(UpdateInstalling value)? installing,
     TResult? Function(UpdateReadyToInstall value)? readyToInstall,
     TResult? Function(UpdateError value)? error,
   }) {
@@ -505,6 +528,7 @@ class _$UpdateAvailableImpl implements UpdateAvailable {
     TResult Function(UpdateChecking value)? checking,
     TResult Function(UpdateAvailable value)? available,
     TResult Function(UpdateDownloading value)? downloading,
+    TResult Function(UpdateInstalling value)? installing,
     TResult Function(UpdateReadyToInstall value)? readyToInstall,
     TResult Function(UpdateError value)? error,
     required TResult orElse(),
@@ -606,6 +630,7 @@ class _$UpdateDownloadingImpl implements UpdateDownloading {
     required TResult Function() checking,
     required TResult Function(UpdateInfo info) available,
     required TResult Function(double progress) downloading,
+    required TResult Function(String message, double progress) installing,
     required TResult Function(File zipFile) readyToInstall,
     required TResult Function(String message) error,
   }) {
@@ -619,6 +644,7 @@ class _$UpdateDownloadingImpl implements UpdateDownloading {
     TResult? Function()? checking,
     TResult? Function(UpdateInfo info)? available,
     TResult? Function(double progress)? downloading,
+    TResult? Function(String message, double progress)? installing,
     TResult? Function(File zipFile)? readyToInstall,
     TResult? Function(String message)? error,
   }) {
@@ -632,6 +658,7 @@ class _$UpdateDownloadingImpl implements UpdateDownloading {
     TResult Function()? checking,
     TResult Function(UpdateInfo info)? available,
     TResult Function(double progress)? downloading,
+    TResult Function(String message, double progress)? installing,
     TResult Function(File zipFile)? readyToInstall,
     TResult Function(String message)? error,
     required TResult orElse(),
@@ -649,6 +676,7 @@ class _$UpdateDownloadingImpl implements UpdateDownloading {
     required TResult Function(UpdateChecking value) checking,
     required TResult Function(UpdateAvailable value) available,
     required TResult Function(UpdateDownloading value) downloading,
+    required TResult Function(UpdateInstalling value) installing,
     required TResult Function(UpdateReadyToInstall value) readyToInstall,
     required TResult Function(UpdateError value) error,
   }) {
@@ -662,6 +690,7 @@ class _$UpdateDownloadingImpl implements UpdateDownloading {
     TResult? Function(UpdateChecking value)? checking,
     TResult? Function(UpdateAvailable value)? available,
     TResult? Function(UpdateDownloading value)? downloading,
+    TResult? Function(UpdateInstalling value)? installing,
     TResult? Function(UpdateReadyToInstall value)? readyToInstall,
     TResult? Function(UpdateError value)? error,
   }) {
@@ -675,6 +704,7 @@ class _$UpdateDownloadingImpl implements UpdateDownloading {
     TResult Function(UpdateChecking value)? checking,
     TResult Function(UpdateAvailable value)? available,
     TResult Function(UpdateDownloading value)? downloading,
+    TResult Function(UpdateInstalling value)? installing,
     TResult Function(UpdateReadyToInstall value)? readyToInstall,
     TResult Function(UpdateError value)? error,
     required TResult orElse(),
@@ -696,6 +726,191 @@ abstract class UpdateDownloading implements UpdateState {
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
   _$$UpdateDownloadingImplCopyWith<_$UpdateDownloadingImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$UpdateInstallingImplCopyWith<$Res> {
+  factory _$$UpdateInstallingImplCopyWith(
+    _$UpdateInstallingImpl value,
+    $Res Function(_$UpdateInstallingImpl) then,
+  ) = __$$UpdateInstallingImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({String message, double progress});
+}
+
+/// @nodoc
+class __$$UpdateInstallingImplCopyWithImpl<$Res>
+    extends _$UpdateStateCopyWithImpl<$Res, _$UpdateInstallingImpl>
+    implements _$$UpdateInstallingImplCopyWith<$Res> {
+  __$$UpdateInstallingImplCopyWithImpl(
+    _$UpdateInstallingImpl _value,
+    $Res Function(_$UpdateInstallingImpl) _then,
+  ) : super(_value, _then);
+
+  /// Create a copy of UpdateState
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({Object? message = null, Object? progress = null}) {
+    return _then(
+      _$UpdateInstallingImpl(
+        null == message
+            ? _value.message
+            : message // ignore: cast_nullable_to_non_nullable
+                  as String,
+        null == progress
+            ? _value.progress
+            : progress // ignore: cast_nullable_to_non_nullable
+                  as double,
+      ),
+    );
+  }
+}
+
+/// @nodoc
+
+class _$UpdateInstallingImpl implements UpdateInstalling {
+  const _$UpdateInstallingImpl(this.message, this.progress);
+
+  @override
+  final String message;
+  @override
+  final double progress;
+
+  @override
+  String toString() {
+    return 'UpdateState.installing(message: $message, progress: $progress)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$UpdateInstallingImpl &&
+            (identical(other.message, message) || other.message == message) &&
+            (identical(other.progress, progress) ||
+                other.progress == progress));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, message, progress);
+
+  /// Create a copy of UpdateState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$UpdateInstallingImplCopyWith<_$UpdateInstallingImpl> get copyWith =>
+      __$$UpdateInstallingImplCopyWithImpl<_$UpdateInstallingImpl>(
+        this,
+        _$identity,
+      );
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() initial,
+    required TResult Function() checking,
+    required TResult Function(UpdateInfo info) available,
+    required TResult Function(double progress) downloading,
+    required TResult Function(String message, double progress) installing,
+    required TResult Function(File zipFile) readyToInstall,
+    required TResult Function(String message) error,
+  }) {
+    return installing(message, progress);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? initial,
+    TResult? Function()? checking,
+    TResult? Function(UpdateInfo info)? available,
+    TResult? Function(double progress)? downloading,
+    TResult? Function(String message, double progress)? installing,
+    TResult? Function(File zipFile)? readyToInstall,
+    TResult? Function(String message)? error,
+  }) {
+    return installing?.call(message, progress);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? initial,
+    TResult Function()? checking,
+    TResult Function(UpdateInfo info)? available,
+    TResult Function(double progress)? downloading,
+    TResult Function(String message, double progress)? installing,
+    TResult Function(File zipFile)? readyToInstall,
+    TResult Function(String message)? error,
+    required TResult orElse(),
+  }) {
+    if (installing != null) {
+      return installing(message, progress);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(UpdateInitial value) initial,
+    required TResult Function(UpdateChecking value) checking,
+    required TResult Function(UpdateAvailable value) available,
+    required TResult Function(UpdateDownloading value) downloading,
+    required TResult Function(UpdateInstalling value) installing,
+    required TResult Function(UpdateReadyToInstall value) readyToInstall,
+    required TResult Function(UpdateError value) error,
+  }) {
+    return installing(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(UpdateInitial value)? initial,
+    TResult? Function(UpdateChecking value)? checking,
+    TResult? Function(UpdateAvailable value)? available,
+    TResult? Function(UpdateDownloading value)? downloading,
+    TResult? Function(UpdateInstalling value)? installing,
+    TResult? Function(UpdateReadyToInstall value)? readyToInstall,
+    TResult? Function(UpdateError value)? error,
+  }) {
+    return installing?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(UpdateInitial value)? initial,
+    TResult Function(UpdateChecking value)? checking,
+    TResult Function(UpdateAvailable value)? available,
+    TResult Function(UpdateDownloading value)? downloading,
+    TResult Function(UpdateInstalling value)? installing,
+    TResult Function(UpdateReadyToInstall value)? readyToInstall,
+    TResult Function(UpdateError value)? error,
+    required TResult orElse(),
+  }) {
+    if (installing != null) {
+      return installing(this);
+    }
+    return orElse();
+  }
+}
+
+abstract class UpdateInstalling implements UpdateState {
+  const factory UpdateInstalling(final String message, final double progress) =
+      _$UpdateInstallingImpl;
+
+  String get message;
+  double get progress;
+
+  /// Create a copy of UpdateState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$UpdateInstallingImplCopyWith<_$UpdateInstallingImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
@@ -777,6 +992,7 @@ class _$UpdateReadyToInstallImpl implements UpdateReadyToInstall {
     required TResult Function() checking,
     required TResult Function(UpdateInfo info) available,
     required TResult Function(double progress) downloading,
+    required TResult Function(String message, double progress) installing,
     required TResult Function(File zipFile) readyToInstall,
     required TResult Function(String message) error,
   }) {
@@ -790,6 +1006,7 @@ class _$UpdateReadyToInstallImpl implements UpdateReadyToInstall {
     TResult? Function()? checking,
     TResult? Function(UpdateInfo info)? available,
     TResult? Function(double progress)? downloading,
+    TResult? Function(String message, double progress)? installing,
     TResult? Function(File zipFile)? readyToInstall,
     TResult? Function(String message)? error,
   }) {
@@ -803,6 +1020,7 @@ class _$UpdateReadyToInstallImpl implements UpdateReadyToInstall {
     TResult Function()? checking,
     TResult Function(UpdateInfo info)? available,
     TResult Function(double progress)? downloading,
+    TResult Function(String message, double progress)? installing,
     TResult Function(File zipFile)? readyToInstall,
     TResult Function(String message)? error,
     required TResult orElse(),
@@ -820,6 +1038,7 @@ class _$UpdateReadyToInstallImpl implements UpdateReadyToInstall {
     required TResult Function(UpdateChecking value) checking,
     required TResult Function(UpdateAvailable value) available,
     required TResult Function(UpdateDownloading value) downloading,
+    required TResult Function(UpdateInstalling value) installing,
     required TResult Function(UpdateReadyToInstall value) readyToInstall,
     required TResult Function(UpdateError value) error,
   }) {
@@ -833,6 +1052,7 @@ class _$UpdateReadyToInstallImpl implements UpdateReadyToInstall {
     TResult? Function(UpdateChecking value)? checking,
     TResult? Function(UpdateAvailable value)? available,
     TResult? Function(UpdateDownloading value)? downloading,
+    TResult? Function(UpdateInstalling value)? installing,
     TResult? Function(UpdateReadyToInstall value)? readyToInstall,
     TResult? Function(UpdateError value)? error,
   }) {
@@ -846,6 +1066,7 @@ class _$UpdateReadyToInstallImpl implements UpdateReadyToInstall {
     TResult Function(UpdateChecking value)? checking,
     TResult Function(UpdateAvailable value)? available,
     TResult Function(UpdateDownloading value)? downloading,
+    TResult Function(UpdateInstalling value)? installing,
     TResult Function(UpdateReadyToInstall value)? readyToInstall,
     TResult Function(UpdateError value)? error,
     required TResult orElse(),
@@ -944,6 +1165,7 @@ class _$UpdateErrorImpl implements UpdateError {
     required TResult Function() checking,
     required TResult Function(UpdateInfo info) available,
     required TResult Function(double progress) downloading,
+    required TResult Function(String message, double progress) installing,
     required TResult Function(File zipFile) readyToInstall,
     required TResult Function(String message) error,
   }) {
@@ -957,6 +1179,7 @@ class _$UpdateErrorImpl implements UpdateError {
     TResult? Function()? checking,
     TResult? Function(UpdateInfo info)? available,
     TResult? Function(double progress)? downloading,
+    TResult? Function(String message, double progress)? installing,
     TResult? Function(File zipFile)? readyToInstall,
     TResult? Function(String message)? error,
   }) {
@@ -970,6 +1193,7 @@ class _$UpdateErrorImpl implements UpdateError {
     TResult Function()? checking,
     TResult Function(UpdateInfo info)? available,
     TResult Function(double progress)? downloading,
+    TResult Function(String message, double progress)? installing,
     TResult Function(File zipFile)? readyToInstall,
     TResult Function(String message)? error,
     required TResult orElse(),
@@ -987,6 +1211,7 @@ class _$UpdateErrorImpl implements UpdateError {
     required TResult Function(UpdateChecking value) checking,
     required TResult Function(UpdateAvailable value) available,
     required TResult Function(UpdateDownloading value) downloading,
+    required TResult Function(UpdateInstalling value) installing,
     required TResult Function(UpdateReadyToInstall value) readyToInstall,
     required TResult Function(UpdateError value) error,
   }) {
@@ -1000,6 +1225,7 @@ class _$UpdateErrorImpl implements UpdateError {
     TResult? Function(UpdateChecking value)? checking,
     TResult? Function(UpdateAvailable value)? available,
     TResult? Function(UpdateDownloading value)? downloading,
+    TResult? Function(UpdateInstalling value)? installing,
     TResult? Function(UpdateReadyToInstall value)? readyToInstall,
     TResult? Function(UpdateError value)? error,
   }) {
@@ -1013,6 +1239,7 @@ class _$UpdateErrorImpl implements UpdateError {
     TResult Function(UpdateChecking value)? checking,
     TResult Function(UpdateAvailable value)? available,
     TResult Function(UpdateDownloading value)? downloading,
+    TResult Function(UpdateInstalling value)? installing,
     TResult Function(UpdateReadyToInstall value)? readyToInstall,
     TResult Function(UpdateError value)? error,
     required TResult orElse(),

@@ -41,7 +41,12 @@ class UpdateCubit extends Cubit<UpdateState> {
 
   Future<void> applyUpdate(File zipFile) async {
     try {
-      await _updateService.applyUpdate(zipFile);
+      await _updateService.applyUpdate(
+        zipFile,
+        onProgress: (message, progress) {
+          emit(UpdateState.installing(message, progress));
+        },
+      );
     } catch (e) {
       emit(UpdateState.error(e.toString()));
     }

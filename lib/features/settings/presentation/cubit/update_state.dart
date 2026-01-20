@@ -10,6 +10,7 @@ class UpdateState with _$UpdateState {
   const factory UpdateState.checking() = UpdateChecking;
   const factory UpdateState.available(UpdateInfo info) = UpdateAvailable;
   const factory UpdateState.downloading(double progress) = UpdateDownloading;
+  const factory UpdateState.installing(String message, double progress) = UpdateInstalling;
   const factory UpdateState.readyToInstall(File zipFile) = UpdateReadyToInstall;
   const factory UpdateState.error(String message) = UpdateError;
 }

@@ -3,6 +3,9 @@ import 'dart:io';
 
 import 'package:dartz/dartz.dart';
 
+import 'package:crypto/crypto.dart';
+import 'package:path/path.dart' as p;
+
 import 'package:game_size_manager/features/games/data/models/heroic_game_dto.dart'; // Add DTO import
 
 import 'package:game_size_manager/core/services/game_art_service.dart';
@@ -48,7 +51,7 @@ class HeroicDatasource implements GameDatasource {
 
       // 2. Parse library metadata to get art URLs (Heroic uses hashed URLs for filenames)
       final artUrls = await _getEpicArtUrls();
-      _logger.debug('Found ${artUrls.length} Art URLs from library metadata', tag: 'Heroic');
+      _logger.debug('Loaded ${artUrls.length} art URLs from legendary_library.json', tag: 'Heroic');
 
       final games = <Game>[];
 
@@ -59,11 +62,13 @@ class HeroicDatasource implements GameDatasource {
           var dto = EpicGameDto.fromJson(gameData, entry.key);
 
           // Use the art URL if available to find the cached image
-          final artUrl = artUrls[dto.appName];
-          final iconPath = _artService.getHeroicArtPath(dto.appName, artUrl: artUrl);
-
-          if (iconPath != null) {
-            dto = dto.copyWith(iconPath: iconPath);
+          final availableArtUrl = await _resolveBestArtUrl(dto.appName, artUrls);
+          if (availableArtUrl != null) {
+            // Pass the resolved URL to GameArtService so it can look up the file
+            final iconPath = _artService.getHeroicArtPath(dto.appName, artUrl: availableArtUrl);
+            if (iconPath != null) {
+              dto = dto.copyWith(iconPath: iconPath);
+            }
           }
 
           if (dto.installPath != null) {
@@ -88,8 +93,40 @@ class HeroicDatasource implements GameDatasource {
     }
   }
 
-  /// Reads legendary_library.json to get a map of appName -> art_square URL
-  Future<Map<String, String>> _getEpicArtUrls() async {
+  /// Checks the Heroic image cache to see which art URL (square, cover, box) is actually cached.
+  /// Returns the URL that corresponds to an existing file, or the best candidate if none found.
+  Future<String?> _resolveBestArtUrl(String appName, Map<String, List<String>> artMap) async {
+    final urls = artMap[appName];
+    if (urls == null || urls.isEmpty) return null;
+
+    final cachePath = _platform.heroicImagesCachePath;
+    if (cachePath == null) return urls.first; // No cache path, just return the first one
+
+    // Check each URL to see if its hash exists in the cache
+    for (final url in urls) {
+      if (url.isEmpty) continue;
+
+      try {
+        // Heroic hashes the full URL with SHA256
+        final hash = sha256.convert(utf8.encode(url)).toString();
+        final file = File(p.join(cachePath, hash));
+
+        if (file.existsSync()) {
+          //_logger.debug('Found cached art for $appName: $url (hash: $hash)', tag: 'Heroic');
+          return url;
+        }
+      } catch (e) {
+        // Ignore hashing errors
+      }
+    }
+
+    // If no cached file found, return the first one (usually art_square) as fallback
+    return urls.first;
+  }
+
+  /// Reads legendary_library.json to get a map of appName -> List of candidate art URLs
+  /// We return a list so we can check multiple options (square, cover, box)
+  Future<Map<String, List<String>>> _getEpicArtUrls() async {
     try {
       final libPath = _platform.legendaryLibraryPath;
       if (libPath == null) return {};
@@ -103,7 +140,7 @@ class HeroicDatasource implements GameDatasource {
       final content = await file.readAsString();
       final json = jsonDecode(content);
 
-      final artMap = <String, String>{};
+      final artMap = <String, List<String>>{};
       List<dynamic> libraryList = [];
 
       // Heroic stores data in a 'library' key, but let's be robust
@@ -118,14 +155,17 @@ class HeroicDatasource implements GameDatasource {
       for (final item in libraryList) {
         if (item is Map<String, dynamic>) {
           final appName = item['app_name'] as String?;
-          // Try detailed art_square first, fallback to other fields if necessary
-          final artUrl =
-              item['art_square'] as String? ??
-              item['art_cover'] as String? ??
-              item['box_art'] as String?;
+          if (appName == null) continue;
 
-          if (appName != null && artUrl != null) {
-            artMap[appName] = artUrl;
+          final candidates = <String>[];
+
+          // Prioritize square art as it looks best in grid
+          if (item['art_square'] is String) candidates.add(item['art_square'] as String);
+          if (item['art_cover'] is String) candidates.add(item['art_cover'] as String);
+          if (item['box_art'] is String) candidates.add(item['box_art'] as String);
+
+          if (candidates.isNotEmpty) {
+            artMap[appName] = candidates;
           }
         }
       }

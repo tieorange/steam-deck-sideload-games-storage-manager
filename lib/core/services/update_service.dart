@@ -136,21 +136,26 @@ class UpdateService {
     return file;
   }
 
-  Future<void> applyUpdate(File zipFile) async {
+  Future<void> applyUpdate(File zipFile, {Function(String, double)? onProgress}) async {
     LoggerService.instance.info('Applying update from ${zipFile.path}', tag: 'UpdateService');
     final tempDir = await getTemporaryDirectory();
     final extractDir = Directory(path.join(tempDir.path, 'update_extracted'));
 
     // Clean previous extraction
+    onProgress?.call('Preparing...', 0.0);
     if (await extractDir.exists()) {
       await extractDir.delete(recursive: true);
     }
     await extractDir.create();
 
     // Decode zip
+    onProgress?.call('Reading archive...', 0.1);
     final bytes = await zipFile.readAsBytes();
     final archive = ZipDecoder().decodeBytes(bytes);
 
+    // Extract with progress
+    final totalFiles = archive.length;
+    var extractedCount = 0;
     for (final file in archive) {
       final filename = file.name;
       if (file.isFile) {
@@ -161,7 +166,13 @@ class UpdateService {
       } else {
         Directory(path.join(extractDir.path, filename)).createSync(recursive: true);
       }
+      extractedCount++;
+      // Report progress: extraction is 10% to 70% of total progress
+      final progress = 0.1 + (extractedCount / totalFiles) * 0.6;
+      onProgress?.call('Extracting ($extractedCount/$totalFiles)...', progress);
     }
+
+    onProgress?.call('Preparing installation...', 0.75);
 
     // Determine Source and Target Paths
     String sourcePath = extractDir.path;
@@ -211,51 +222,79 @@ class UpdateService {
       scriptContent =
           '''
 #!/bin/bash
+set -e
+exec > /tmp/gsm_update.log 2>&1
+echo "[UPDATE] Starting update at \$(date)"
+
 PID=$pid
 SOURCE="$sourcePath"
 TARGET="$targetPath"
 APP_NAME="$executableName"
 
-# Wait for exit
-while kill -0 \$PID 2>/dev/null; do sleep 0.5; done
+# Cleanup function
+cleanup() {
+  echo "[UPDATE] Cleaning up..."
+  rm -rf "\$SOURCE" 2>/dev/null || true
+}
+trap cleanup EXIT
 
-# Remove old app and copy new one
+echo "[UPDATE] Waiting for app (PID \$PID) to exit..."
+while kill -0 \$PID 2>/dev/null; do sleep 0.5; done
+echo "[UPDATE] App exited"
+
+echo "[UPDATE] Removing old app: \$TARGET"
 rm -rf "\$TARGET"
+
+echo "[UPDATE] Copying new app from \$SOURCE to \$TARGET"
 cp -R "\$SOURCE" "\$TARGET"
 
-# Remove quarantine (fix for "damaged" or secinit crash)
-xattr -cr "\$TARGET"
+echo "[UPDATE] Removing quarantine attributes"
+xattr -cr "\$TARGET" 2>/dev/null || true
 
-# Cleanup
-rm -rf "\$SOURCE"
-rm "\$0"
+echo "[UPDATE] Removing update script"
+rm "\$0" 2>/dev/null || true
 
-# Relaunch
+echo "[UPDATE] Relaunching app"
 open "\$TARGET"
+echo "[UPDATE] Update complete at \$(date)"
 ''';
     } else {
       // Linux Logic
       scriptContent =
           '''
 #!/bin/bash
+set -e
+exec > /tmp/gsm_update.log 2>&1
+echo "[UPDATE] Starting update at \$(date)"
+
 PID=$pid
 SOURCE="$sourcePath"
 TARGET="$targetPath"
 EXECUTABLE="$executableName"
 
-# Wait for exit
-while kill -0 \$PID 2>/dev/null; do sleep 0.5; done
+# Cleanup function
+cleanup() {
+  echo "[UPDATE] Cleaning up..."
+  rm -rf "\$SOURCE" 2>/dev/null || true
+}
+trap cleanup EXIT
 
-# Replace content
-rm -rf "\$TARGET"/*
+echo "[UPDATE] Waiting for app (PID \$PID) to exit..."
+while kill -0 \$PID 2>/dev/null; do sleep 0.5; done
+echo "[UPDATE] App exited"
+
+echo "[UPDATE] Removing old files from \$TARGET"
+rm -rf "\$TARGET"/* 2>/dev/null || true
+
+echo "[UPDATE] Copying new files from \$SOURCE to \$TARGET"
 cp -r "\$SOURCE"/* "\$TARGET"
 
-# Cleanup
-rm -rf "\$SOURCE"
-rm "\$0"
+echo "[UPDATE] Removing update script"
+rm "\$0" 2>/dev/null || true
 
-# Relaunch
+echo "[UPDATE] Relaunching app"
 nohup "\$TARGET/\$EXECUTABLE" > /dev/null 2>&1 &
+echo "[UPDATE] Update complete at \$(date)"
 ''';
     }
 

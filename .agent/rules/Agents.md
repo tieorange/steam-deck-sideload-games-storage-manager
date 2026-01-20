@@ -58,17 +58,28 @@ When working on datasources, understand how we detect games for each launcher:
 *   **Game Metadata**: Parses `appmanifest_[APPID].acf` files in `steamapps/`.
     *   **Key Fields**: `appid`, `name`, `installdir`, `SizeOnDisk`.
 *   **Launch Options**: Parsed from `localconfig.vdf`. Careful: simpler regex parsing is preferred over full VDF parsing for performance.
+*   **Art Fetching**:
+    *   **Priority 1 (Custom)**: Checks `userdata/<user_id>/config/grid` for PNGs (e.g., `[APPID]p.png` for cover). Common for SteamGridDB.
+    *   **Priority 2 (Default)**: Checks `appcache/librarycache` for cached images (e.g., `[APPID]_library_600x900.jpg`).
 
 ### 🦸 Heroic Games Launcher (Epic & GOG)
 *   **Source**: `lib/features/games/data/datasources/heroic_datasource.dart`
 *   **Epic Games**: Parses `installed.json` (managed by Legendary).
     *   **Path**: `~/.config/heroic/legendaryConfig/legendary/installed.json`
 *   **GOG**: Parses `gog_store/library.json` (Heroic's cache).
+*   **Art Fetching**:
+    *   **SHA256 Hashing**: Heroic caches images using the **SHA256 hash of the image URL** as the filename.
+    *   **Metadata Source**: We read `store_cache/legendary_library.json` (Epic) to look up the `art_square` URL, hash it, and check `~/.config/heroic/images-cache`.
+    *   **Fallback**: Scanning the directory for `[AppName].jpg` (unreliable).
 
 ### 🍷 Lutris
 *   **Source**: `lib/features/games/data/datasources/lutris_datasource.dart`
 *   **Database**: SQLite file at `~/.local/share/lutris/pga.db`.
 *   **Query**: Select from `games` table where `installed = 1` and `directory` is not null.
+*   **Art Fetching**:
+    *   **Path**: Checks `coverart` and `banners` directories.
+    *   **Flatpak Quirk**: Lutris Flatpak stores data in `~/.var/app/.../data/lutris` (XDG_DATA_HOME), NOT `cache`.
+    *   **Filename**: `{slug}.jpg`. Slug is derived from game info.
 
 ### 📦 OpenGameInstaller (OGI)
 *   **Source**: `lib/features/games/data/datasources/ogi_datasource.dart`

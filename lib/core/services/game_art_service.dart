@@ -62,7 +62,7 @@ class GameArtService {
       }
     }
 
-    // 2. Check Official Library Cache
+    // 2. Check Official Library Cache (subdirectory per appId)
     final cachePath = _platform.steamLibraryCachePath;
 
     if (!Directory(cachePath).existsSync()) {
@@ -70,25 +70,33 @@ class GameArtService {
       return null;
     }
 
+    // Steam uses subdirectory per appId: librarycache/[appId]/library_600x900.jpg
+    final appCachePath = '$cachePath/$appId';
+
+    if (!Directory(appCachePath).existsSync()) {
+      _logger.debug('Steam app cache not found for $appId', tag: _tag);
+      return null;
+    }
+
     // Check for vertical cover (best for details page)
-    final coverPath = '$cachePath/${appId}_library_600x900.jpg';
+    final coverPath = '$appCachePath/library_600x900.jpg';
     if (File(coverPath).existsSync()) {
       _logger.debug('Found Steam cover art for $appId: $coverPath', tag: _tag);
       return coverPath;
     }
 
-    // Check for header/banner
-    final headerPath = '$cachePath/${appId}_header.jpg';
-    if (File(headerPath).existsSync()) {
-      _logger.debug('Found Steam header art for $appId: $headerPath', tag: _tag);
-      return headerPath;
+    // Check for header/hero banner
+    final heroPath = '$appCachePath/library_hero.jpg';
+    if (File(heroPath).existsSync()) {
+      _logger.debug('Found Steam hero art for $appId: $heroPath', tag: _tag);
+      return heroPath;
     }
 
-    // Check for icon
-    final iconPath = '$cachePath/${appId}_icon.jpg';
-    if (File(iconPath).existsSync()) {
-      _logger.debug('Found Steam icon for $appId: $iconPath', tag: _tag);
-      return iconPath;
+    // Check for logo
+    final logoPath = '$appCachePath/logo.png';
+    if (File(logoPath).existsSync()) {
+      _logger.debug('Found Steam logo for $appId: $logoPath', tag: _tag);
+      return logoPath;
     }
 
     _logger.warning(

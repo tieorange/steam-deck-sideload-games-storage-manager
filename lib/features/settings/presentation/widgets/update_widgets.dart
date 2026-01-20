@@ -215,6 +215,14 @@ class _UpdateCheckDialogContentState extends State<_UpdateCheckDialogContent> {
           ),
         ],
       ),
+      installing: (message, progress) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          LinearProgressIndicator(value: progress),
+          const SizedBox(height: 16),
+          Text(message, style: theme.textTheme.bodyMedium),
+        ],
+      ),
       readyToInstall: (_) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
