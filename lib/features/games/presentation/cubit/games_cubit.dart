@@ -103,6 +103,12 @@ class GamesCubit extends Cubit<GamesState> {
 
     final result = await _refreshGames(onProgress: updateProgress);
 
+    // Ensure minimum loading time of 2 seconds for better UX
+    final elapsed = DateTime.now().difference(startTime);
+    if (elapsed < const Duration(seconds: 2)) {
+      await Future.delayed(const Duration(seconds: 2) - elapsed);
+    }
+
     result.fold(
       (failure) => emit(GamesState.error(failure.message)),
       (games) => emit(

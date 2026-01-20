@@ -5,6 +5,8 @@ import 'package:dartz/dartz.dart';
 
 import 'package:game_size_manager/features/games/data/models/heroic_game_dto.dart'; // Add DTO import
 
+import 'package:game_size_manager/core/services/game_art_service.dart';
+
 import 'package:game_size_manager/core/error/failures.dart';
 import 'package:game_size_manager/core/logging/logger_service.dart';
 import 'package:game_size_manager/core/platform/platform_service.dart';
@@ -13,12 +15,17 @@ import 'package:game_size_manager/features/games/domain/entities/game_entity.dar
 
 /// Data source for Heroic Games Launcher (Epic + GOG)
 class HeroicDatasource implements GameDatasource {
-  HeroicDatasource({PlatformService? platformService, LoggerService? logger})
-    : _platform = platformService ?? PlatformService.instance,
-      _logger = logger ?? LoggerService.instance;
+  HeroicDatasource({
+    PlatformService? platformService,
+    LoggerService? logger,
+    GameArtService? artService,
+  }) : _platform = platformService ?? PlatformService.instance,
+       _logger = logger ?? LoggerService.instance,
+       _artService = artService ?? GameArtService.instance;
 
   final PlatformService _platform;
   final LoggerService _logger;
+  final GameArtService _artService;
 
   /// Get all installed Epic games from Legendary's installed.json
   Future<Result<List<Game>>> getEpicGames() async {
@@ -44,7 +51,12 @@ class HeroicDatasource implements GameDatasource {
         final gameData = entry.value as Map<String, dynamic>;
 
         try {
-          final dto = EpicGameDto.fromJson(gameData, entry.key);
+          var dto = EpicGameDto.fromJson(gameData, entry.key);
+
+          final iconPath = _artService.getHeroicArtPath(dto.appName);
+          if (iconPath != null) {
+            dto = dto.copyWith(iconPath: iconPath);
+          }
 
           if (dto.installPath != null) {
             _logger.debug(
@@ -96,7 +108,12 @@ class HeroicDatasource implements GameDatasource {
         final gameData = item as Map<String, dynamic>;
 
         try {
-          final dto = GogGameDto.fromJson(gameData);
+          var dto = GogGameDto.fromJson(gameData);
+
+          final iconPath = _artService.getHeroicArtPath(dto.appName);
+          if (iconPath != null) {
+            dto = dto.copyWith(iconPath: iconPath);
+          }
 
           if (dto.isInstalled) {
             if (dto.installPath != null && dto.installPath!.isNotEmpty) {

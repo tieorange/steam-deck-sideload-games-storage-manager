@@ -4,6 +4,8 @@ import 'package:dartz/dartz.dart';
 
 import 'package:game_size_manager/features/games/data/models/steam_game_dto.dart';
 
+import 'package:game_size_manager/core/services/game_art_service.dart';
+
 import 'package:game_size_manager/core/error/failures.dart';
 import 'package:game_size_manager/core/logging/logger_service.dart';
 import 'package:game_size_manager/core/platform/platform_service.dart';
@@ -12,12 +14,17 @@ import 'package:game_size_manager/features/games/domain/entities/game_entity.dar
 
 /// Data source for Steam games
 class SteamDatasource implements GameDatasource {
-  SteamDatasource({PlatformService? platformService, LoggerService? logger})
-    : _platform = platformService ?? PlatformService.instance,
-      _logger = logger ?? LoggerService.instance;
+  SteamDatasource({
+    PlatformService? platformService,
+    LoggerService? logger,
+    GameArtService? artService,
+  }) : _platform = platformService ?? PlatformService.instance,
+       _logger = logger ?? LoggerService.instance,
+       _artService = artService ?? GameArtService.instance;
 
   final PlatformService _platform;
   final LoggerService _logger;
+  final GameArtService _artService;
 
   /// Get all installed Steam games from appmanifest files
   @override
@@ -153,6 +160,7 @@ class SteamDatasource implements GameDatasource {
       // Get extra metadata
       final launchOptions = await _getLaunchOptions(appId);
       final protonVersion = await _getProtonVersion(appId);
+      final iconPath = _artService.getSteamArtPath(appId);
 
       // Get full install path
       final steamappsDir = file.parent.path;
@@ -161,6 +169,7 @@ class SteamDatasource implements GameDatasource {
         steamAppsPath: steamappsDir,
         launchOptions: launchOptions,
         protonVersion: protonVersion,
+        iconPath: iconPath,
       );
     } catch (e) {
       return null;

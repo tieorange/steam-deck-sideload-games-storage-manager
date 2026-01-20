@@ -114,7 +114,7 @@ class GameRepositoryImpl implements GameRepository {
     _logger.info('Found ${allGames.length} games total from sources.', tag: 'GameRepo');
 
     // 3. Calculate sizes for games that need it
-    // Some sources (like OGI or Lutris) might not provide size.
+    onProgress?.call('Calculating sizes...', 0.6);
     try {
       final sizedGames = await Future.wait(
         allGames.map((game) async {
@@ -146,10 +146,14 @@ class GameRepositoryImpl implements GameRepository {
         }),
       );
 
+      onProgress?.call('Caching games...', 0.9);
+
       // Cache games
       // We clear cache then insert to ensure deleted games are removed
       await _localDatasource.clearCache();
       await _localDatasource.cacheGames(sizedGames);
+
+      onProgress?.call('Complete!', 1.0);
 
       return Right(sizedGames);
     } catch (e, s) {

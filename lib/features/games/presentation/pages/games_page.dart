@@ -38,8 +38,9 @@ class _GamesPageState extends State<GamesPage> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    // Auto-refresh on start
-    context.read<GamesCubit>().refreshGames();
+    // Auto-refresh on start (only if not already loaded)
+    final gamesCubit = context.read<GamesCubit>();
+    gamesCubit.state.maybeWhen(initial: () => gamesCubit.refreshGames(), orElse: () {});
     context.read<SettingsCubit>().loadSettings();
 
     _searchController.addListener(() {

@@ -35,7 +35,12 @@ class SteamGameDto {
     );
   }
 
-  Game toEntity({required String steamAppsPath, String? launchOptions, String? protonVersion}) {
+  Game toEntity({
+    required String steamAppsPath,
+    String? launchOptions,
+    String? protonVersion,
+    String? iconPath,
+  }) {
     final commonDir = '$steamAppsPath/common/$installDir';
 
     return Game(
@@ -46,6 +51,7 @@ class SteamGameDto {
       sizeBytes: sizeOnDisk,
       launchOptions: launchOptions,
       protonVersion: protonVersion,
+      iconPath: iconPath,
     );
   }
 }

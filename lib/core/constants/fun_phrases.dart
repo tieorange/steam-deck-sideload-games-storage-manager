@@ -1,3 +1,5 @@
+import 'dart:math';
+
 /// List of fun phrases to display during loading
 class FunPhrases {
   static const List<String> loadingPhrases = [
@@ -24,5 +26,5 @@ class FunPhrases {
   ];
 
   /// Get a random phrase
-  static String getRandom() => (loadingPhrases..shuffle()).first;
+  static String getRandom() => loadingPhrases[Random().nextInt(loadingPhrases.length)];
 }

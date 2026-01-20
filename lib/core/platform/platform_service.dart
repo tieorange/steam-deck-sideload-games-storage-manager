@@ -57,8 +57,17 @@ class PlatformService {
 
   String get heroicStandardPath => '$homeDir/.config/heroic';
 
+  String get heroicMacosPath => '$homeDir/Library/Application Support/heroic';
+
   /// Returns Heroic config path (Flatpak first, then standard)
   String? get heroicConfigPath {
+    // macOS Support
+    if (isMacOS) {
+      final macPath = heroicMacosPath;
+      if (Directory(macPath).existsSync()) return macPath;
+      // Fallback to check if user has a linux-like config on mac for some reason
+    }
+
     _logger.info('============ HEROIC PATH DETECTION ============', tag: 'Platform');
     _logger.info('homeDir: $homeDir', tag: 'Platform');
 
@@ -89,6 +98,21 @@ class PlatformService {
   /// Path to Legendary's installed.json (Epic games)
   String? get legendaryInstalledJsonPath {
     _logger.info('============ LEGENDARY PATH DETECTION ============', tag: 'Platform');
+
+    // macOS specific legendary path
+    if (isMacOS) {
+      // Typically ~/.config/legendary/installed.json or within 'Application Support'
+      final standardLegendary = '$homeDir/.config/legendary/installed.json';
+      if (File(standardLegendary).existsSync()) return standardLegendary;
+
+      // Also check if it's nested in Heroic config on Mac
+      final heroicPath = heroicConfigPath;
+      if (heroicPath != null) {
+        final nested = '$heroicPath/legendaryConfig/legendary/installed.json';
+        if (File(nested).existsSync()) return nested;
+      }
+    }
+
     final heroicPath = heroicConfigPath;
 
     if (heroicPath == null) {
@@ -180,9 +204,19 @@ class PlatformService {
   // Steam Paths
   // ============================================
 
-  String get steamAppsPath => '$homeDir/.local/share/Steam/steamapps';
+  String get steamAppsPath {
+    if (isMacOS) {
+      return '$homeDir/Library/Application Support/Steam/steamapps';
+    }
+    return '$homeDir/.local/share/Steam/steamapps';
+  }
 
-  String get steamUserDataPath => '$homeDir/.local/share/Steam/userdata';
+  String get steamUserDataPath {
+    if (isMacOS) {
+      return '$homeDir/Library/Application Support/Steam/userdata';
+    }
+    return '$homeDir/.local/share/Steam/userdata';
+  }
 
   String get libraryFoldersVdfPath => '$steamAppsPath/libraryfolders.vdf';
 
@@ -213,6 +247,72 @@ class PlatformService {
     }
 
     return paths;
+  }
+
+  String get steamLibraryCachePath => '$steamAppsPath/../appcache/librarycache';
+
+  // ============================================
+  // Heroic Paths
+  // ============================================
+
+  /// Returns Heroic images cache path (Flatpak first, then standard)
+  String? get heroicImagesCachePath {
+    // macOS Support
+    if (isMacOS) {
+      final macAppSupport = '$homeDir/Library/Application Support/heroic/ImagesCache';
+      if (Directory(macAppSupport).existsSync()) return macAppSupport;
+
+      final macConfig = '$homeDir/.config/heroic/images-cache';
+      if (Directory(macConfig).existsSync()) return macConfig;
+    }
+
+    // Flatpak: ~/.var/app/com.heroicgameslauncher.hgl/config/heroic/images-cache
+    final flatpakPath = '$homeDir/.var/app/com.heroicgameslauncher.hgl/config/heroic/images-cache';
+    if (Directory(flatpakPath).existsSync()) return flatpakPath;
+
+    // Standard: ~/.config/heroic/images-cache
+    final standardPath = '$homeDir/.config/heroic/images-cache';
+    if (Directory(standardPath).existsSync()) return standardPath;
+
+    return null;
+  }
+
+  // ============================================
+  // Lutris Paths
+  // ============================================
+
+  /// Returns Lutris banners path (Flatpak first, then standard)
+  String? get lutrisBannersPath {
+    // Flatpak: ~/.var/app/net.lutris.Lutris/cache/lutris/banners
+    final flatpakPath = '$homeDir/.var/app/net.lutris.Lutris/cache/lutris/banners';
+    if (Directory(flatpakPath).existsSync()) return flatpakPath;
+
+    // Standard: ~/.cache/lutris/banners
+    final standardPath = '$homeDir/.cache/lutris/banners';
+    if (Directory(standardPath).existsSync()) return standardPath;
+
+    // Local share fallback: ~/.local/share/lutris/banners
+    final localSharePath = '$homeDir/.local/share/lutris/banners';
+    if (Directory(localSharePath).existsSync()) return localSharePath;
+
+    return null;
+  }
+
+  /// Returns Lutris coverart path (Flatpak first, then standard)
+  String? get lutrisCoverartPath {
+    // Flatpak: ~/.var/app/net.lutris.Lutris/cache/lutris/coverart
+    final flatpakPath = '$homeDir/.var/app/net.lutris.Lutris/cache/lutris/coverart';
+    if (Directory(flatpakPath).existsSync()) return flatpakPath;
+
+    // Standard: ~/.cache/lutris/coverart
+    final standardPath = '$homeDir/.cache/lutris/coverart';
+    if (Directory(standardPath).existsSync()) return standardPath;
+
+    // Local share fallback: ~/.local/share/lutris/coverart
+    final localSharePath = '$homeDir/.local/share/lutris/coverart';
+    if (Directory(localSharePath).existsSync()) return localSharePath;
+
+    return null;
   }
 
   // ============================================

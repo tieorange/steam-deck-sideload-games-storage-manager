@@ -59,7 +59,10 @@ class RefreshProgressOverlay extends StatelessWidget {
                           '${(progress.progressPercent * 100).toInt()}%',
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
-                        if (progress.estimatedTimeRemaining != null)
+                        if (progress.progressPercent >= 0.9)
+                          const Text('Almost done!', style: TextStyle(fontStyle: FontStyle.italic))
+                        else if (progress.estimatedTimeRemaining != null &&
+                            progress.estimatedTimeRemaining!.inSeconds >= 1)
                           Text(
                             '~${progress.estimatedTimeRemaining!.inSeconds}s remaining',
                             style: const TextStyle(fontStyle: FontStyle.italic),

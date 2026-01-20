@@ -6,6 +6,8 @@ import 'package:path/path.dart' as p;
 import 'package:yaml/yaml.dart';
 import 'package:game_size_manager/features/games/data/models/lutris_game_dto.dart';
 
+import 'package:game_size_manager/core/services/game_art_service.dart';
+
 import 'package:game_size_manager/core/error/failures.dart';
 import 'package:game_size_manager/core/logging/logger_service.dart';
 import 'package:game_size_manager/core/platform/platform_service.dart';
@@ -14,12 +16,17 @@ import 'package:game_size_manager/features/games/domain/entities/game_entity.dar
 
 /// Data source for Lutris games
 class LutrisDatasource implements GameDatasource {
-  LutrisDatasource({PlatformService? platformService, LoggerService? logger})
-    : _platform = platformService ?? PlatformService.instance,
-      _logger = logger ?? LoggerService.instance;
+  LutrisDatasource({
+    PlatformService? platformService,
+    LoggerService? logger,
+    GameArtService? artService,
+  }) : _platform = platformService ?? PlatformService.instance,
+       _logger = logger ?? LoggerService.instance,
+       _artService = artService ?? GameArtService.instance;
 
   final PlatformService _platform;
   final LoggerService _logger;
+  final GameArtService _artService;
 
   /// Get all installed Lutris games from pga.db
   @override
@@ -66,6 +73,12 @@ class LutrisDatasource implements GameDatasource {
             }
           } else {
             _logger.debug('No config file found for ${dto.slug}', tag: 'Lutris');
+          }
+
+          // Resolve art path
+          final iconPath = _artService.getLutrisArtPath(dto.slug);
+          if (iconPath != null) {
+            dto = dto.copyWith(iconPath: iconPath);
           }
 
           if ((dto.gamePath != null && dto.gamePath!.isNotEmpty) ||

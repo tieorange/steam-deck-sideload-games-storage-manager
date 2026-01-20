@@ -7,8 +7,15 @@ class EpicGameDto {
   final String? title;
   final String? installPath;
   final int? installSize;
+  final String? iconPath;
 
-  const EpicGameDto({required this.appName, this.title, this.installPath, this.installSize});
+  const EpicGameDto({
+    required this.appName,
+    this.title,
+    this.installPath,
+    this.installSize,
+    this.iconPath,
+  });
 
   factory EpicGameDto.fromJson(Map<String, dynamic> json, String key) {
     return EpicGameDto(
@@ -16,6 +23,17 @@ class EpicGameDto {
       title: json['title'] as String?,
       installPath: json['install_path'] as String?,
       installSize: json['install_size'] as int?,
+    );
+  }
+
+  /// Create copy with icon path
+  EpicGameDto copyWith({String? iconPath}) {
+    return EpicGameDto(
+      appName: appName,
+      title: title,
+      installPath: installPath,
+      installSize: installSize,
+      iconPath: iconPath ?? this.iconPath,
     );
   }
 
@@ -27,6 +45,7 @@ class EpicGameDto {
       source: GameSource.heroic,
       installPath: installPath ?? '',
       sizeBytes: installSize ?? 0,
+      iconPath: iconPath,
     );
   }
 }
@@ -37,12 +56,14 @@ class GogGameDto {
   final String? title;
   final String? installPath;
   final bool isInstalled;
+  final String? iconPath;
 
   const GogGameDto({
     required this.appName,
     required this.isInstalled,
     this.title,
     this.installPath,
+    this.iconPath,
   });
 
   factory GogGameDto.fromJson(Map<String, dynamic> json) {
@@ -54,6 +75,17 @@ class GogGameDto {
     );
   }
 
+  /// Create copy with icon path
+  GogGameDto copyWith({String? iconPath}) {
+    return GogGameDto(
+      appName: appName,
+      isInstalled: isInstalled,
+      title: title,
+      installPath: installPath,
+      iconPath: iconPath ?? this.iconPath,
+    );
+  }
+
   Game toEntity() {
     final safeTitle = title ?? appName;
     return Game(
@@ -62,6 +94,7 @@ class GogGameDto {
       source: GameSource.heroic,
       installPath: installPath ?? '',
       sizeBytes: 0, // GOG doesn't provide size in cache
+      iconPath: iconPath,
     );
   }
 }
