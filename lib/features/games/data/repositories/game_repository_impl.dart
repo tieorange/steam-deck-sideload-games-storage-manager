@@ -80,9 +80,7 @@ class GameRepositoryImpl implements GameRepository {
     return result.fold(
       (failure) {
         _logger.error('Detector failed: $failure', tag: 'GameRepo');
-        // Map package failure to app failure
-        // Assuming we have a similar structure or just wrap it
-        return Left(UnexpectedFailure(failure.message, failure.stackTrace));
+        return Left(_mapFailure(failure));
       },
       (pkgGames) async {
         _logger.info('Found ${pkgGames.length} games from detector.', tag: 'GameRepo');
@@ -90,56 +88,57 @@ class GameRepositoryImpl implements GameRepository {
         onProgress?.call('Processing results...', 0.5);
 
         // Convert to App Entities
+        // Map allows partial success if one conversion fails (though unlikely with current factory)
         final allGames = pkgGames.map((g) => Game.fromPackage(g)).toList();
 
         // 3. Calculate sizes for games that need it
         onProgress?.call('Calculating sizes...', 0.6);
-        try {
-          final sizedGames = await Future.wait(
-            allGames.map((game) async {
+
+        final List<Game> sizedGames = [];
+
+        // Process sequentially or in chunks to avoid overwhelming I/O?
+        // Parallel is faster but risky if hundreds of games. Future.wait is fine for now (disk calc is async).
+        // Using wait but wrapping EACH in try-catch to return the original game if calc fails, or null if critical.
+
+        final results = await Future.wait(
+          allGames.map((game) async {
+            try {
               var updatedGame = game;
 
-              // Storage location is already detected by package!
-              // But if size is 0, we try to calc it.
-
               if (updatedGame.sizeBytes == 0 && updatedGame.installPath.isNotEmpty) {
-                try {
-                  final dir = Directory(updatedGame.installPath);
-                  if (await dir.exists()) {
-                    final size = await _diskSizeService.calculateDirectorySize(
-                      updatedGame.installPath,
-                    );
-                    updatedGame = updatedGame.copyWith(sizeBytes: size);
-                  }
-                } catch (e) {
-                  _logger.warning(
-                    'Failed to calculate size for ${updatedGame.title}: $e',
-                    tag: 'GameRepo',
+                final dir = Directory(updatedGame.installPath);
+                if (await dir.exists()) {
+                  final size = await _diskSizeService.calculateDirectorySize(
+                    updatedGame.installPath,
                   );
+                  updatedGame = updatedGame.copyWith(sizeBytes: size);
                 }
               }
               return updatedGame;
-            }),
-          );
+            } catch (e) {
+              _logger.warning('Failed to process/size game ${game.title}: $e', tag: 'GameRepo');
+              // Return original game even if sizing failed, so it still appears
+              return game;
+            }
+          }),
+        );
 
-          onProgress?.call('Caching games...', 0.9);
+        sizedGames.addAll(results);
 
-          // Cache games
+        onProgress?.call('Caching games...', 0.9);
+
+        // Cache games
+        try {
           await _localDatasource.clearCache();
           await _localDatasource.cacheGames(sizedGames);
-
-          onProgress?.call('Complete!', 1.0);
-
-          return Right(sizedGames);
-        } catch (e, s) {
-          _logger.error(
-            'Failed processing games during refresh',
-            error: e,
-            stackTrace: s,
-            tag: 'GameRepo',
-          );
-          return Left(UnexpectedFailure(e.toString(), s));
+        } catch (e) {
+          _logger.error('Failed to cache games: $e', tag: 'GameRepo');
+          // Even if caching fails, return the list we found so UI shows something
         }
+
+        onProgress?.call('Complete!', 1.0);
+
+        return Right(sizedGames);
       },
     );
   }
@@ -176,8 +175,20 @@ class GameRepositoryImpl implements GameRepository {
 
       return const Right(null);
     } catch (e, s) {
-      _logger.error('Failed to uninstall ${game.title}', error: e, stackTrace: s, tag: 'GameRepo');
       return Left(UninstallFailure('Failed to uninstall: $e', s));
     }
+  }
+
+  Failure _mapFailure(pkg.Failure failure) {
+    if (failure is pkg.LauncherNotFoundFailure) {
+      return LauncherNotFoundFailure(failure.message, failure.stackTrace);
+    } else if (failure is pkg.FileSystemFailure) {
+      return FileSystemFailure(failure.message, failure.stackTrace);
+    } else if (failure is pkg.DatabaseFailure) {
+      return DatabaseFailure(failure.message, failure.stackTrace);
+    } else if (failure is pkg.ParseFailure) {
+      return ParseFailure(failure.message, failure.stackTrace);
+    }
+    return UnexpectedFailure(failure.message, failure.stackTrace);
   }
 }

@@ -159,9 +159,36 @@ class _UpdateCheckDialogContentState extends State<_UpdateCheckDialogContent> {
 
   Widget _buildContent(BuildContext context, UpdateState state, ThemeData theme) {
     return state.when(
-      initial: () => const SizedBox(height: 50),
-      checking: () =>
-          const SizedBox(height: 100, child: Center(child: CircularProgressIndicator())),
+      initial: () => const SizedBox(height: 100, child: Center(child: Text('Initializing...'))),
+      checking: () => SizedBox(
+        height: 120, // Fixed height to prevent jumping
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            Text('Checking for updates...', style: theme.textTheme.bodyMedium),
+          ],
+        ),
+      ),
+      upToDate: (version) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.check_circle_rounded, size: 64, color: Colors.green.shade400),
+          const SizedBox(height: 16),
+          Text(
+            'You are up to date!',
+            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Version $version is the latest available.',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+            ),
+          ),
+        ],
+      ),
       available: (info) => Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -202,6 +229,11 @@ class _UpdateCheckDialogContentState extends State<_UpdateCheckDialogContent> {
             const SizedBox(height: 8),
             Container(
               constraints: const BoxConstraints(maxHeight: 150),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(8),
+              ),
               child: SingleChildScrollView(
                 child: Text(info.changelog, style: theme.textTheme.bodySmall),
               ),
@@ -212,7 +244,7 @@ class _UpdateCheckDialogContentState extends State<_UpdateCheckDialogContent> {
       downloading: (progress) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          LinearProgressIndicator(value: progress),
+          LinearProgressIndicator(value: progress, borderRadius: BorderRadius.circular(4)),
           const SizedBox(height: 16),
           Text(
             'Downloading... ${(progress * 100).toStringAsFixed(0)}%',
@@ -223,7 +255,7 @@ class _UpdateCheckDialogContentState extends State<_UpdateCheckDialogContent> {
       installing: (message, progress) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          LinearProgressIndicator(value: progress),
+          LinearProgressIndicator(value: progress, borderRadius: BorderRadius.circular(4)),
           const SizedBox(height: 16),
           Text(message, style: theme.textTheme.bodyMedium),
         ],
@@ -231,9 +263,12 @@ class _UpdateCheckDialogContentState extends State<_UpdateCheckDialogContent> {
       readyToInstall: (_) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.check_circle_outline, size: 48, color: Colors.green),
+          const Icon(Icons.system_update_rounded, size: 48, color: Colors.green),
           const SizedBox(height: 16),
-          const Text('Update Downloaded!'),
+          Text(
+            'Update Ready!',
+            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 8),
           const Text('The app will restart to apply the update.'),
         ],
@@ -245,12 +280,17 @@ class _UpdateCheckDialogContentState extends State<_UpdateCheckDialogContent> {
           const SizedBox(height: 16),
           Text('Failed to update', style: theme.textTheme.titleMedium),
           const SizedBox(height: 8),
-          Text(
-            message,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.errorContainer.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(8),
             ),
-            textAlign: TextAlign.center,
+            child: Text(
+              message,
+              style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.error),
+              textAlign: TextAlign.center,
+            ),
           ),
         ],
       ),
@@ -274,6 +314,9 @@ class _UpdateCheckDialogContentState extends State<_UpdateCheckDialogContent> {
           icon: const Icon(Icons.restart_alt_rounded),
           label: const Text('Restart & Install'),
         ),
+      ],
+      upToDate: (_) => [
+        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Close')),
       ],
       downloading: (_) => [],
       checking: () => [],

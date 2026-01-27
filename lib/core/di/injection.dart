@@ -1,12 +1,14 @@
 import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:steam_deck_games_detector/steam_deck_games_detector.dart';
+import 'package:steam_deck_games_detector/steam_deck_games_detector.dart' as pkg;
 
 import 'package:game_size_manager/core/database/game_database.dart';
 import 'package:game_size_manager/core/services/disk_size_service.dart';
 import 'package:game_size_manager/core/services/update_service.dart';
 import 'package:game_size_manager/core/platform/platform_service.dart';
+import 'package:game_size_manager/core/logging/log_bridge.dart';
+import 'package:game_size_manager/core/logging/logger_service.dart';
 import 'package:game_size_manager/features/games/data/datasources/game_local_datasource.dart';
 
 import 'package:game_size_manager/features/games/data/repositories/game_repository_impl.dart';
@@ -46,7 +48,12 @@ Future<void> init() async {
   ); // Register Local Datasource
 
   // Package: SteamDeckGamesDetector
-  sl.registerLazySingleton(() => SteamDeckGamesDetector());
+  // Package: SteamDeckGamesDetector
+  sl.registerLazySingleton(
+    () =>
+        pkg.SteamDeckGamesDetector()
+          ..loggerService.registerHandler(BridgeLogger(LoggerService.instance)),
+  );
 
   // Repositories
   if (!PlatformService.instance.shouldUseMockData) {

@@ -28,7 +28,7 @@ mixin _$Game {
   String get title => throw _privateConstructorUsedError;
 
   /// Source launcher
-  GameSource get source => throw _privateConstructorUsedError;
+  pkg.GameSource get source => throw _privateConstructorUsedError;
 
   /// Full path to installation directory
   String get installPath => throw _privateConstructorUsedError;
@@ -46,7 +46,7 @@ mixin _$Game {
   String? get protonVersion => throw _privateConstructorUsedError;
 
   /// Storage location (internal or SD card)
-  StorageLocation get storageLocation => throw _privateConstructorUsedError;
+  pkg.StorageLocation get storageLocation => throw _privateConstructorUsedError;
 
   /// Whether this game is selected for batch operations
   bool get isSelected => throw _privateConstructorUsedError;
@@ -68,13 +68,13 @@ abstract class $GameCopyWith<$Res> {
   $Res call({
     String id,
     String title,
-    GameSource source,
+    pkg.GameSource source,
     String installPath,
     int sizeBytes,
     String? iconPath,
     String? launchOptions,
     String? protonVersion,
-    StorageLocation storageLocation,
+    pkg.StorageLocation storageLocation,
     bool isSelected,
   });
 }
@@ -118,7 +118,7 @@ class _$GameCopyWithImpl<$Res, $Val extends Game>
             source: null == source
                 ? _value.source
                 : source // ignore: cast_nullable_to_non_nullable
-                      as GameSource,
+                      as pkg.GameSource,
             installPath: null == installPath
                 ? _value.installPath
                 : installPath // ignore: cast_nullable_to_non_nullable
@@ -142,7 +142,7 @@ class _$GameCopyWithImpl<$Res, $Val extends Game>
             storageLocation: null == storageLocation
                 ? _value.storageLocation
                 : storageLocation // ignore: cast_nullable_to_non_nullable
-                      as StorageLocation,
+                      as pkg.StorageLocation,
             isSelected: null == isSelected
                 ? _value.isSelected
                 : isSelected // ignore: cast_nullable_to_non_nullable
@@ -164,13 +164,13 @@ abstract class _$$GameImplCopyWith<$Res> implements $GameCopyWith<$Res> {
   $Res call({
     String id,
     String title,
-    GameSource source,
+    pkg.GameSource source,
     String installPath,
     int sizeBytes,
     String? iconPath,
     String? launchOptions,
     String? protonVersion,
-    StorageLocation storageLocation,
+    pkg.StorageLocation storageLocation,
     bool isSelected,
   });
 }
@@ -211,7 +211,7 @@ class __$$GameImplCopyWithImpl<$Res>
         source: null == source
             ? _value.source
             : source // ignore: cast_nullable_to_non_nullable
-                  as GameSource,
+                  as pkg.GameSource,
         installPath: null == installPath
             ? _value.installPath
             : installPath // ignore: cast_nullable_to_non_nullable
@@ -235,7 +235,7 @@ class __$$GameImplCopyWithImpl<$Res>
         storageLocation: null == storageLocation
             ? _value.storageLocation
             : storageLocation // ignore: cast_nullable_to_non_nullable
-                  as StorageLocation,
+                  as pkg.StorageLocation,
         isSelected: null == isSelected
             ? _value.isSelected
             : isSelected // ignore: cast_nullable_to_non_nullable
@@ -274,7 +274,7 @@ class _$GameImpl implements _Game {
 
   /// Source launcher
   @override
-  final GameSource source;
+  final pkg.GameSource source;
 
   /// Full path to installation directory
   @override
@@ -299,7 +299,7 @@ class _$GameImpl implements _Game {
   /// Storage location (internal or SD card)
   @override
   @JsonKey()
-  final StorageLocation storageLocation;
+  final pkg.StorageLocation storageLocation;
 
   /// Whether this game is selected for batch operations
   @override
@@ -369,13 +369,13 @@ abstract class _Game implements Game {
   const factory _Game({
     required final String id,
     required final String title,
-    required final GameSource source,
+    required final pkg.GameSource source,
     required final String installPath,
     required final int sizeBytes,
     final String? iconPath,
     final String? launchOptions,
     final String? protonVersion,
-    final StorageLocation storageLocation,
+    final pkg.StorageLocation storageLocation,
     final bool isSelected,
   }) = _$GameImpl;
 
@@ -391,7 +391,7 @@ abstract class _Game implements Game {
 
   /// Source launcher
   @override
-  GameSource get source;
+  pkg.GameSource get source;
 
   /// Full path to installation directory
   @override
@@ -415,7 +415,7 @@ abstract class _Game implements Game {
 
   /// Storage location (internal or SD card)
   @override
-  StorageLocation get storageLocation;
+  pkg.StorageLocation get storageLocation;
 
   /// Whether this game is selected for batch operations
   @override

@@ -36,10 +36,10 @@ Map<String, dynamic> _$$GameImplToJson(_$GameImpl instance) =>
     };
 
 const _$GameSourceEnumMap = {
-  GameSource.heroic: 'heroic',
-  GameSource.ogi: 'ogi',
-  GameSource.lutris: 'lutris',
-  GameSource.steam: 'steam',
+  GameSource.heroic: 'Heroic',
+  GameSource.ogi: 'OGI',
+  GameSource.lutris: 'Lutris',
+  GameSource.steam: 'Steam',
 };
 
 const _$StorageLocationEnumMap = {

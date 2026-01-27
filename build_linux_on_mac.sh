@@ -18,8 +18,8 @@ DOCKER_CMD="docker"
 # Run build
 $DOCKER_CMD run --rm \
   --platform linux/amd64 \
-  -v "$(pwd):/app" \
-  -w /app \
+  -v "$(cd .. && pwd):/workspace" \
+  -w /workspace/steam-deck-sideload-games-storage-manager \
   $IMAGE \
   /bin/bash -c "
     echo '📥 Installing build dependencies...' && \
@@ -32,7 +32,7 @@ $DOCKER_CMD run --rm \
     flutter build linux --release && \
     echo '📦 Zipping artifact...' && \
     cd build/linux/x64/release/bundle && \
-    zip -r /app/game_size_manager_linux.zip .
+    zip -r /workspace/steam-deck-sideload-games-storage-manager/game_size_manager_linux.zip .
   "
 
 if [ -f "game_size_manager_linux.zip" ]; then

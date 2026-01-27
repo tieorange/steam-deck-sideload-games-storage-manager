@@ -3,7 +3,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
+import 'package:game_size_manager/core/constants.dart';
 import 'package:game_size_manager/core/di/injection.dart';
 import 'package:game_size_manager/core/logging/logger_service.dart';
 import 'package:game_size_manager/core/platform/platform_service.dart';
@@ -32,6 +34,14 @@ void main() async {
       // Initialize logging
       await LoggerService.instance.init();
       await PlatformService.instance.init();
+
+      // Load app version
+      final packageInfo = await PackageInfo.fromPlatform();
+      AppConstants.appVersion = packageInfo.version;
+      LoggerService.instance.info(
+        'App initialized with version: ${AppConstants.appVersion}',
+        tag: 'Main',
+      );
 
       // Configure dependency injection
       await init();

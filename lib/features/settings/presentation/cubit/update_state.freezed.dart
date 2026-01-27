@@ -26,6 +26,7 @@ mixin _$UpdateState {
     required TResult Function(String message, double progress) installing,
     required TResult Function(File zipFile) readyToInstall,
     required TResult Function(String message) error,
+    required TResult Function(String currentVersion) upToDate,
   }) => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
@@ -36,6 +37,7 @@ mixin _$UpdateState {
     TResult? Function(String message, double progress)? installing,
     TResult? Function(File zipFile)? readyToInstall,
     TResult? Function(String message)? error,
+    TResult? Function(String currentVersion)? upToDate,
   }) => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
@@ -46,6 +48,7 @@ mixin _$UpdateState {
     TResult Function(String message, double progress)? installing,
     TResult Function(File zipFile)? readyToInstall,
     TResult Function(String message)? error,
+    TResult Function(String currentVersion)? upToDate,
     required TResult orElse(),
   }) => throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -57,6 +60,7 @@ mixin _$UpdateState {
     required TResult Function(UpdateInstalling value) installing,
     required TResult Function(UpdateReadyToInstall value) readyToInstall,
     required TResult Function(UpdateError value) error,
+    required TResult Function(UpdateUpToDate value) upToDate,
   }) => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? mapOrNull<TResult extends Object?>({
@@ -67,6 +71,7 @@ mixin _$UpdateState {
     TResult? Function(UpdateInstalling value)? installing,
     TResult? Function(UpdateReadyToInstall value)? readyToInstall,
     TResult? Function(UpdateError value)? error,
+    TResult? Function(UpdateUpToDate value)? upToDate,
   }) => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeMap<TResult extends Object?>({
@@ -77,6 +82,7 @@ mixin _$UpdateState {
     TResult Function(UpdateInstalling value)? installing,
     TResult Function(UpdateReadyToInstall value)? readyToInstall,
     TResult Function(UpdateError value)? error,
+    TResult Function(UpdateUpToDate value)? upToDate,
     required TResult orElse(),
   }) => throw _privateConstructorUsedError;
 }
@@ -153,6 +159,7 @@ class _$UpdateInitialImpl implements UpdateInitial {
     required TResult Function(String message, double progress) installing,
     required TResult Function(File zipFile) readyToInstall,
     required TResult Function(String message) error,
+    required TResult Function(String currentVersion) upToDate,
   }) {
     return initial();
   }
@@ -167,6 +174,7 @@ class _$UpdateInitialImpl implements UpdateInitial {
     TResult? Function(String message, double progress)? installing,
     TResult? Function(File zipFile)? readyToInstall,
     TResult? Function(String message)? error,
+    TResult? Function(String currentVersion)? upToDate,
   }) {
     return initial?.call();
   }
@@ -181,6 +189,7 @@ class _$UpdateInitialImpl implements UpdateInitial {
     TResult Function(String message, double progress)? installing,
     TResult Function(File zipFile)? readyToInstall,
     TResult Function(String message)? error,
+    TResult Function(String currentVersion)? upToDate,
     required TResult orElse(),
   }) {
     if (initial != null) {
@@ -199,6 +208,7 @@ class _$UpdateInitialImpl implements UpdateInitial {
     required TResult Function(UpdateInstalling value) installing,
     required TResult Function(UpdateReadyToInstall value) readyToInstall,
     required TResult Function(UpdateError value) error,
+    required TResult Function(UpdateUpToDate value) upToDate,
   }) {
     return initial(this);
   }
@@ -213,6 +223,7 @@ class _$UpdateInitialImpl implements UpdateInitial {
     TResult? Function(UpdateInstalling value)? installing,
     TResult? Function(UpdateReadyToInstall value)? readyToInstall,
     TResult? Function(UpdateError value)? error,
+    TResult? Function(UpdateUpToDate value)? upToDate,
   }) {
     return initial?.call(this);
   }
@@ -227,6 +238,7 @@ class _$UpdateInitialImpl implements UpdateInitial {
     TResult Function(UpdateInstalling value)? installing,
     TResult Function(UpdateReadyToInstall value)? readyToInstall,
     TResult Function(UpdateError value)? error,
+    TResult Function(UpdateUpToDate value)? upToDate,
     required TResult orElse(),
   }) {
     if (initial != null) {
@@ -290,6 +302,7 @@ class _$UpdateCheckingImpl implements UpdateChecking {
     required TResult Function(String message, double progress) installing,
     required TResult Function(File zipFile) readyToInstall,
     required TResult Function(String message) error,
+    required TResult Function(String currentVersion) upToDate,
   }) {
     return checking();
   }
@@ -304,6 +317,7 @@ class _$UpdateCheckingImpl implements UpdateChecking {
     TResult? Function(String message, double progress)? installing,
     TResult? Function(File zipFile)? readyToInstall,
     TResult? Function(String message)? error,
+    TResult? Function(String currentVersion)? upToDate,
   }) {
     return checking?.call();
   }
@@ -318,6 +332,7 @@ class _$UpdateCheckingImpl implements UpdateChecking {
     TResult Function(String message, double progress)? installing,
     TResult Function(File zipFile)? readyToInstall,
     TResult Function(String message)? error,
+    TResult Function(String currentVersion)? upToDate,
     required TResult orElse(),
   }) {
     if (checking != null) {
@@ -336,6 +351,7 @@ class _$UpdateCheckingImpl implements UpdateChecking {
     required TResult Function(UpdateInstalling value) installing,
     required TResult Function(UpdateReadyToInstall value) readyToInstall,
     required TResult Function(UpdateError value) error,
+    required TResult Function(UpdateUpToDate value) upToDate,
   }) {
     return checking(this);
   }
@@ -350,6 +366,7 @@ class _$UpdateCheckingImpl implements UpdateChecking {
     TResult? Function(UpdateInstalling value)? installing,
     TResult? Function(UpdateReadyToInstall value)? readyToInstall,
     TResult? Function(UpdateError value)? error,
+    TResult? Function(UpdateUpToDate value)? upToDate,
   }) {
     return checking?.call(this);
   }
@@ -364,6 +381,7 @@ class _$UpdateCheckingImpl implements UpdateChecking {
     TResult Function(UpdateInstalling value)? installing,
     TResult Function(UpdateReadyToInstall value)? readyToInstall,
     TResult Function(UpdateError value)? error,
+    TResult Function(UpdateUpToDate value)? upToDate,
     required TResult orElse(),
   }) {
     if (checking != null) {
@@ -457,6 +475,7 @@ class _$UpdateAvailableImpl implements UpdateAvailable {
     required TResult Function(String message, double progress) installing,
     required TResult Function(File zipFile) readyToInstall,
     required TResult Function(String message) error,
+    required TResult Function(String currentVersion) upToDate,
   }) {
     return available(info);
   }
@@ -471,6 +490,7 @@ class _$UpdateAvailableImpl implements UpdateAvailable {
     TResult? Function(String message, double progress)? installing,
     TResult? Function(File zipFile)? readyToInstall,
     TResult? Function(String message)? error,
+    TResult? Function(String currentVersion)? upToDate,
   }) {
     return available?.call(info);
   }
@@ -485,6 +505,7 @@ class _$UpdateAvailableImpl implements UpdateAvailable {
     TResult Function(String message, double progress)? installing,
     TResult Function(File zipFile)? readyToInstall,
     TResult Function(String message)? error,
+    TResult Function(String currentVersion)? upToDate,
     required TResult orElse(),
   }) {
     if (available != null) {
@@ -503,6 +524,7 @@ class _$UpdateAvailableImpl implements UpdateAvailable {
     required TResult Function(UpdateInstalling value) installing,
     required TResult Function(UpdateReadyToInstall value) readyToInstall,
     required TResult Function(UpdateError value) error,
+    required TResult Function(UpdateUpToDate value) upToDate,
   }) {
     return available(this);
   }
@@ -517,6 +539,7 @@ class _$UpdateAvailableImpl implements UpdateAvailable {
     TResult? Function(UpdateInstalling value)? installing,
     TResult? Function(UpdateReadyToInstall value)? readyToInstall,
     TResult? Function(UpdateError value)? error,
+    TResult? Function(UpdateUpToDate value)? upToDate,
   }) {
     return available?.call(this);
   }
@@ -531,6 +554,7 @@ class _$UpdateAvailableImpl implements UpdateAvailable {
     TResult Function(UpdateInstalling value)? installing,
     TResult Function(UpdateReadyToInstall value)? readyToInstall,
     TResult Function(UpdateError value)? error,
+    TResult Function(UpdateUpToDate value)? upToDate,
     required TResult orElse(),
   }) {
     if (available != null) {
@@ -633,6 +657,7 @@ class _$UpdateDownloadingImpl implements UpdateDownloading {
     required TResult Function(String message, double progress) installing,
     required TResult Function(File zipFile) readyToInstall,
     required TResult Function(String message) error,
+    required TResult Function(String currentVersion) upToDate,
   }) {
     return downloading(progress);
   }
@@ -647,6 +672,7 @@ class _$UpdateDownloadingImpl implements UpdateDownloading {
     TResult? Function(String message, double progress)? installing,
     TResult? Function(File zipFile)? readyToInstall,
     TResult? Function(String message)? error,
+    TResult? Function(String currentVersion)? upToDate,
   }) {
     return downloading?.call(progress);
   }
@@ -661,6 +687,7 @@ class _$UpdateDownloadingImpl implements UpdateDownloading {
     TResult Function(String message, double progress)? installing,
     TResult Function(File zipFile)? readyToInstall,
     TResult Function(String message)? error,
+    TResult Function(String currentVersion)? upToDate,
     required TResult orElse(),
   }) {
     if (downloading != null) {
@@ -679,6 +706,7 @@ class _$UpdateDownloadingImpl implements UpdateDownloading {
     required TResult Function(UpdateInstalling value) installing,
     required TResult Function(UpdateReadyToInstall value) readyToInstall,
     required TResult Function(UpdateError value) error,
+    required TResult Function(UpdateUpToDate value) upToDate,
   }) {
     return downloading(this);
   }
@@ -693,6 +721,7 @@ class _$UpdateDownloadingImpl implements UpdateDownloading {
     TResult? Function(UpdateInstalling value)? installing,
     TResult? Function(UpdateReadyToInstall value)? readyToInstall,
     TResult? Function(UpdateError value)? error,
+    TResult? Function(UpdateUpToDate value)? upToDate,
   }) {
     return downloading?.call(this);
   }
@@ -707,6 +736,7 @@ class _$UpdateDownloadingImpl implements UpdateDownloading {
     TResult Function(UpdateInstalling value)? installing,
     TResult Function(UpdateReadyToInstall value)? readyToInstall,
     TResult Function(UpdateError value)? error,
+    TResult Function(UpdateUpToDate value)? upToDate,
     required TResult orElse(),
   }) {
     if (downloading != null) {
@@ -817,6 +847,7 @@ class _$UpdateInstallingImpl implements UpdateInstalling {
     required TResult Function(String message, double progress) installing,
     required TResult Function(File zipFile) readyToInstall,
     required TResult Function(String message) error,
+    required TResult Function(String currentVersion) upToDate,
   }) {
     return installing(message, progress);
   }
@@ -831,6 +862,7 @@ class _$UpdateInstallingImpl implements UpdateInstalling {
     TResult? Function(String message, double progress)? installing,
     TResult? Function(File zipFile)? readyToInstall,
     TResult? Function(String message)? error,
+    TResult? Function(String currentVersion)? upToDate,
   }) {
     return installing?.call(message, progress);
   }
@@ -845,6 +877,7 @@ class _$UpdateInstallingImpl implements UpdateInstalling {
     TResult Function(String message, double progress)? installing,
     TResult Function(File zipFile)? readyToInstall,
     TResult Function(String message)? error,
+    TResult Function(String currentVersion)? upToDate,
     required TResult orElse(),
   }) {
     if (installing != null) {
@@ -863,6 +896,7 @@ class _$UpdateInstallingImpl implements UpdateInstalling {
     required TResult Function(UpdateInstalling value) installing,
     required TResult Function(UpdateReadyToInstall value) readyToInstall,
     required TResult Function(UpdateError value) error,
+    required TResult Function(UpdateUpToDate value) upToDate,
   }) {
     return installing(this);
   }
@@ -877,6 +911,7 @@ class _$UpdateInstallingImpl implements UpdateInstalling {
     TResult? Function(UpdateInstalling value)? installing,
     TResult? Function(UpdateReadyToInstall value)? readyToInstall,
     TResult? Function(UpdateError value)? error,
+    TResult? Function(UpdateUpToDate value)? upToDate,
   }) {
     return installing?.call(this);
   }
@@ -891,6 +926,7 @@ class _$UpdateInstallingImpl implements UpdateInstalling {
     TResult Function(UpdateInstalling value)? installing,
     TResult Function(UpdateReadyToInstall value)? readyToInstall,
     TResult Function(UpdateError value)? error,
+    TResult Function(UpdateUpToDate value)? upToDate,
     required TResult orElse(),
   }) {
     if (installing != null) {
@@ -995,6 +1031,7 @@ class _$UpdateReadyToInstallImpl implements UpdateReadyToInstall {
     required TResult Function(String message, double progress) installing,
     required TResult Function(File zipFile) readyToInstall,
     required TResult Function(String message) error,
+    required TResult Function(String currentVersion) upToDate,
   }) {
     return readyToInstall(zipFile);
   }
@@ -1009,6 +1046,7 @@ class _$UpdateReadyToInstallImpl implements UpdateReadyToInstall {
     TResult? Function(String message, double progress)? installing,
     TResult? Function(File zipFile)? readyToInstall,
     TResult? Function(String message)? error,
+    TResult? Function(String currentVersion)? upToDate,
   }) {
     return readyToInstall?.call(zipFile);
   }
@@ -1023,6 +1061,7 @@ class _$UpdateReadyToInstallImpl implements UpdateReadyToInstall {
     TResult Function(String message, double progress)? installing,
     TResult Function(File zipFile)? readyToInstall,
     TResult Function(String message)? error,
+    TResult Function(String currentVersion)? upToDate,
     required TResult orElse(),
   }) {
     if (readyToInstall != null) {
@@ -1041,6 +1080,7 @@ class _$UpdateReadyToInstallImpl implements UpdateReadyToInstall {
     required TResult Function(UpdateInstalling value) installing,
     required TResult Function(UpdateReadyToInstall value) readyToInstall,
     required TResult Function(UpdateError value) error,
+    required TResult Function(UpdateUpToDate value) upToDate,
   }) {
     return readyToInstall(this);
   }
@@ -1055,6 +1095,7 @@ class _$UpdateReadyToInstallImpl implements UpdateReadyToInstall {
     TResult? Function(UpdateInstalling value)? installing,
     TResult? Function(UpdateReadyToInstall value)? readyToInstall,
     TResult? Function(UpdateError value)? error,
+    TResult? Function(UpdateUpToDate value)? upToDate,
   }) {
     return readyToInstall?.call(this);
   }
@@ -1069,6 +1110,7 @@ class _$UpdateReadyToInstallImpl implements UpdateReadyToInstall {
     TResult Function(UpdateInstalling value)? installing,
     TResult Function(UpdateReadyToInstall value)? readyToInstall,
     TResult Function(UpdateError value)? error,
+    TResult Function(UpdateUpToDate value)? upToDate,
     required TResult orElse(),
   }) {
     if (readyToInstall != null) {
@@ -1168,6 +1210,7 @@ class _$UpdateErrorImpl implements UpdateError {
     required TResult Function(String message, double progress) installing,
     required TResult Function(File zipFile) readyToInstall,
     required TResult Function(String message) error,
+    required TResult Function(String currentVersion) upToDate,
   }) {
     return error(message);
   }
@@ -1182,6 +1225,7 @@ class _$UpdateErrorImpl implements UpdateError {
     TResult? Function(String message, double progress)? installing,
     TResult? Function(File zipFile)? readyToInstall,
     TResult? Function(String message)? error,
+    TResult? Function(String currentVersion)? upToDate,
   }) {
     return error?.call(message);
   }
@@ -1196,6 +1240,7 @@ class _$UpdateErrorImpl implements UpdateError {
     TResult Function(String message, double progress)? installing,
     TResult Function(File zipFile)? readyToInstall,
     TResult Function(String message)? error,
+    TResult Function(String currentVersion)? upToDate,
     required TResult orElse(),
   }) {
     if (error != null) {
@@ -1214,6 +1259,7 @@ class _$UpdateErrorImpl implements UpdateError {
     required TResult Function(UpdateInstalling value) installing,
     required TResult Function(UpdateReadyToInstall value) readyToInstall,
     required TResult Function(UpdateError value) error,
+    required TResult Function(UpdateUpToDate value) upToDate,
   }) {
     return error(this);
   }
@@ -1228,6 +1274,7 @@ class _$UpdateErrorImpl implements UpdateError {
     TResult? Function(UpdateInstalling value)? installing,
     TResult? Function(UpdateReadyToInstall value)? readyToInstall,
     TResult? Function(UpdateError value)? error,
+    TResult? Function(UpdateUpToDate value)? upToDate,
   }) {
     return error?.call(this);
   }
@@ -1242,6 +1289,7 @@ class _$UpdateErrorImpl implements UpdateError {
     TResult Function(UpdateInstalling value)? installing,
     TResult Function(UpdateReadyToInstall value)? readyToInstall,
     TResult Function(UpdateError value)? error,
+    TResult Function(UpdateUpToDate value)? upToDate,
     required TResult orElse(),
   }) {
     if (error != null) {
@@ -1260,5 +1308,188 @@ abstract class UpdateError implements UpdateState {
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
   _$$UpdateErrorImplCopyWith<_$UpdateErrorImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$UpdateUpToDateImplCopyWith<$Res> {
+  factory _$$UpdateUpToDateImplCopyWith(
+    _$UpdateUpToDateImpl value,
+    $Res Function(_$UpdateUpToDateImpl) then,
+  ) = __$$UpdateUpToDateImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({String currentVersion});
+}
+
+/// @nodoc
+class __$$UpdateUpToDateImplCopyWithImpl<$Res>
+    extends _$UpdateStateCopyWithImpl<$Res, _$UpdateUpToDateImpl>
+    implements _$$UpdateUpToDateImplCopyWith<$Res> {
+  __$$UpdateUpToDateImplCopyWithImpl(
+    _$UpdateUpToDateImpl _value,
+    $Res Function(_$UpdateUpToDateImpl) _then,
+  ) : super(_value, _then);
+
+  /// Create a copy of UpdateState
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({Object? currentVersion = null}) {
+    return _then(
+      _$UpdateUpToDateImpl(
+        null == currentVersion
+            ? _value.currentVersion
+            : currentVersion // ignore: cast_nullable_to_non_nullable
+                  as String,
+      ),
+    );
+  }
+}
+
+/// @nodoc
+
+class _$UpdateUpToDateImpl implements UpdateUpToDate {
+  const _$UpdateUpToDateImpl(this.currentVersion);
+
+  @override
+  final String currentVersion;
+
+  @override
+  String toString() {
+    return 'UpdateState.upToDate(currentVersion: $currentVersion)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$UpdateUpToDateImpl &&
+            (identical(other.currentVersion, currentVersion) ||
+                other.currentVersion == currentVersion));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, currentVersion);
+
+  /// Create a copy of UpdateState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$UpdateUpToDateImplCopyWith<_$UpdateUpToDateImpl> get copyWith =>
+      __$$UpdateUpToDateImplCopyWithImpl<_$UpdateUpToDateImpl>(
+        this,
+        _$identity,
+      );
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() initial,
+    required TResult Function() checking,
+    required TResult Function(UpdateInfo info) available,
+    required TResult Function(double progress) downloading,
+    required TResult Function(String message, double progress) installing,
+    required TResult Function(File zipFile) readyToInstall,
+    required TResult Function(String message) error,
+    required TResult Function(String currentVersion) upToDate,
+  }) {
+    return upToDate(currentVersion);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? initial,
+    TResult? Function()? checking,
+    TResult? Function(UpdateInfo info)? available,
+    TResult? Function(double progress)? downloading,
+    TResult? Function(String message, double progress)? installing,
+    TResult? Function(File zipFile)? readyToInstall,
+    TResult? Function(String message)? error,
+    TResult? Function(String currentVersion)? upToDate,
+  }) {
+    return upToDate?.call(currentVersion);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? initial,
+    TResult Function()? checking,
+    TResult Function(UpdateInfo info)? available,
+    TResult Function(double progress)? downloading,
+    TResult Function(String message, double progress)? installing,
+    TResult Function(File zipFile)? readyToInstall,
+    TResult Function(String message)? error,
+    TResult Function(String currentVersion)? upToDate,
+    required TResult orElse(),
+  }) {
+    if (upToDate != null) {
+      return upToDate(currentVersion);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(UpdateInitial value) initial,
+    required TResult Function(UpdateChecking value) checking,
+    required TResult Function(UpdateAvailable value) available,
+    required TResult Function(UpdateDownloading value) downloading,
+    required TResult Function(UpdateInstalling value) installing,
+    required TResult Function(UpdateReadyToInstall value) readyToInstall,
+    required TResult Function(UpdateError value) error,
+    required TResult Function(UpdateUpToDate value) upToDate,
+  }) {
+    return upToDate(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(UpdateInitial value)? initial,
+    TResult? Function(UpdateChecking value)? checking,
+    TResult? Function(UpdateAvailable value)? available,
+    TResult? Function(UpdateDownloading value)? downloading,
+    TResult? Function(UpdateInstalling value)? installing,
+    TResult? Function(UpdateReadyToInstall value)? readyToInstall,
+    TResult? Function(UpdateError value)? error,
+    TResult? Function(UpdateUpToDate value)? upToDate,
+  }) {
+    return upToDate?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(UpdateInitial value)? initial,
+    TResult Function(UpdateChecking value)? checking,
+    TResult Function(UpdateAvailable value)? available,
+    TResult Function(UpdateDownloading value)? downloading,
+    TResult Function(UpdateInstalling value)? installing,
+    TResult Function(UpdateReadyToInstall value)? readyToInstall,
+    TResult Function(UpdateError value)? error,
+    TResult Function(UpdateUpToDate value)? upToDate,
+    required TResult orElse(),
+  }) {
+    if (upToDate != null) {
+      return upToDate(this);
+    }
+    return orElse();
+  }
+}
+
+abstract class UpdateUpToDate implements UpdateState {
+  const factory UpdateUpToDate(final String currentVersion) =
+      _$UpdateUpToDateImpl;
+
+  String get currentVersion;
+
+  /// Create a copy of UpdateState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$UpdateUpToDateImplCopyWith<_$UpdateUpToDateImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

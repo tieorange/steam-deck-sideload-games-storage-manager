@@ -15,7 +15,7 @@ class UpdateCubit extends Cubit<UpdateState> {
       if (info.hasUpdate) {
         emit(UpdateState.available(info));
       } else {
-        emit(const UpdateState.initial());
+        emit(UpdateState.upToDate(info.latestVersion));
       }
     } catch (e) {
       emit(UpdateState.error(e.toString()));

@@ -13,7 +13,7 @@ class AppConstants {
   // GitHub repo for auto-update
   static const String githubOwner = 'tieorange';
   static const String githubRepo = 'steam-deck-sideload-games-storage-manager';
-  static const String appVersion = '1.0.5';
+  static String appVersion = '...';
 
   // Log sharing (Resend API)
   static const String resendApiKey = 're_5S81xRmR_NFmfNUzh5qbyRw9qF5KEtxqb';

@@ -13,4 +13,5 @@ class UpdateState with _$UpdateState {
   const factory UpdateState.installing(String message, double progress) = UpdateInstalling;
   const factory UpdateState.readyToInstall(File zipFile) = UpdateReadyToInstall;
   const factory UpdateState.error(String message) = UpdateError;
+  const factory UpdateState.upToDate(String currentVersion) = UpdateUpToDate;
 }
