@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import 'package:game_size_manager/core/constants.dart';
@@ -42,7 +44,7 @@ class SourceFilterChips extends StatelessWidget {
               _buildChip(
                 context,
                 source,
-                source.displayName,
+                _getSourceDisplayName(source),
                 counts[source]!,
                 _getSourceIcon(source),
                 _getSourceColor(source),
@@ -131,7 +133,37 @@ class SourceFilterChips extends StatelessWidget {
     );
   }
 
+  /// Platform-aware display name for source
+  String _getSourceDisplayName(GameSource source) {
+    if (Platform.isAndroid) {
+      switch (source) {
+        case GameSource.steam:
+          return 'Meta Store';
+        case GameSource.heroic:
+          return 'Sideloaded';
+        case GameSource.ogi:
+          return 'Other';
+        case GameSource.lutris:
+          return 'System';
+      }
+    }
+    return source.displayName;
+  }
+
   IconData _getSourceIcon(GameSource source) {
+    if (Platform.isAndroid) {
+      switch (source) {
+        case GameSource.steam:
+          return Icons.store_rounded; // Meta Store
+        case GameSource.heroic:
+          return Icons.download_rounded; // Sideloaded
+        case GameSource.ogi:
+          return Icons.apps_rounded;
+        case GameSource.lutris:
+          return Icons.android_rounded;
+      }
+    }
+    // Linux/Steam Deck icons
     switch (source) {
       case GameSource.heroic:
         return Icons.storefront_rounded;
@@ -145,6 +177,19 @@ class SourceFilterChips extends StatelessWidget {
   }
 
   Color _getSourceColor(GameSource source) {
+    if (Platform.isAndroid) {
+      switch (source) {
+        case GameSource.steam:
+          return const Color(0xFF1877F2); // Meta blue
+        case GameSource.heroic:
+          return const Color(0xFF4CAF50); // Green for sideloaded
+        case GameSource.ogi:
+          return const Color(0xFF9C27B0);
+        case GameSource.lutris:
+          return const Color(0xFF3DDC84); // Android green
+      }
+    }
+    // Linux/Steam Deck colors
     switch (source) {
       case GameSource.heroic:
         return const Color(0xFFE91E63);

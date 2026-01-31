@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:dartz/dartz.dart';
-import 'package:steam_deck_games_detector/steam_deck_games_detector.dart' as pkg;
 
 import 'package:game_size_manager/features/games/data/datasources/game_local_datasource.dart';
 import 'package:game_size_manager/features/games/domain/entities/game_entity.dart';
@@ -9,22 +8,22 @@ import 'package:game_size_manager/features/games/domain/repositories/game_reposi
 import 'package:game_size_manager/core/error/failures.dart';
 import 'package:game_size_manager/core/logging/logger_service.dart';
 import 'package:game_size_manager/core/services/disk_size_service.dart';
+import 'package:game_size_manager/core/services/game_source_service.dart';
 import 'package:game_size_manager/core/constants.dart';
 
 /// Real implementation of GameRepository with SQLite Caching
 class GameRepositoryImpl implements GameRepository {
-  final pkg.SteamDeckGamesDetector _detector;
+  final GameSourceService _gameSource;
   final DiskSizeService _diskSizeService;
   final GameLocalDatasource _localDatasource;
   final LoggerService _logger;
 
   GameRepositoryImpl({
-    required pkg.SteamDeckGamesDetector detector,
+    required GameSourceService gameSource,
     required DiskSizeService diskSizeService,
     required GameLocalDatasource localDatasource,
     LoggerService? logger,
-  }) : _detector = detector,
-
+  }) : _gameSource = gameSource,
        _diskSizeService = diskSizeService,
        _localDatasource = localDatasource,
        _logger = logger ?? LoggerService.instance;
@@ -74,22 +73,18 @@ class GameRepositoryImpl implements GameRepository {
 
     onProgress?.call('Scanning games...', 0.3);
 
-    // 1. Fetch from SteamDeckGamesDetector
-    final result = await _detector.getAllGames();
+    // 1. Fetch from GameSourceService (platform-specific)
+    final result = await _gameSource.getGames();
 
     return result.fold(
       (failure) {
-        _logger.error('Detector failed: $failure', tag: 'GameRepo');
-        return Left(_mapFailure(failure));
+        _logger.error('Game source failed: $failure', tag: 'GameRepo');
+        return Left(failure);
       },
-      (pkgGames) async {
-        _logger.info('Found ${pkgGames.length} games from detector.', tag: 'GameRepo');
+      (allGames) async {
+        _logger.info('Found ${allGames.length} games from source.', tag: 'GameRepo');
 
         onProgress?.call('Processing results...', 0.5);
-
-        // Convert to App Entities
-        // Map allows partial success if one conversion fails (though unlikely with current factory)
-        final allGames = pkgGames.map((g) => Game.fromPackage(g)).toList();
 
         // 3. Calculate sizes for games that need it
         onProgress?.call('Calculating sizes...', 0.6);
@@ -163,6 +158,17 @@ class GameRepositoryImpl implements GameRepository {
     _logger.info('Uninstalling: ${game.title}', tag: 'GameRepo');
 
     try {
+      // On Android, delegate to GameSourceService which launches system uninstall dialog
+      if (Platform.isAndroid) {
+        final result = await _gameSource.uninstallGame(game.id);
+        return result.fold((failure) => Left(failure), (_) {
+          // Remove from cache after dialog is shown (user may or may not confirm)
+          _localDatasource.deleteGames([game.id]);
+          return const Right(null);
+        });
+      }
+
+      // On Linux/Steam Deck, delete the directory directly
       final dir = Directory(game.installPath);
       if (await dir.exists()) {
         await dir.delete(recursive: true);
@@ -177,18 +183,5 @@ class GameRepositoryImpl implements GameRepository {
     } catch (e, s) {
       return Left(UninstallFailure('Failed to uninstall: $e', s));
     }
-  }
-
-  Failure _mapFailure(pkg.Failure failure) {
-    if (failure is pkg.LauncherNotFoundFailure) {
-      return LauncherNotFoundFailure(failure.message, failure.stackTrace);
-    } else if (failure is pkg.FileSystemFailure) {
-      return FileSystemFailure(failure.message, failure.stackTrace);
-    } else if (failure is pkg.DatabaseFailure) {
-      return DatabaseFailure(failure.message, failure.stackTrace);
-    } else if (failure is pkg.ParseFailure) {
-      return ParseFailure(failure.message, failure.stackTrace);
-    }
-    return UnexpectedFailure(failure.message, failure.stackTrace);
   }
 }

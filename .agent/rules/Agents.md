@@ -3,18 +3,22 @@
 This document is the **Source of Truth** for AI agents working on this codebase. It defines the architecture, workflows, and technical details required to contribute effectively.
 
 > **⚠️ CRITICAL RULE FOR AGENTS:**
-> If you make changes to the Project Architecture, Build System, or key Technical Approaches (e.g. changing how a launcher is detected), **YOU MUST UPDATE THIS DOCUMENT**.
-> Do not let this documentation drift from reality. Treat it as part of the code.
+> 1. **Read-First**: Always read this document at the start of a task to understand the architecture.
+> 2. **Auto-Maintain**: If you modify the Project Architecture, Build System, or key implementation details (e.g., add a new GameSource, change how icons work, or modify native code), **YOU MUST UPDATE THIS DOCUMENT** before finishing your task.
+>    - Do not let this documentation drift from reality.
+>    - Treat this file as code. If the code changes, this file must change.
 
 ---
 
 ## 1. Project Overview
 
-**Game Size Manager** is a Flutter desktop application for **Steam Deck** (Linux). It aggregates installed games from multiple launchers to help users visualize and manage their disk performance.
+**Game Size Manager** is a Flutter application for **Steam Deck** (Linux) and **Oculus Quest** (Android). It aggregates installed games/apps to help users visualize and manage their disk usage.
 
-*   **Tech Stack:** Flutter (MacOS for dev, Linux for target), Dart.
-*   **Target Device:** Steam Deck (Arch Linux-based SteamOS).
-*   **Resolution:** Optimized for 1280x800 (16:10).
+*   **Tech Stack**: Flutter (MacOS for dev, Linux/Android for targets), Dart, Kotlin (Android native).
+*   **Target Devices**:
+    *   Steam Deck (Arch Linux-based SteamOS) - 1280x800 (16:10)
+    *   Oculus Quest 2/3 (Android 14) - 2D panel app (Landscape, Tablet-like layout)
+    *   Android phones/tablets
 
 ---
 
@@ -41,10 +45,20 @@ The project closely adheres to **Clean Architecture** principles to separate con
 ### Dependency Injection (DI)
 *   **Package**: `get_it` with `injectable` (manually registered in `lib/core/di/injection.dart`).
 *   **Pattern**: Service Locator pattern used in `main.dart`, but Constructor Injection used everywhere else.
+*   **Platform Detection**: DI uses `Platform.isLinux` / `Platform.isAndroid` to register correct implementations.
 *   **Setup**:
     *   `sl()` is the global instance.
     *   Register `UseCases` as singletons.
     *   Register `Cubits` via `registerFactory`.
+
+### Platform Abstraction (GameSourceService)
+The app uses a platform abstraction layer to support different game sources:
+
+*   **Interface**: `lib/core/services/game_source_service.dart`
+*   **Impementations**:
+    *   **Linux**: `SteamDeckGameSource` wraps `steam_deck_games_detector` package
+    *   **Android**: `QuestGameSource` uses MethodChannel to native Kotlin
+*   **Architecture**: `GameRepositoryImpl` depends on abstract `GameSourceService`, not concrete implementations
 
 ---
 
@@ -91,6 +105,31 @@ When working on datasources, understand how we detect games for each launcher:
 *   **Source**: `lib/features/games/data/datasources/ogi_datasource.dart`
 *   **Metadata**: Parses JSON files in OGI games directory.
 *   **Detection**: Validates `installLocation` path exists.
+
+### 🥽 Android / Oculus Quest
+*   **Source**: `lib/features/games/data/datasources/quest_game_source.dart`
+*   **Native Code**: `android/app/src/main/kotlin/.../MainActivity.kt`
+*   **Detection Method**:
+    *   Uses `PackageManager.getInstalledApplications()` to list all apps
+    *   Filters out system apps without launchers
+*   **Source Classification**:
+    *   `getInstallerPackageName()` returns:
+        *   `com.oculus.mobilestore` / `com.oculus.ocms` → **Meta Store**
+        *   `null` / `com.android.shell` → **Sideloaded**
+        *   `com.android.vending` → **Play Store**
+*   **Size Retrieval**:
+    *   Uses `StorageStatsManager.queryStatsForPackage()` (API 26+)
+    *   Returns `appBytes + dataBytes + cacheBytes`
+    *   Fallback: APK file size if Usage Stats permission not granted
+*   **App Icons**:
+    *   Fetches via `PackageManager.getApplicationIcon()`, encoded as base64 PNG.
+    *   **Managed via**: `flutter_launcher_icons` (Material Design).
+*   **Uninstall**:
+    *   Supported via `Intent(Intent.ACTION_DELETE)`.
+    *   Requires `GameSourceService.uninstallGame()` to delegate to native method.
+*   **Required Permissions** (in `AndroidManifest.xml`):
+    *   `QUERY_ALL_PACKAGES` - enumerate all installed packages (Android 11+)
+    *   `PACKAGE_USAGE_STATS` - access StorageStatsManager (requires user grant in Settings)
 
 ---
 

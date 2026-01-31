@@ -53,6 +53,17 @@ static void my_application_activate(GApplication* application) {
     gtk_window_set_title(window, "game_size_manager");
   }
 
+  // Set window icon
+  GError* error = nullptr;
+  // Try to load from bundle assets (standard Flutter release structure)
+  // Path is relative to the executable in the bundle root
+  if (!gtk_window_set_icon_from_file(window, "data/flutter_assets/assets/icon/icon.png", &error)) {
+     // Fallback for development mode (where assets might be in root or elsewhere)
+     // But primarily we care about the Release build on Steam Deck.
+     g_warning("Failed to set window icon: %s", error->message);
+     g_error_free(error);
+  }
+
   gtk_window_set_default_size(window, 1280, 720);
 
   g_autoptr(FlDartProject) project = fl_dart_project_new();

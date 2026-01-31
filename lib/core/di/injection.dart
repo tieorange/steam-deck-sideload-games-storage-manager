@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -10,6 +12,9 @@ import 'package:game_size_manager/core/platform/platform_service.dart';
 import 'package:game_size_manager/core/logging/log_bridge.dart';
 import 'package:game_size_manager/core/logging/logger_service.dart';
 import 'package:game_size_manager/features/games/data/datasources/game_local_datasource.dart';
+import 'package:game_size_manager/features/games/data/datasources/steam_deck_game_source.dart';
+import 'package:game_size_manager/features/games/data/datasources/quest_game_source.dart';
+import 'package:game_size_manager/core/services/game_source_service.dart';
 
 import 'package:game_size_manager/features/games/data/repositories/game_repository_impl.dart';
 import 'package:game_size_manager/features/games/data/repositories/mock_game_repository.dart';
@@ -47,18 +52,24 @@ Future<void> init() async {
     () => GameLocalDatasourceImpl(sl()),
   ); // Register Local Datasource
 
-  // Package: SteamDeckGamesDetector
-  // Package: SteamDeckGamesDetector
-  sl.registerLazySingleton(
-    () =>
-        pkg.SteamDeckGamesDetector()
-          ..loggerService.registerHandler(BridgeLogger(LoggerService.instance)),
-  );
+  // Platform-specific GameSourceService
+  if (Platform.isLinux) {
+    // Linux/Steam Deck: Use SteamDeckGamesDetector
+    sl.registerLazySingleton(
+      () =>
+          pkg.SteamDeckGamesDetector()
+            ..loggerService.registerHandler(BridgeLogger(LoggerService.instance)),
+    );
+    sl.registerLazySingleton<GameSourceService>(() => SteamDeckGameSource(sl()));
+  } else if (Platform.isAndroid) {
+    // Android/Quest: Use native MethodChannel
+    sl.registerLazySingleton<GameSourceService>(() => QuestGameSource());
+  }
 
   // Repositories
   if (!PlatformService.instance.shouldUseMockData) {
     sl.registerLazySingleton<GameRepository>(
-      () => GameRepositoryImpl(detector: sl(), diskSizeService: sl(), localDatasource: sl()),
+      () => GameRepositoryImpl(gameSource: sl(), diskSizeService: sl(), localDatasource: sl()),
     );
   } else {
     // Use Mock Repository for macOS development if not strictly testing full integration

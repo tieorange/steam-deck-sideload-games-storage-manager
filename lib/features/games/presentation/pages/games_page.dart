@@ -321,25 +321,67 @@ class _GamesContent extends StatelessWidget {
                       );
                     }, childCount: displayedGames.length),
                   )
-                : SliverGrid(
-                    gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                      maxCrossAxisExtent: 220,
-                      mainAxisExtent: 90,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                    ),
-                    delegate: SliverChildBuilderDelegate((context, index) {
-                      final game = displayedGames[index];
-                      return GameGridItem(
-                        game: game,
-                        index: index,
-                        onTap: () => context.pushNamed(AppRoutes.gameDetailsName, extra: game),
-                        onSelect: () => cubit.toggleGameSelection(game.id),
-                      );
-                    }, childCount: displayedGames.length),
-                  ),
+                : _buildResponsiveGrid(context, displayedGames, cubit),
           ),
       ],
+    );
+  }
+
+  /// Build a responsive grid that adapts to screen width
+  Widget _buildResponsiveGrid(BuildContext context, List<Game> games, GamesCubit cubit) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    // Calculate optimal grid parameters based on screen width
+    // Phones: ~360-414dp -> 1-2 columns
+    // Tablets/Quest: ~700-1280dp -> 3-4 columns with larger cards
+    final double maxCrossAxisExtent;
+    final double mainAxisExtent;
+    final double crossAxisSpacing;
+    final double mainAxisSpacing;
+
+    if (screenWidth < 400) {
+      // Small phones - single column
+      maxCrossAxisExtent = screenWidth - 32;
+      mainAxisExtent = 80;
+      crossAxisSpacing = 12;
+      mainAxisSpacing = 12;
+    } else if (screenWidth < 600) {
+      // Phones - 2 columns
+      maxCrossAxisExtent = (screenWidth - 48) / 2;
+      mainAxisExtent = 85;
+      crossAxisSpacing = 12;
+      mainAxisSpacing = 12;
+    } else if (screenWidth < 900) {
+      // Tablets/Quest portrait - 3 columns with bigger cards
+      maxCrossAxisExtent = 280;
+      mainAxisExtent = 110;
+      crossAxisSpacing = 16;
+      mainAxisSpacing = 16;
+    } else {
+      // Quest landscape / large screens - 4 columns with big cards
+      // Quest 3 typically has ~1280px panel width
+      maxCrossAxisExtent = 320;
+      mainAxisExtent = 120;
+      crossAxisSpacing = 20;
+      mainAxisSpacing = 20;
+    }
+
+    return SliverGrid(
+      gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+        maxCrossAxisExtent: maxCrossAxisExtent,
+        mainAxisExtent: mainAxisExtent,
+        crossAxisSpacing: crossAxisSpacing,
+        mainAxisSpacing: mainAxisSpacing,
+      ),
+      delegate: SliverChildBuilderDelegate((context, index) {
+        final game = games[index];
+        return GameGridItem(
+          game: game,
+          index: index,
+          onTap: () => context.pushNamed(AppRoutes.gameDetailsName, extra: game),
+          onSelect: () => cubit.toggleGameSelection(game.id),
+        );
+      }, childCount: games.length),
     );
   }
 }
