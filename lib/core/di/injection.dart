@@ -6,6 +6,9 @@ import 'package:steam_deck_games_detector/steam_deck_games_detector.dart' as pkg
 import 'package:game_size_manager/core/database/game_database.dart';
 import 'package:game_size_manager/core/services/disk_size_service.dart';
 import 'package:game_size_manager/core/services/update_service.dart';
+import 'package:game_size_manager/core/services/orphaned_data_service.dart';
+import 'package:game_size_manager/core/services/game_export_service.dart';
+import 'package:game_size_manager/core/services/game_launch_service.dart';
 import 'package:game_size_manager/core/platform/platform_service.dart';
 import 'package:game_size_manager/core/logging/log_bridge.dart';
 import 'package:game_size_manager/core/logging/logger_service.dart';
@@ -41,6 +44,9 @@ Future<void> init() async {
   sl.registerLazySingleton(() => PlatformService.instance);
   sl.registerLazySingleton(() => DiskSizeService.instance);
   sl.registerLazySingleton(() => UpdateService(sl()));
+  sl.registerLazySingleton(() => OrphanedDataService());
+  sl.registerLazySingleton(() => GameExportService());
+  sl.registerLazySingleton(() => GameLaunchService());
 
   // Data Sources
   sl.registerLazySingleton<GameLocalDatasource>(

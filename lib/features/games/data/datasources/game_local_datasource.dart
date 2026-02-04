@@ -59,10 +59,7 @@ class GameLocalDatasourceImpl implements GameLocalDatasource {
   Future<Result<void>> deleteGames(List<String> gameIds) async {
     try {
       if (gameIds.isEmpty) return const Right(null);
-      // SQLite batch delete would be better, but loop is fine for now
-      for (final id in gameIds) {
-        await _database.deleteGame(id);
-      }
+      await _database.deleteGamesBatch(gameIds);
       return const Right(null);
     } catch (e, s) {
       return Left(DatabaseFailure('Failed to delete games from cache: $e', s));

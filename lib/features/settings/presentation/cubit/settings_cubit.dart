@@ -25,15 +25,28 @@ class SettingsCubit extends Cubit<SettingsState> {
     }, (settings) => emit(SettingsState.loaded(settings)));
   }
 
-  /// Update theme mode
-  Future<void> setThemeMode(ThemeMode mode) async {
+  /// Update app theme mode (supports OLED)
+  Future<void> setAppThemeMode(AppThemeMode mode) async {
     final currentSettings = state.maybeWhen(
       loaded: (settings) => settings,
       orElse: () => const Settings(),
     );
 
-    final newSettings = currentSettings.copyWith(themeMode: mode);
+    final newSettings = currentSettings.copyWith(
+      appThemeMode: mode,
+      themeMode: mode.toThemeMode,
+    );
     await _saveSettings(newSettings);
+  }
+
+  /// Update theme mode (legacy)
+  Future<void> setThemeMode(ThemeMode mode) async {
+    final appMode = mode == ThemeMode.system
+        ? AppThemeMode.system
+        : mode == ThemeMode.light
+            ? AppThemeMode.light
+            : AppThemeMode.dark;
+    await setAppThemeMode(appMode);
   }
 
   /// Toggle uninstall confirmation
@@ -89,7 +102,6 @@ class SettingsCubit extends Cubit<SettingsState> {
 
     result.fold((failure) {
       _logger.error('Failed to save settings', error: failure);
-      // Optionally emit error state or show notification via listener
     }, (_) => emit(SettingsState.loaded(settings)));
   }
 }

@@ -14,6 +14,7 @@ class SettingsRepositoryImpl implements SettingsRepository {
   final SharedPreferences _prefs;
 
   static const _keyThemeMode = 'theme_mode';
+  static const _keyAppThemeMode = 'app_theme_mode';
   static const _keyHeroicPath = 'heroic_config_path';
   static const _keyLutrisPath = 'lutris_db_path';
   static const _keySteamPath = 'steam_path';
@@ -25,9 +26,17 @@ class SettingsRepositoryImpl implements SettingsRepository {
   Future<Result<Settings>> loadSettings() async {
     try {
       final themeModeIndex = _prefs.getInt(_keyThemeMode) ?? ThemeMode.dark.index;
+      final appThemeModeStr = _prefs.getString(_keyAppThemeMode);
+      final appThemeMode = appThemeModeStr != null
+          ? AppThemeMode.values.firstWhere(
+              (e) => e.name == appThemeModeStr,
+              orElse: () => AppThemeMode.dark,
+            )
+          : _migrateThemeMode(ThemeMode.values[themeModeIndex]);
 
       final settings = Settings(
-        themeMode: ThemeMode.values[themeModeIndex],
+        themeMode: appThemeMode.toThemeMode,
+        appThemeMode: appThemeMode,
         heroicConfigPath: _prefs.getString(_keyHeroicPath),
         lutrisDbPath: _prefs.getString(_keyLutrisPath),
         steamPath: _prefs.getString(_keySteamPath),
@@ -42,10 +51,23 @@ class SettingsRepositoryImpl implements SettingsRepository {
     }
   }
 
+  /// Migrate old ThemeMode to new AppThemeMode
+  AppThemeMode _migrateThemeMode(ThemeMode mode) {
+    switch (mode) {
+      case ThemeMode.system:
+        return AppThemeMode.system;
+      case ThemeMode.light:
+        return AppThemeMode.light;
+      case ThemeMode.dark:
+        return AppThemeMode.dark;
+    }
+  }
+
   @override
   Future<Result<void>> saveSettings(Settings settings) async {
     try {
       await _prefs.setInt(_keyThemeMode, settings.themeMode.index);
+      await _prefs.setString(_keyAppThemeMode, settings.appThemeMode.name);
 
       if (settings.heroicConfigPath != null) {
         await _prefs.setString(_keyHeroicPath, settings.heroicConfigPath!);
