@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 import 'package:game_size_manager/core/constants.dart';
 import 'package:game_size_manager/core/extensions/size_formatter.dart';
-
+import 'package:game_size_manager/core/theme/game_colors.dart';
 import 'package:game_size_manager/features/games/domain/entities/game_entity.dart';
 
 /// Grid item for game library grid view
@@ -53,7 +53,7 @@ class _GameGridItemState extends State<GameGridItem> with SingleTickerProviderSt
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final sourceColor = _getSourceColor(widget.game.source);
+    final sourceColor = GameColors.forSource(widget.game.source);
 
     return FocusableActionDetector(
       onShowFocusHighlight: (focused) => setState(() => _isFocused = focused),
@@ -187,14 +187,14 @@ class _GameGridItemState extends State<GameGridItem> with SingleTickerProviderSt
                                       File(widget.game.iconPath!),
                                       fit: BoxFit.cover,
                                       errorBuilder: (_, __, ___) => Icon(
-                                        _getSourceIcon(widget.game.source),
+                                        GameColors.iconForSource(widget.game.source),
                                         size: 18,
                                         color: sourceColor,
                                       ),
                                     ),
                                   )
                                 : Icon(
-                                    _getSourceIcon(widget.game.source),
+                                    GameColors.iconForSource(widget.game.source),
                                     size: 18,
                                     color: sourceColor,
                                   ),
@@ -222,32 +222,6 @@ class _GameGridItemState extends State<GameGridItem> with SingleTickerProviderSt
         ),
       ),
     );
-  }
-
-  IconData _getSourceIcon(GameSource source) {
-    switch (source) {
-      case GameSource.heroic:
-        return Icons.storefront_rounded;
-      case GameSource.ogi:
-        return Icons.apps_rounded;
-      case GameSource.lutris:
-        return Icons.sports_esports_rounded;
-      case GameSource.steam:
-        return Icons.gamepad_rounded;
-    }
-  }
-
-  Color _getSourceColor(GameSource source) {
-    switch (source) {
-      case GameSource.heroic:
-        return const Color(0xFFE91E63);
-      case GameSource.ogi:
-        return const Color(0xFF9C27B0);
-      case GameSource.lutris:
-        return const Color(0xFFFF9800);
-      case GameSource.steam:
-        return const Color(0xFF2196F3);
-    }
   }
 
   Color _getSizeColor(int sizeBytes, ColorScheme colorScheme) {

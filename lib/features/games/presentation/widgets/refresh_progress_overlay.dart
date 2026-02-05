@@ -12,7 +12,7 @@ class RefreshProgressOverlay extends StatelessWidget {
       builder: (context, state) {
         final progress = state.maybeWhen(
           loading: (p) => p,
-          loaded: (_, __, ___, ____, p) => p,
+          loaded: (_, __, ___, ____, p, _____, ______, _______) => p,
           orElse: () => null,
         );
 

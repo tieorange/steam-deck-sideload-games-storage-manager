@@ -1,22 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:game_size_manager/features/settings/domain/entities/settings_entity.dart';
 import 'package:game_size_manager/features/settings/presentation/cubit/settings_cubit.dart';
 
-/// Theme selection card with system/light/dark buttons
+/// Theme selection card with system/light/dark/oled buttons
 class ThemeCard extends StatelessWidget {
   const ThemeCard({super.key, required this.currentMode});
 
-  final ThemeMode currentMode;
+  final AppThemeMode currentMode;
 
-  String _getThemeModeName(ThemeMode mode) {
+  String _getThemeModeName(AppThemeMode mode) {
     switch (mode) {
-      case ThemeMode.system:
+      case AppThemeMode.system:
         return 'Following system preference';
-      case ThemeMode.light:
+      case AppThemeMode.light:
         return 'Always light';
-      case ThemeMode.dark:
+      case AppThemeMode.dark:
         return 'Always dark';
+      case AppThemeMode.oled:
+        return 'True black OLED';
     }
   }
 
@@ -69,22 +72,29 @@ class ThemeCard extends StatelessWidget {
                 _ThemeButton(
                   icon: Icons.settings_suggest_rounded,
                   label: 'System',
-                  mode: ThemeMode.system,
-                  isSelected: currentMode == ThemeMode.system,
+                  mode: AppThemeMode.system,
+                  isSelected: currentMode == AppThemeMode.system,
                 ),
                 const SizedBox(width: 12),
                 _ThemeButton(
                   icon: Icons.light_mode_rounded,
                   label: 'Light',
-                  mode: ThemeMode.light,
-                  isSelected: currentMode == ThemeMode.light,
+                  mode: AppThemeMode.light,
+                  isSelected: currentMode == AppThemeMode.light,
                 ),
                 const SizedBox(width: 12),
                 _ThemeButton(
                   icon: Icons.dark_mode_rounded,
                   label: 'Dark',
-                  mode: ThemeMode.dark,
-                  isSelected: currentMode == ThemeMode.dark,
+                  mode: AppThemeMode.dark,
+                  isSelected: currentMode == AppThemeMode.dark,
+                ),
+                const SizedBox(width: 12),
+                _ThemeButton(
+                  icon: Icons.brightness_1,
+                  label: 'OLED',
+                  mode: AppThemeMode.oled,
+                  isSelected: currentMode == AppThemeMode.oled,
                 ),
               ],
             ),
@@ -105,7 +115,7 @@ class _ThemeButton extends StatelessWidget {
 
   final IconData icon;
   final String label;
-  final ThemeMode mode;
+  final AppThemeMode mode;
   final bool isSelected;
 
   @override
@@ -119,7 +129,7 @@ class _ThemeButton extends StatelessWidget {
             : theme.colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(12),
         child: InkWell(
-          onTap: () => context.read<SettingsCubit>().setThemeMode(mode),
+          onTap: () => context.read<SettingsCubit>().setAppThemeMode(mode),
           borderRadius: BorderRadius.circular(12),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),

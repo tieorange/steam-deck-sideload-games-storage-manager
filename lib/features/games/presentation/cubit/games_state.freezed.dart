@@ -27,6 +27,9 @@ mixin _$GamesState {
       bool sortDescending,
       String? searchQuery,
       RefreshProgressState? refreshProgress,
+      SortOption sortOption,
+      GameTag? filterTag,
+      DateTime? lastRefresh,
     )
     loaded,
     required TResult Function(String message) error,
@@ -41,6 +44,9 @@ mixin _$GamesState {
       bool sortDescending,
       String? searchQuery,
       RefreshProgressState? refreshProgress,
+      SortOption sortOption,
+      GameTag? filterTag,
+      DateTime? lastRefresh,
     )?
     loaded,
     TResult? Function(String message)? error,
@@ -55,6 +61,9 @@ mixin _$GamesState {
       bool sortDescending,
       String? searchQuery,
       RefreshProgressState? refreshProgress,
+      SortOption sortOption,
+      GameTag? filterTag,
+      DateTime? lastRefresh,
     )?
     loaded,
     TResult Function(String message)? error,
@@ -157,6 +166,9 @@ class _$GamesInitialImpl extends GamesInitial {
       bool sortDescending,
       String? searchQuery,
       RefreshProgressState? refreshProgress,
+      SortOption sortOption,
+      GameTag? filterTag,
+      DateTime? lastRefresh,
     )
     loaded,
     required TResult Function(String message) error,
@@ -175,6 +187,9 @@ class _$GamesInitialImpl extends GamesInitial {
       bool sortDescending,
       String? searchQuery,
       RefreshProgressState? refreshProgress,
+      SortOption sortOption,
+      GameTag? filterTag,
+      DateTime? lastRefresh,
     )?
     loaded,
     TResult? Function(String message)? error,
@@ -193,6 +208,9 @@ class _$GamesInitialImpl extends GamesInitial {
       bool sortDescending,
       String? searchQuery,
       RefreshProgressState? refreshProgress,
+      SortOption sortOption,
+      GameTag? filterTag,
+      DateTime? lastRefresh,
     )?
     loaded,
     TResult Function(String message)? error,
@@ -343,6 +361,9 @@ class _$GamesLoadingImpl extends GamesLoading {
       bool sortDescending,
       String? searchQuery,
       RefreshProgressState? refreshProgress,
+      SortOption sortOption,
+      GameTag? filterTag,
+      DateTime? lastRefresh,
     )
     loaded,
     required TResult Function(String message) error,
@@ -361,6 +382,9 @@ class _$GamesLoadingImpl extends GamesLoading {
       bool sortDescending,
       String? searchQuery,
       RefreshProgressState? refreshProgress,
+      SortOption sortOption,
+      GameTag? filterTag,
+      DateTime? lastRefresh,
     )?
     loaded,
     TResult? Function(String message)? error,
@@ -379,6 +403,9 @@ class _$GamesLoadingImpl extends GamesLoading {
       bool sortDescending,
       String? searchQuery,
       RefreshProgressState? refreshProgress,
+      SortOption sortOption,
+      GameTag? filterTag,
+      DateTime? lastRefresh,
     )?
     loaded,
     TResult Function(String message)? error,
@@ -455,6 +482,9 @@ abstract class _$$GamesLoadedImplCopyWith<$Res> {
     bool sortDescending,
     String? searchQuery,
     RefreshProgressState? refreshProgress,
+    SortOption sortOption,
+    GameTag? filterTag,
+    DateTime? lastRefresh,
   });
 
   $RefreshProgressStateCopyWith<$Res>? get refreshProgress;
@@ -479,6 +509,9 @@ class __$$GamesLoadedImplCopyWithImpl<$Res>
     Object? sortDescending = null,
     Object? searchQuery = freezed,
     Object? refreshProgress = freezed,
+    Object? sortOption = null,
+    Object? filterTag = freezed,
+    Object? lastRefresh = freezed,
   }) {
     return _then(
       _$GamesLoadedImpl(
@@ -502,6 +535,18 @@ class __$$GamesLoadedImplCopyWithImpl<$Res>
             ? _value.refreshProgress
             : refreshProgress // ignore: cast_nullable_to_non_nullable
                   as RefreshProgressState?,
+        sortOption: null == sortOption
+            ? _value.sortOption
+            : sortOption // ignore: cast_nullable_to_non_nullable
+                  as SortOption,
+        filterTag: freezed == filterTag
+            ? _value.filterTag
+            : filterTag // ignore: cast_nullable_to_non_nullable
+                  as GameTag?,
+        lastRefresh: freezed == lastRefresh
+            ? _value.lastRefresh
+            : lastRefresh // ignore: cast_nullable_to_non_nullable
+                  as DateTime?,
       ),
     );
   }
@@ -532,6 +577,9 @@ class _$GamesLoadedImpl extends GamesLoaded {
     this.sortDescending = true,
     this.searchQuery = null,
     this.refreshProgress = null,
+    this.sortOption = SortOption.size,
+    this.filterTag = null,
+    this.lastRefresh = null,
   }) : _games = games,
        super._();
 
@@ -555,10 +603,19 @@ class _$GamesLoadedImpl extends GamesLoaded {
   @override
   @JsonKey()
   final RefreshProgressState? refreshProgress;
+  @override
+  @JsonKey()
+  final SortOption sortOption;
+  @override
+  @JsonKey()
+  final GameTag? filterTag;
+  @override
+  @JsonKey()
+  final DateTime? lastRefresh;
 
   @override
   String toString() {
-    return 'GamesState.loaded(games: $games, filterSource: $filterSource, sortDescending: $sortDescending, searchQuery: $searchQuery, refreshProgress: $refreshProgress)';
+    return 'GamesState.loaded(games: $games, filterSource: $filterSource, sortDescending: $sortDescending, searchQuery: $searchQuery, refreshProgress: $refreshProgress, sortOption: $sortOption, filterTag: $filterTag, lastRefresh: $lastRefresh)';
   }
 
   @override
@@ -574,7 +631,13 @@ class _$GamesLoadedImpl extends GamesLoaded {
             (identical(other.searchQuery, searchQuery) ||
                 other.searchQuery == searchQuery) &&
             (identical(other.refreshProgress, refreshProgress) ||
-                other.refreshProgress == refreshProgress));
+                other.refreshProgress == refreshProgress) &&
+            (identical(other.sortOption, sortOption) ||
+                other.sortOption == sortOption) &&
+            (identical(other.filterTag, filterTag) ||
+                other.filterTag == filterTag) &&
+            (identical(other.lastRefresh, lastRefresh) ||
+                other.lastRefresh == lastRefresh));
   }
 
   @override
@@ -585,6 +648,9 @@ class _$GamesLoadedImpl extends GamesLoaded {
     sortDescending,
     searchQuery,
     refreshProgress,
+    sortOption,
+    filterTag,
+    lastRefresh,
   );
 
   /// Create a copy of GamesState
@@ -606,6 +672,9 @@ class _$GamesLoadedImpl extends GamesLoaded {
       bool sortDescending,
       String? searchQuery,
       RefreshProgressState? refreshProgress,
+      SortOption sortOption,
+      GameTag? filterTag,
+      DateTime? lastRefresh,
     )
     loaded,
     required TResult Function(String message) error,
@@ -616,6 +685,9 @@ class _$GamesLoadedImpl extends GamesLoaded {
       sortDescending,
       searchQuery,
       refreshProgress,
+      sortOption,
+      filterTag,
+      lastRefresh,
     );
   }
 
@@ -630,6 +702,9 @@ class _$GamesLoadedImpl extends GamesLoaded {
       bool sortDescending,
       String? searchQuery,
       RefreshProgressState? refreshProgress,
+      SortOption sortOption,
+      GameTag? filterTag,
+      DateTime? lastRefresh,
     )?
     loaded,
     TResult? Function(String message)? error,
@@ -640,6 +715,9 @@ class _$GamesLoadedImpl extends GamesLoaded {
       sortDescending,
       searchQuery,
       refreshProgress,
+      sortOption,
+      filterTag,
+      lastRefresh,
     );
   }
 
@@ -654,6 +732,9 @@ class _$GamesLoadedImpl extends GamesLoaded {
       bool sortDescending,
       String? searchQuery,
       RefreshProgressState? refreshProgress,
+      SortOption sortOption,
+      GameTag? filterTag,
+      DateTime? lastRefresh,
     )?
     loaded,
     TResult Function(String message)? error,
@@ -666,6 +747,9 @@ class _$GamesLoadedImpl extends GamesLoaded {
         sortDescending,
         searchQuery,
         refreshProgress,
+        sortOption,
+        filterTag,
+        lastRefresh,
       );
     }
     return orElse();
@@ -716,6 +800,9 @@ abstract class GamesLoaded extends GamesState {
     final bool sortDescending,
     final String? searchQuery,
     final RefreshProgressState? refreshProgress,
+    final SortOption sortOption,
+    final GameTag? filterTag,
+    final DateTime? lastRefresh,
   }) = _$GamesLoadedImpl;
   const GamesLoaded._() : super._();
 
@@ -724,6 +811,9 @@ abstract class GamesLoaded extends GamesState {
   bool get sortDescending;
   String? get searchQuery;
   RefreshProgressState? get refreshProgress;
+  SortOption get sortOption;
+  GameTag? get filterTag;
+  DateTime? get lastRefresh;
 
   /// Create a copy of GamesState
   /// with the given fields replaced by the non-null parameter values.
@@ -810,6 +900,9 @@ class _$GamesErrorImpl extends GamesError {
       bool sortDescending,
       String? searchQuery,
       RefreshProgressState? refreshProgress,
+      SortOption sortOption,
+      GameTag? filterTag,
+      DateTime? lastRefresh,
     )
     loaded,
     required TResult Function(String message) error,
@@ -828,6 +921,9 @@ class _$GamesErrorImpl extends GamesError {
       bool sortDescending,
       String? searchQuery,
       RefreshProgressState? refreshProgress,
+      SortOption sortOption,
+      GameTag? filterTag,
+      DateTime? lastRefresh,
     )?
     loaded,
     TResult? Function(String message)? error,
@@ -846,6 +942,9 @@ class _$GamesErrorImpl extends GamesError {
       bool sortDescending,
       String? searchQuery,
       RefreshProgressState? refreshProgress,
+      SortOption sortOption,
+      GameTag? filterTag,
+      DateTime? lastRefresh,
     )?
     loaded,
     TResult Function(String message)? error,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:game_size_manager/core/constants.dart';
+import 'package:game_size_manager/core/theme/game_colors.dart';
 import 'package:game_size_manager/core/theme/steam_deck_constants.dart';
 import 'package:game_size_manager/features/games/domain/entities/game_entity.dart';
 
@@ -44,8 +45,8 @@ class SourceFilterChips extends StatelessWidget {
                 source,
                 source.displayName,
                 counts[source]!,
-                _getSourceIcon(source),
-                _getSourceColor(source),
+                GameColors.iconForSource(source),
+                GameColors.forSource(source),
               ),
               const SizedBox(width: 8),
             ],
@@ -131,29 +132,4 @@ class SourceFilterChips extends StatelessWidget {
     );
   }
 
-  IconData _getSourceIcon(GameSource source) {
-    switch (source) {
-      case GameSource.heroic:
-        return Icons.storefront_rounded;
-      case GameSource.ogi:
-        return Icons.apps_rounded;
-      case GameSource.lutris:
-        return Icons.sports_esports_rounded;
-      case GameSource.steam:
-        return Icons.gamepad_rounded;
-    }
-  }
-
-  Color _getSourceColor(GameSource source) {
-    switch (source) {
-      case GameSource.heroic:
-        return const Color(0xFFE91E63);
-      case GameSource.ogi:
-        return const Color(0xFF9C27B0);
-      case GameSource.lutris:
-        return const Color(0xFFFF9800);
-      case GameSource.steam:
-        return const Color(0xFF2196F3);
-    }
-  }
 }

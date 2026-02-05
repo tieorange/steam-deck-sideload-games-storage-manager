@@ -24,6 +24,9 @@ mixin _$Settings {
   /// Theme mode
   ThemeMode get themeMode => throw _privateConstructorUsedError;
 
+  /// Extended theme mode (includes OLED)
+  AppThemeMode get appThemeMode => throw _privateConstructorUsedError;
+
   /// Custom Heroic config path (optional override)
   String? get heroicConfigPath => throw _privateConstructorUsedError;
 
@@ -62,6 +65,7 @@ abstract class $SettingsCopyWith<$Res> {
   @useResult
   $Res call({
     ThemeMode themeMode,
+    AppThemeMode appThemeMode,
     String? heroicConfigPath,
     String? lutrisDbPath,
     String? steamPath,
@@ -88,6 +92,7 @@ class _$SettingsCopyWithImpl<$Res, $Val extends Settings>
   @override
   $Res call({
     Object? themeMode = null,
+    Object? appThemeMode = null,
     Object? heroicConfigPath = freezed,
     Object? lutrisDbPath = freezed,
     Object? steamPath = freezed,
@@ -102,6 +107,10 @@ class _$SettingsCopyWithImpl<$Res, $Val extends Settings>
                 ? _value.themeMode
                 : themeMode // ignore: cast_nullable_to_non_nullable
                       as ThemeMode,
+            appThemeMode: null == appThemeMode
+                ? _value.appThemeMode
+                : appThemeMode // ignore: cast_nullable_to_non_nullable
+                      as AppThemeMode,
             heroicConfigPath: freezed == heroicConfigPath
                 ? _value.heroicConfigPath
                 : heroicConfigPath // ignore: cast_nullable_to_non_nullable
@@ -147,6 +156,7 @@ abstract class _$$SettingsImplCopyWith<$Res>
   @useResult
   $Res call({
     ThemeMode themeMode,
+    AppThemeMode appThemeMode,
     String? heroicConfigPath,
     String? lutrisDbPath,
     String? steamPath,
@@ -172,6 +182,7 @@ class __$$SettingsImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? themeMode = null,
+    Object? appThemeMode = null,
     Object? heroicConfigPath = freezed,
     Object? lutrisDbPath = freezed,
     Object? steamPath = freezed,
@@ -186,6 +197,10 @@ class __$$SettingsImplCopyWithImpl<$Res>
             ? _value.themeMode
             : themeMode // ignore: cast_nullable_to_non_nullable
                   as ThemeMode,
+        appThemeMode: null == appThemeMode
+            ? _value.appThemeMode
+            : appThemeMode // ignore: cast_nullable_to_non_nullable
+                  as AppThemeMode,
         heroicConfigPath: freezed == heroicConfigPath
             ? _value.heroicConfigPath
             : heroicConfigPath // ignore: cast_nullable_to_non_nullable
@@ -224,6 +239,7 @@ class __$$SettingsImplCopyWithImpl<$Res>
 class _$SettingsImpl implements _Settings {
   const _$SettingsImpl({
     this.themeMode = ThemeMode.dark,
+    this.appThemeMode = AppThemeMode.dark,
     this.heroicConfigPath,
     this.lutrisDbPath,
     this.steamPath,
@@ -240,6 +256,11 @@ class _$SettingsImpl implements _Settings {
   @override
   @JsonKey()
   final ThemeMode themeMode;
+
+  /// Extended theme mode (includes OLED)
+  @override
+  @JsonKey()
+  final AppThemeMode appThemeMode;
 
   /// Custom Heroic config path (optional override)
   @override
@@ -274,7 +295,7 @@ class _$SettingsImpl implements _Settings {
 
   @override
   String toString() {
-    return 'Settings(themeMode: $themeMode, heroicConfigPath: $heroicConfigPath, lutrisDbPath: $lutrisDbPath, steamPath: $steamPath, ogiLibraryPath: $ogiLibraryPath, confirmBeforeUninstall: $confirmBeforeUninstall, sortBySizeDescending: $sortBySizeDescending, defaultViewMode: $defaultViewMode)';
+    return 'Settings(themeMode: $themeMode, appThemeMode: $appThemeMode, heroicConfigPath: $heroicConfigPath, lutrisDbPath: $lutrisDbPath, steamPath: $steamPath, ogiLibraryPath: $ogiLibraryPath, confirmBeforeUninstall: $confirmBeforeUninstall, sortBySizeDescending: $sortBySizeDescending, defaultViewMode: $defaultViewMode)';
   }
 
   @override
@@ -284,6 +305,8 @@ class _$SettingsImpl implements _Settings {
             other is _$SettingsImpl &&
             (identical(other.themeMode, themeMode) ||
                 other.themeMode == themeMode) &&
+            (identical(other.appThemeMode, appThemeMode) ||
+                other.appThemeMode == appThemeMode) &&
             (identical(other.heroicConfigPath, heroicConfigPath) ||
                 other.heroicConfigPath == heroicConfigPath) &&
             (identical(other.lutrisDbPath, lutrisDbPath) ||
@@ -305,6 +328,7 @@ class _$SettingsImpl implements _Settings {
   int get hashCode => Object.hash(
     runtimeType,
     themeMode,
+    appThemeMode,
     heroicConfigPath,
     lutrisDbPath,
     steamPath,
@@ -331,6 +355,7 @@ class _$SettingsImpl implements _Settings {
 abstract class _Settings implements Settings {
   const factory _Settings({
     final ThemeMode themeMode,
+    final AppThemeMode appThemeMode,
     final String? heroicConfigPath,
     final String? lutrisDbPath,
     final String? steamPath,
@@ -346,6 +371,10 @@ abstract class _Settings implements Settings {
   /// Theme mode
   @override
   ThemeMode get themeMode;
+
+  /// Extended theme mode (includes OLED)
+  @override
+  AppThemeMode get appThemeMode;
 
   /// Custom Heroic config path (optional override)
   @override

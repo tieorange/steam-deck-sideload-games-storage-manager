@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:game_size_manager/core/di/injection.dart';
 import 'package:game_size_manager/core/theme/steam_deck_constants.dart';
 import 'package:game_size_manager/core/widgets/animated_card.dart';
+import 'package:game_size_manager/core/widgets/skeleton_loading.dart';
 import 'package:game_size_manager/features/storage/presentation/cubit/storage_cubit.dart';
 import 'package:game_size_manager/features/storage/presentation/cubit/storage_state.dart';
 import 'package:game_size_manager/features/storage/presentation/widgets/drive_info_card.dart';
@@ -63,7 +64,7 @@ class _StorageViewState extends State<StorageView> with SingleTickerProviderStat
         builder: (context, state) {
           return state.when(
             initial: () => const SizedBox.shrink(),
-            loading: () => const Center(child: CircularProgressIndicator()),
+            loading: () => const StoragePageSkeleton(),
             error: (msg) => Center(child: Text('Error: $msg')),
             loaded: (total, used, free, drives) => ListView(
               padding: const EdgeInsets.all(SteamDeckConstants.pagePadding),
