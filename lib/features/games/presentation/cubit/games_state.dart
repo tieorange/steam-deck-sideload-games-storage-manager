@@ -59,6 +59,10 @@ class GamesState with _$GamesState {
     orElse: () => [],
   );
 
+  /// Get all games (unfiltered) for operations that need the complete list
+  List<Game> get allGames =>
+      maybeWhen(loaded: (games, _, __, ___, ____, _____, ______, _______) => games, orElse: () => []);
+
   /// Get selected games
   List<Game> get selectedGames =>
       maybeWhen(loaded: (games, _, __, ___, ____, _____, ______, _______) => games.selectedGames, orElse: () => []);

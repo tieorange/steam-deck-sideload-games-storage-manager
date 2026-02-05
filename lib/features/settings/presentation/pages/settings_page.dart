@@ -5,6 +5,7 @@ import 'package:game_size_manager/core/di/injection.dart';
 import 'package:game_size_manager/core/extensions/size_formatter.dart';
 import 'package:game_size_manager/core/services/game_export_service.dart';
 import 'package:game_size_manager/core/services/orphaned_data_service.dart';
+import 'package:game_size_manager/features/games/domain/entities/game_entity.dart';
 import 'package:game_size_manager/core/theme/steam_deck_constants.dart';
 import 'package:game_size_manager/core/widgets/animated_card.dart';
 import 'package:game_size_manager/features/games/presentation/cubit/games_cubit.dart';
@@ -100,7 +101,8 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
   }
 
   void _showOrphanedDataDialog(BuildContext context) {
-    final games = context.read<GamesCubit>().state.displayedGames;
+    // Use allGames (unfiltered) so we don't false-flag filtered-out games as orphaned
+    final games = context.read<GamesCubit>().state.allGames;
     final orphanedDataService = sl<OrphanedDataService>();
 
     showDialog(
@@ -223,7 +225,7 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
                         color: const Color(0xFFF59E0B),
                       ),
                       title: const Text('Clean Orphaned Data'),
-                      subtitle: const Text('Remove leftover data from uninstalled games'),
+                      subtitle: const Text('Scan compatdata & shader caches across all drives'),
                       trailing: const Icon(Icons.chevron_right_rounded),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
@@ -258,26 +260,28 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
   }
 }
 
-/// Dialog that scans for and displays orphaned data with cleanup option
+/// Dialog that scans for and displays orphaned data with selective cleanup
 class _OrphanedDataDialog extends StatefulWidget {
   const _OrphanedDataDialog({
     required this.games,
     required this.orphanedDataService,
   });
 
-  final List<dynamic> games;
+  final List<Game> games;
   final OrphanedDataService orphanedDataService;
 
   @override
   State<_OrphanedDataDialog> createState() => _OrphanedDataDialogState();
 }
 
+enum _DialogPhase { scanning, results, confirming, cleaning, done, error }
+
 class _OrphanedDataDialogState extends State<_OrphanedDataDialog> {
-  bool _scanning = true;
-  bool _cleaning = false;
+  _DialogPhase _phase = _DialogPhase.scanning;
   List<OrphanedData> _orphanedData = [];
+  final Set<int> _selectedIndices = {};
   String? _error;
-  int? _freedBytes;
+  CleanupResult? _cleanupResult;
 
   @override
   void initState() {
@@ -287,78 +291,105 @@ class _OrphanedDataDialogState extends State<_OrphanedDataDialog> {
 
   Future<void> _scan() async {
     try {
-      final results = await widget.orphanedDataService.scan(widget.games.cast());
+      final results = await widget.orphanedDataService.scan(widget.games);
       if (mounted) {
         setState(() {
           _orphanedData = results;
-          _scanning = false;
+          // Select all non-symlink entries by default
+          _selectedIndices.clear();
+          for (var i = 0; i < results.length; i++) {
+            if (!results[i].isSymlink) _selectedIndices.add(i);
+          }
+          _phase = _DialogPhase.results;
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
           _error = e.toString();
-          _scanning = false;
+          _phase = _DialogPhase.error;
         });
       }
     }
   }
 
+  List<OrphanedData> get _selectedItems =>
+      _selectedIndices.map((i) => _orphanedData[i]).toList();
+
+  int get _selectedSize =>
+      _selectedItems.fold<int>(0, (sum, item) => sum + item.sizeBytes);
+
+  bool get _hasCompatDataSelected =>
+      _selectedItems.any((item) => item.hasSaveDataRisk);
+
   Future<void> _cleanup() async {
-    setState(() => _cleaning = true);
+    setState(() => _phase = _DialogPhase.cleaning);
     try {
-      final freed = await widget.orphanedDataService.cleanup(_orphanedData);
+      final result = await widget.orphanedDataService.cleanup(_selectedItems);
       if (mounted) {
         setState(() {
-          _freedBytes = freed;
-          _cleaning = false;
+          _cleanupResult = result;
+          _phase = _DialogPhase.done;
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
           _error = e.toString();
-          _cleaning = false;
+          _phase = _DialogPhase.error;
         });
       }
     }
+  }
+
+  void _showConfirmation() {
+    setState(() => _phase = _DialogPhase.confirming);
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    if (_scanning) {
-      return AlertDialog(
-        title: const Text('Orphaned Data'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const CircularProgressIndicator(),
-            const SizedBox(height: 16),
-            const Text('Scanning for orphaned data...'),
-          ],
-        ),
-      );
-    }
+    return switch (_phase) {
+      _DialogPhase.scanning => _buildScanningDialog(theme),
+      _DialogPhase.results => _buildResultsDialog(theme),
+      _DialogPhase.confirming => _buildConfirmationDialog(theme),
+      _DialogPhase.cleaning => _buildCleaningDialog(theme),
+      _DialogPhase.done => _buildDoneDialog(theme),
+      _DialogPhase.error => _buildErrorDialog(theme),
+    };
+  }
 
-    if (_error != null) {
-      return AlertDialog(
-        title: const Text('Orphaned Data'),
-        content: Text('An error occurred: $_error'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+  Widget _buildScanningDialog(ThemeData theme) {
+    return AlertDialog(
+      title: const Text('Scanning for Orphaned Data'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const CircularProgressIndicator(),
+          const SizedBox(height: 16),
+          Text(
+            'Checking all Steam library folders for\n'
+            'leftover compatdata and shader caches...',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+            ),
           ),
         ],
-      );
-    }
+      ),
+    );
+  }
 
-    if (_freedBytes != null) {
+  Widget _buildResultsDialog(ThemeData theme) {
+    if (_orphanedData.isEmpty) {
       return AlertDialog(
-        title: const Text('Cleanup Complete'),
-        content: Text('Freed ${_freedBytes!.toHumanReadableSize()} of disk space.'),
+        icon: Icon(Icons.check_circle_outline, color: Colors.green[400], size: 48),
+        title: const Text('All Clean'),
+        content: const Text(
+          'No orphaned data found. All compatdata and shader '
+          'cache directories belong to installed games.',
+        ),
         actions: [
           FilledButton(
             onPressed: () => Navigator.pop(context),
@@ -368,58 +399,130 @@ class _OrphanedDataDialogState extends State<_OrphanedDataDialog> {
       );
     }
 
-    if (_orphanedData.isEmpty) {
-      return AlertDialog(
-        title: const Text('Orphaned Data'),
-        content: const Text('No orphaned data found. Your system is clean!'),
-        actions: [
-          FilledButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Great'),
-          ),
-        ],
-      );
-    }
-
-    final totalSize = _orphanedData.fold<int>(0, (sum, item) => sum + item.sizeBytes);
+    final totalSize = _orphanedData.fold<int>(0, (sum, e) => sum + e.sizeBytes);
+    final compatCount = _orphanedData.where((e) => e.type == OrphanedDataType.compatData).length;
+    final shaderCount = _orphanedData.where((e) => e.type == OrphanedDataType.shaderCache).length;
+    final symlinkCount = _orphanedData.where((e) => e.isSymlink).length;
 
     return AlertDialog(
-      title: const Text('Orphaned Data'),
+      title: const Text('Orphaned Data Found'),
       content: SizedBox(
         width: double.maxFinite,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Found ${_orphanedData.length} orphaned entries '
-              'totaling ${totalSize.toHumanReadableSize()}.',
-              style: theme.textTheme.bodyMedium,
+            // Summary chips
+            Wrap(
+              spacing: 8,
+              runSpacing: 4,
+              children: [
+                _SummaryChip(
+                  icon: Icons.folder_rounded,
+                  label: '$compatCount prefix${compatCount != 1 ? 'es' : ''}',
+                  color: theme.colorScheme.tertiary,
+                ),
+                _SummaryChip(
+                  icon: Icons.gradient_rounded,
+                  label: '$shaderCount cache${shaderCount != 1 ? 's' : ''}',
+                  color: theme.colorScheme.secondary,
+                ),
+                _SummaryChip(
+                  icon: Icons.data_usage_rounded,
+                  label: totalSize.toHumanReadableSize(),
+                  color: theme.colorScheme.error,
+                ),
+                if (symlinkCount > 0)
+                  _SummaryChip(
+                    icon: Icons.link_rounded,
+                    label: '$symlinkCount symlink${symlinkCount != 1 ? 's' : ''} (skipped)',
+                    color: theme.colorScheme.outline,
+                  ),
+              ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
+            // Select all / none
+            Row(
+              children: [
+                TextButton.icon(
+                  onPressed: () => setState(() {
+                    _selectedIndices.clear();
+                    for (var i = 0; i < _orphanedData.length; i++) {
+                      if (!_orphanedData[i].isSymlink) _selectedIndices.add(i);
+                    }
+                  }),
+                  icon: const Icon(Icons.select_all, size: 18),
+                  label: const Text('All'),
+                ),
+                TextButton.icon(
+                  onPressed: () => setState(() => _selectedIndices.clear()),
+                  icon: const Icon(Icons.deselect, size: 18),
+                  label: const Text('None'),
+                ),
+                const Spacer(),
+                Text(
+                  '${_selectedIndices.length} selected',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                  ),
+                ),
+              ],
+            ),
+            const Divider(height: 1),
+            // Items list
             ConstrainedBox(
-              constraints: const BoxConstraints(maxHeight: 300),
-              child: ListView.separated(
+              constraints: const BoxConstraints(maxHeight: 320),
+              child: ListView.builder(
                 shrinkWrap: true,
                 itemCount: _orphanedData.length,
-                separatorBuilder: (_, __) => const Divider(height: 1),
                 itemBuilder: (context, index) {
                   final item = _orphanedData[index];
-                  return ListTile(
+                  final isSelected = _selectedIndices.contains(index);
+                  final isCompat = item.type == OrphanedDataType.compatData;
+
+                  return CheckboxListTile(
                     dense: true,
-                    leading: Icon(
-                      item.type == OrphanedDataType.compatData
-                          ? Icons.folder_rounded
-                          : Icons.gradient_rounded,
+                    value: isSelected,
+                    enabled: !item.isSymlink,
+                    onChanged: item.isSymlink ? null : (val) {
+                      setState(() {
+                        if (val == true) {
+                          _selectedIndices.add(index);
+                        } else {
+                          _selectedIndices.remove(index);
+                        }
+                      });
+                    },
+                    secondary: Icon(
+                      item.isSymlink
+                          ? Icons.link_rounded
+                          : isCompat
+                              ? Icons.folder_rounded
+                              : Icons.gradient_rounded,
                       size: 20,
-                      color: theme.colorScheme.secondary,
+                      color: item.isSymlink
+                          ? theme.colorScheme.outline
+                          : isCompat
+                              ? theme.colorScheme.tertiary
+                              : theme.colorScheme.secondary,
                     ),
-                    title: Text(item.label),
-                    subtitle: Text(item.type.label),
-                    trailing: Text(
-                      item.sizeBytes.toHumanReadableSize(),
+                    title: Text(
+                      item.label,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: item.isSymlink
+                            ? theme.colorScheme.onSurface.withValues(alpha: 0.5)
+                            : null,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    subtitle: Text(
+                      item.isSymlink
+                          ? 'Symlink (managed externally)'
+                          : '${item.type.label} - ${item.sizeBytes.toHumanReadableSize()}'
+                              '${item.isNonSteamShortcut ? ' - Non-Steam' : ''}',
                       style: theme.textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                       ),
                     ),
                   );
@@ -435,16 +538,196 @@ class _OrphanedDataDialogState extends State<_OrphanedDataDialog> {
           child: const Text('Cancel'),
         ),
         FilledButton(
-          onPressed: _cleaning ? null : _cleanup,
-          child: _cleaning
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : Text('Clean Up (${totalSize.toHumanReadableSize()})'),
+          onPressed: _selectedIndices.isEmpty ? null : _showConfirmation,
+          child: Text(
+            _selectedIndices.isEmpty
+                ? 'Select items'
+                : 'Clean Up (${_selectedSize.toHumanReadableSize()})',
+          ),
         ),
       ],
+    );
+  }
+
+  Widget _buildConfirmationDialog(ThemeData theme) {
+    return AlertDialog(
+      icon: Icon(Icons.warning_amber_rounded, color: Colors.orange[400], size: 48),
+      title: const Text('Confirm Cleanup'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'You are about to permanently delete '
+            '${_selectedIndices.length} item${_selectedIndices.length != 1 ? 's' : ''} '
+            '(${_selectedSize.toHumanReadableSize()}).',
+            style: theme.textTheme.bodyMedium,
+          ),
+          if (_hasCompatDataSelected) ...[
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.errorContainer.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: theme.colorScheme.error.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.warning_rounded, size: 20, color: theme.colorScheme.error),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Some selected items are Proton prefixes (compatdata). '
+                      'These may contain save files that are not backed up to '
+                      'Steam Cloud. Deleting them will permanently remove '
+                      'those saves.',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.error,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 12),
+          Text(
+            'Shader caches will regenerate automatically. '
+            'This action cannot be undone.',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => setState(() => _phase = _DialogPhase.results),
+          child: const Text('Go Back'),
+        ),
+        FilledButton(
+          style: FilledButton.styleFrom(
+            backgroundColor: theme.colorScheme.error,
+            foregroundColor: theme.colorScheme.onError,
+          ),
+          onPressed: _cleanup,
+          child: const Text('Delete Permanently'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCleaningDialog(ThemeData theme) {
+    return AlertDialog(
+      title: const Text('Cleaning Up'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const CircularProgressIndicator(),
+          const SizedBox(height: 16),
+          Text(
+            'Deleting ${_selectedIndices.length} orphaned '
+            'item${_selectedIndices.length != 1 ? 's' : ''}...',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDoneDialog(ThemeData theme) {
+    final result = _cleanupResult!;
+    return AlertDialog(
+      icon: Icon(
+        result.failureCount == 0
+            ? Icons.check_circle_outline
+            : Icons.info_outline,
+        color: result.failureCount == 0 ? Colors.green[400] : Colors.orange[400],
+        size: 48,
+      ),
+      title: const Text('Cleanup Complete'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Freed ${result.freedBytes.toHumanReadableSize()} of disk space.',
+            style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          if (result.failureCount > 0) ...[
+            const SizedBox(height: 8),
+            Text(
+              '${result.successCount} deleted, '
+              '${result.failureCount} failed.',
+              style: theme.textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 8),
+            ...result.errors.take(3).map((e) => Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text(
+                    e,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.error,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                )),
+          ],
+        ],
+      ),
+      actions: [
+        FilledButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Done'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildErrorDialog(ThemeData theme) {
+    return AlertDialog(
+      icon: Icon(Icons.error_outline, color: theme.colorScheme.error, size: 48),
+      title: const Text('Error'),
+      content: Text('An error occurred:\n$_error'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Close'),
+        ),
+      ],
+    );
+  }
+}
+
+/// Small summary chip for the orphaned data dialog
+class _SummaryChip extends StatelessWidget {
+  const _SummaryChip({
+    required this.icon,
+    required this.label,
+    required this.color,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Chip(
+      avatar: Icon(icon, size: 16, color: color),
+      label: Text(label),
+      labelStyle: Theme.of(context).textTheme.labelSmall,
+      visualDensity: VisualDensity.compact,
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      padding: EdgeInsets.zero,
     );
   }
 }
