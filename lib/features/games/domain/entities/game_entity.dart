@@ -44,7 +44,8 @@ class Game with _$Game {
     /// Whether this game is selected for batch operations
     @Default(false) bool isSelected,
 
-    /// User-assigned tag for categorization
+    /// User-assigned tag for categorization (not serialized, stored in DB separately)
+    // ignore: invalid_annotation_target
     @JsonKey(includeFromJson: false, includeToJson: false) GameTag? tag,
   }) = _Game;
 

@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import 'package:game_size_manager/core/constants.dart';
 import 'package:game_size_manager/core/extensions/size_formatter.dart';
 import 'package:game_size_manager/core/router/app_router.dart';
-import 'package:game_size_manager/core/theme/game_colors.dart';
 import 'package:game_size_manager/core/theme/steam_deck_constants.dart';
 import 'package:game_size_manager/core/widgets/empty_state.dart';
 import 'package:game_size_manager/core/widgets/skeleton_loading.dart';

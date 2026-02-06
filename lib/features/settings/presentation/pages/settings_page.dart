@@ -41,7 +41,6 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
   }
 
   void _showExportDialog(BuildContext context) {
-    final theme = Theme.of(context);
     final exportService = sl<GameExportService>();
     final games = context.read<GamesCubit>().state.displayedGames;
 

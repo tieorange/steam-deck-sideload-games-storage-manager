@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:game_size_manager/core/constants.dart';
 import 'package:game_size_manager/core/di/injection.dart';
 import 'package:game_size_manager/core/services/game_launch_service.dart';
 import 'package:game_size_manager/core/theme/game_colors.dart';

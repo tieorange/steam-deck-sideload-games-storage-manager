@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:game_size_manager/core/constants.dart';
 import 'package:game_size_manager/core/extensions/size_formatter.dart';
 import 'package:game_size_manager/core/theme/game_colors.dart';
 import 'package:game_size_manager/core/theme/steam_deck_constants.dart';
