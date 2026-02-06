@@ -51,6 +51,10 @@ mixin _$Game {
   /// Whether this game is selected for batch operations
   bool get isSelected => throw _privateConstructorUsedError;
 
+  /// User-assigned tag for categorization
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  GameTag? get tag => throw _privateConstructorUsedError;
+
   /// Serializes this Game to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
 
@@ -76,6 +80,7 @@ abstract class $GameCopyWith<$Res> {
     String? protonVersion,
     pkg.StorageLocation storageLocation,
     bool isSelected,
+    GameTag? tag,
   });
 }
 
@@ -104,6 +109,7 @@ class _$GameCopyWithImpl<$Res, $Val extends Game>
     Object? protonVersion = freezed,
     Object? storageLocation = null,
     Object? isSelected = null,
+    Object? tag = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -147,6 +153,10 @@ class _$GameCopyWithImpl<$Res, $Val extends Game>
                 ? _value.isSelected
                 : isSelected // ignore: cast_nullable_to_non_nullable
                       as bool,
+            tag: freezed == tag
+                ? _value.tag
+                : tag // ignore: cast_nullable_to_non_nullable
+                      as GameTag?,
           )
           as $Val,
     );
@@ -172,6 +182,7 @@ abstract class _$$GameImplCopyWith<$Res> implements $GameCopyWith<$Res> {
     String? protonVersion,
     pkg.StorageLocation storageLocation,
     bool isSelected,
+    GameTag? tag,
   });
 }
 
@@ -197,6 +208,7 @@ class __$$GameImplCopyWithImpl<$Res>
     Object? protonVersion = freezed,
     Object? storageLocation = null,
     Object? isSelected = null,
+    Object? tag = freezed,
   }) {
     return _then(
       _$GameImpl(
@@ -240,6 +252,10 @@ class __$$GameImplCopyWithImpl<$Res>
             ? _value.isSelected
             : isSelected // ignore: cast_nullable_to_non_nullable
                   as bool,
+        tag: freezed == tag
+            ? _value.tag
+            : tag // ignore: cast_nullable_to_non_nullable
+                  as GameTag?,
       ),
     );
   }
@@ -259,6 +275,7 @@ class _$GameImpl implements _Game {
     this.protonVersion,
     this.storageLocation = StorageLocation.internal,
     this.isSelected = false,
+    this.tag,
   });
 
   factory _$GameImpl.fromJson(Map<String, dynamic> json) =>
@@ -306,9 +323,14 @@ class _$GameImpl implements _Game {
   @JsonKey()
   final bool isSelected;
 
+  /// User-assigned tag for categorization
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  final GameTag? tag;
+
   @override
   String toString() {
-    return 'Game(id: $id, title: $title, source: $source, installPath: $installPath, sizeBytes: $sizeBytes, iconPath: $iconPath, launchOptions: $launchOptions, protonVersion: $protonVersion, storageLocation: $storageLocation, isSelected: $isSelected)';
+    return 'Game(id: $id, title: $title, source: $source, installPath: $installPath, sizeBytes: $sizeBytes, iconPath: $iconPath, launchOptions: $launchOptions, protonVersion: $protonVersion, storageLocation: $storageLocation, isSelected: $isSelected, tag: $tag)';
   }
 
   @override
@@ -332,7 +354,8 @@ class _$GameImpl implements _Game {
             (identical(other.storageLocation, storageLocation) ||
                 other.storageLocation == storageLocation) &&
             (identical(other.isSelected, isSelected) ||
-                other.isSelected == isSelected));
+                other.isSelected == isSelected) &&
+            (identical(other.tag, tag) || other.tag == tag));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -349,6 +372,7 @@ class _$GameImpl implements _Game {
     protonVersion,
     storageLocation,
     isSelected,
+    tag,
   );
 
   /// Create a copy of Game
@@ -377,6 +401,7 @@ abstract class _Game implements Game {
     final String? protonVersion,
     final pkg.StorageLocation storageLocation,
     final bool isSelected,
+    final GameTag? tag,
   }) = _$GameImpl;
 
   factory _Game.fromJson(Map<String, dynamic> json) = _$GameImpl.fromJson;
@@ -420,6 +445,11 @@ abstract class _Game implements Game {
   /// Whether this game is selected for batch operations
   @override
   bool get isSelected;
+
+  /// User-assigned tag for categorization
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  GameTag? get tag;
 
   /// Create a copy of Game
   /// with the given fields replaced by the non-null parameter values.

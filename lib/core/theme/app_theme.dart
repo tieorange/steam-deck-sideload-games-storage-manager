@@ -88,6 +88,29 @@ class AppTheme {
     );
   }
   
+  /// OLED Black theme - true black for OLED displays (saves battery)
+  static ThemeData get oledTheme {
+    final dark = darkTheme;
+    return dark.copyWith(
+      scaffoldBackgroundColor: Colors.black,
+      colorScheme: dark.colorScheme.copyWith(
+        surface: const Color(0xFF0A0A14),
+      ),
+      cardTheme: dark.cardTheme.copyWith(
+        color: const Color(0xFF0F0F1A),
+      ),
+      appBarTheme: dark.appBarTheme.copyWith(
+        backgroundColor: const Color(0xFF0A0A14),
+      ),
+      navigationBarTheme: dark.navigationBarTheme.copyWith(
+        backgroundColor: const Color(0xFF0A0A14),
+      ),
+      inputDecorationTheme: dark.inputDecorationTheme.copyWith(
+        fillColor: const Color(0xFF1A1A2E),
+      ),
+    );
+  }
+
   static ThemeData get darkTheme {
     return ThemeData(
       useMaterial3: true,

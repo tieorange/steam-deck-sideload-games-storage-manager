@@ -214,6 +214,7 @@ class UpdateService {
     }
 
     final scriptPath = path.join(tempDir.path, 'update_helper.sh');
+    final currentPid = pid; // Get current process ID
 
     // Script Content
     String scriptContent;
@@ -226,7 +227,7 @@ set -e
 exec > /tmp/gsm_update.log 2>&1
 echo "[UPDATE] Starting update at \$(date)"
 
-PID=$pid
+PID=$currentPid
 SOURCE="$sourcePath"
 TARGET="$targetPath"
 APP_NAME="$executableName"
@@ -267,7 +268,7 @@ set -e
 exec > /tmp/gsm_update.log 2>&1
 echo "[UPDATE] Starting update at \$(date)"
 
-PID=$pid
+PID=$currentPid
 SOURCE="$sourcePath"
 TARGET="$targetPath"
 EXECUTABLE="$executableName"

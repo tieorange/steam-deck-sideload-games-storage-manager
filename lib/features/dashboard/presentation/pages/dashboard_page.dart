@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:game_size_manager/core/constants.dart';
 import 'package:game_size_manager/core/extensions/size_formatter.dart';
+import 'package:game_size_manager/core/theme/game_colors.dart';
 import 'package:game_size_manager/core/theme/steam_deck_constants.dart';
+import 'package:game_size_manager/core/widgets/skeleton_loading.dart';
 import 'package:game_size_manager/features/games/domain/entities/game_entity.dart';
 import 'package:game_size_manager/features/games/presentation/cubit/games_cubit.dart';
 import 'package:game_size_manager/features/games/presentation/cubit/games_state.dart';
@@ -56,9 +57,9 @@ class _DashboardPageState extends State<DashboardPage> with SingleTickerProvider
               });
               return const Center(child: CircularProgressIndicator());
             },
-            loading: (_) => const Center(child: CircularProgressIndicator()),
+            loading: (_) => const DashboardCardSkeleton(),
             error: (message) => Center(child: Text('Error: $message')),
-            loaded: (games, _, __, ___, ____) => _buildDashboard(context, games),
+            loaded: (games, _, __, ___, ____, _____, ______, _______) => _buildDashboard(context, games),
           );
         },
       ),
@@ -238,7 +239,7 @@ class _DashboardPageState extends State<DashboardPage> with SingleTickerProvider
         source.displayName,
         sourceGames.length,
         sourceGames.totalSizeBytes,
-        _getSourceColor(source),
+        GameColors.forSource(source),
       ));
     }
 
@@ -298,7 +299,7 @@ class _DashboardPageState extends State<DashboardPage> with SingleTickerProvider
   }
 
   Widget _buildGameCard(BuildContext context, Game game, int rank, ThemeData theme) {
-    final color = _getSourceColor(game.source);
+    final color = GameColors.forSource(game.source);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -361,30 +362,11 @@ class _DashboardPageState extends State<DashboardPage> with SingleTickerProvider
           game.sizeBytes.toHumanReadableSize(),
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.bold,
-            color: _getSizeColor(game.sizeBytes, theme),
+            color: GameColors.forSize(game.sizeBytes),
           ),
         ),
       ),
     );
   }
 
-  Color _getSourceColor(GameSource source) {
-    switch (source) {
-      case GameSource.heroic:
-        return const Color(0xFFE91E63);
-      case GameSource.ogi:
-        return const Color(0xFF9C27B0);
-      case GameSource.lutris:
-        return const Color(0xFFFF9800);
-      case GameSource.steam:
-        return const Color(0xFF2196F3);
-    }
-  }
-
-  Color _getSizeColor(int sizeBytes, ThemeData theme) {
-    final gb = sizeBytes / (1024 * 1024 * 1024);
-    if (gb > 80) return const Color(0xFFEF4444);
-    if (gb > 50) return const Color(0xFFF59E0B);
-    return theme.colorScheme.primary;
-  }
 }

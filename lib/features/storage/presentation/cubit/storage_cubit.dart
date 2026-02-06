@@ -17,6 +17,7 @@ class StorageCubit extends Cubit<StorageState> {
 
     try {
       final drives = <StorageDrive>[];
+      final warnings = <String>[];
       int totalBytes = 0;
       int usedBytes = 0;
 
@@ -37,6 +38,12 @@ class StorageCubit extends Cubit<StorageState> {
         );
         totalBytes += total;
         usedBytes += used;
+      } else {
+        warnings.add('Failed to read internal storage info');
+        LoggerService.instance.warning(
+          'Failed to get disk usage for home path: $homePath',
+          tag: 'StorageCubit',
+        );
       }
 
       // Check Removable Drives
@@ -64,11 +71,19 @@ class StorageCubit extends Cubit<StorageState> {
           // Usually yes for "Total System Storage" if they are used for games.
           // totalBytes += total;
           // usedBytes += used;
+        } else {
+          final label = path.split(Platform.pathSeparator).last;
+          warnings.add('Failed to read external drive: $label');
+          LoggerService.instance.warning(
+            'Failed to get disk usage for removable path: $path',
+            tag: 'StorageCubit',
+          );
         }
       }
 
       LoggerService.instance.info(
-        'Storage loaded: ${drives.length} drives (Internal + ${drives.length - 1} external)',
+        'Storage loaded: ${drives.length} drives (Internal + ${drives.length - 1} external)'
+        '${warnings.isNotEmpty ? ', ${warnings.length} warning(s)' : ''}',
         tag: 'StorageCubit',
       );
 
@@ -78,6 +93,7 @@ class StorageCubit extends Cubit<StorageState> {
           usedBytes: usedBytes,
           freeBytes: totalBytes - usedBytes,
           drives: drives,
+          warnings: warnings,
         ),
       );
     } catch (e, stack) {

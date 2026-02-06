@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:dartz/dartz.dart';
@@ -9,6 +10,7 @@ import 'package:game_size_manager/features/games/domain/repositories/game_reposi
 import 'package:game_size_manager/core/error/failures.dart';
 import 'package:game_size_manager/core/logging/logger_service.dart';
 import 'package:game_size_manager/core/services/disk_size_service.dart';
+import 'package:game_size_manager/core/database/game_database.dart';
 import 'package:game_size_manager/core/constants.dart';
 
 /// Real implementation of GameRepository with SQLite Caching
@@ -17,6 +19,12 @@ class GameRepositoryImpl implements GameRepository {
   final DiskSizeService _diskSizeService;
   final GameLocalDatasource _localDatasource;
   final LoggerService _logger;
+
+  /// Concurrent refresh protection
+  Completer<Result<List<Game>>>? _refreshCompleter;
+
+  /// Cache TTL - auto-refresh if older than this
+  static const _cacheTtl = Duration(hours: 1);
 
   GameRepositoryImpl({
     required pkg.SteamDeckGamesDetector detector,
@@ -35,20 +43,32 @@ class GameRepositoryImpl implements GameRepository {
       // First try to load from database
       final cachedResult = await _localDatasource.getCachedGames();
 
-      return cachedResult.fold(
-        (failure) {
-          _logger.warning('Failed to load from cache, refreshing...', tag: 'GameRepo');
+      // Handle failure case - refresh games
+      if (cachedResult.isLeft()) {
+        _logger.warning('Failed to load from cache, refreshing...', tag: 'GameRepo');
+        return refreshGames();
+      }
+
+      // Extract games from Right side
+      final games = cachedResult.getOrElse(() => []);
+
+      if (games.isEmpty) {
+        _logger.info('Cache empty, refreshing...', tag: 'GameRepo');
+        return refreshGames();
+      }
+
+      // Check cache staleness (async operation)
+      final lastRefresh = await GameDatabase.instance.getLastRefreshTime();
+      if (lastRefresh != null) {
+        final age = DateTime.now().difference(lastRefresh);
+        if (age > _cacheTtl) {
+          _logger.info('Cache is stale (${age.inMinutes}m old), refreshing...', tag: 'GameRepo');
           return refreshGames();
-        },
-        (games) {
-          if (games.isEmpty) {
-            _logger.info('Cache empty, refreshing...', tag: 'GameRepo');
-            return refreshGames();
-          }
-          _logger.info('Loaded ${games.length} games from cache', tag: 'GameRepo');
-          return Right(games);
-        },
-      );
+        }
+      }
+
+      _logger.info('Loaded ${games.length} games from cache', tag: 'GameRepo');
+      return Right(games);
     } catch (e, s) {
       _logger.error(
         'Unexpected error loading games from cache',
@@ -70,6 +90,30 @@ class GameRepositoryImpl implements GameRepository {
   Future<Result<List<Game>>> refreshGames({
     void Function(String message, double progress)? onProgress,
   }) async {
+    // Concurrent refresh protection: if already refreshing, wait for the result
+    if (_refreshCompleter != null) {
+      _logger.info('Refresh already in progress, waiting...', tag: 'GameRepo');
+      return _refreshCompleter!.future;
+    }
+
+    _refreshCompleter = Completer<Result<List<Game>>>();
+
+    try {
+      final result = await _doRefresh(onProgress);
+      _refreshCompleter!.complete(result);
+      return result;
+    } catch (e, s) {
+      final failure = Left<Failure, List<Game>>(UnexpectedFailure('Refresh failed: $e', s));
+      _refreshCompleter!.complete(failure);
+      return failure;
+    } finally {
+      _refreshCompleter = null;
+    }
+  }
+
+  Future<Result<List<Game>>> _doRefresh(
+    void Function(String message, double progress)? onProgress,
+  ) async {
     _logger.info('Refreshing all games via SteamDeckGamesDetector...', tag: 'GameRepo');
 
     onProgress?.call('Scanning games...', 0.3);
@@ -88,42 +132,56 @@ class GameRepositoryImpl implements GameRepository {
         onProgress?.call('Processing results...', 0.5);
 
         // Convert to App Entities
-        // Map allows partial success if one conversion fails (though unlikely with current factory)
         final allGames = pkgGames.map((g) => Game.fromPackage(g)).toList();
 
-        // 3. Calculate sizes for games that need it
+        // Preserve existing tags from cache
+        final cachedResult = await _localDatasource.getCachedGames();
+        final tagMap = <String, dynamic>{};
+        cachedResult.fold((_) {}, (cached) {
+          for (final g in cached) {
+            if (g.tag != null) tagMap[g.id] = g.tag;
+          }
+        });
+
+        // 3. Calculate sizes with throttling (max 4 concurrent)
         onProgress?.call('Calculating sizes...', 0.6);
 
         final List<Game> sizedGames = [];
+        const maxConcurrent = 4;
 
-        // Process sequentially or in chunks to avoid overwhelming I/O?
-        // Parallel is faster but risky if hundreds of games. Future.wait is fine for now (disk calc is async).
-        // Using wait but wrapping EACH in try-catch to return the original game if calc fails, or null if critical.
-
-        final results = await Future.wait(
-          allGames.map((game) async {
-            try {
-              var updatedGame = game;
-
-              if (updatedGame.sizeBytes == 0 && updatedGame.installPath.isNotEmpty) {
-                final dir = Directory(updatedGame.installPath);
-                if (await dir.exists()) {
-                  final size = await _diskSizeService.calculateDirectorySize(
-                    updatedGame.installPath,
-                  );
-                  updatedGame = updatedGame.copyWith(sizeBytes: size);
+        for (var i = 0; i < allGames.length; i += maxConcurrent) {
+          final chunk = allGames.skip(i).take(maxConcurrent);
+          final results = await Future.wait(
+            chunk.map((game) async {
+              try {
+                var updatedGame = game;
+                // Restore tag from cache
+                if (tagMap.containsKey(game.id)) {
+                  updatedGame = updatedGame.copyWith(tag: tagMap[game.id]);
                 }
-              }
-              return updatedGame;
-            } catch (e) {
-              _logger.warning('Failed to process/size game ${game.title}: $e', tag: 'GameRepo');
-              // Return original game even if sizing failed, so it still appears
-              return game;
-            }
-          }),
-        );
 
-        sizedGames.addAll(results);
+                if (updatedGame.sizeBytes == 0 && updatedGame.installPath.isNotEmpty) {
+                  final dir = Directory(updatedGame.installPath);
+                  if (await dir.exists()) {
+                    final size = await _diskSizeService.calculateDirectorySize(
+                      updatedGame.installPath,
+                    );
+                    updatedGame = updatedGame.copyWith(sizeBytes: size);
+                  }
+                }
+                return updatedGame;
+              } catch (e) {
+                _logger.warning('Failed to process/size game ${game.title}: $e', tag: 'GameRepo');
+                return game;
+              }
+            }),
+          );
+          sizedGames.addAll(results);
+
+          // Update progress
+          final progress = 0.6 + (i / allGames.length) * 0.25;
+          onProgress?.call('Calculating sizes (${sizedGames.length}/${allGames.length})...', progress);
+        }
 
         onProgress?.call('Caching games...', 0.9);
 
@@ -131,9 +189,9 @@ class GameRepositoryImpl implements GameRepository {
         try {
           await _localDatasource.clearCache();
           await _localDatasource.cacheGames(sizedGames);
+          await GameDatabase.instance.updateLastRefreshTime();
         } catch (e) {
           _logger.error('Failed to cache games: $e', tag: 'GameRepo');
-          // Even if caching fails, return the list we found so UI shows something
         }
 
         onProgress?.call('Complete!', 1.0);
@@ -147,10 +205,7 @@ class GameRepositoryImpl implements GameRepository {
   Future<Result<Game>> calculateGameSize(Game game) async {
     try {
       final size = await _diskSizeService.calculateDirectorySize(game.installPath);
-      // Update cache with new size
       final updatedGame = game.copyWith(sizeBytes: size);
-
-      // Upsert requires list
       await _localDatasource.cacheGames([updatedGame]);
       return Right(updatedGame);
     } catch (e, s) {

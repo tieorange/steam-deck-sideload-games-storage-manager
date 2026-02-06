@@ -3,6 +3,9 @@ import 'package:steam_deck_games_detector/steam_deck_games_detector.dart' as pkg
 import 'package:steam_deck_games_detector/steam_deck_games_detector.dart'
     show GameSource, StorageLocation;
 
+import 'package:game_size_manager/features/games/domain/entities/game_tag.dart';
+import 'package:game_size_manager/features/games/domain/entities/sort_option.dart';
+
 part 'game_entity.freezed.dart';
 part 'game_entity.g.dart';
 
@@ -40,6 +43,10 @@ class Game with _$Game {
 
     /// Whether this game is selected for batch operations
     @Default(false) bool isSelected,
+
+    /// User-assigned tag for categorization (not serialized, stored in DB separately)
+    // ignore: invalid_annotation_target
+    @JsonKey(includeFromJson: false, includeToJson: false) GameTag? tag,
   }) = _Game;
 
   factory Game.fromJson(Map<String, dynamic> json) => _$GameFromJson(json);
@@ -85,9 +92,29 @@ extension GameListExtensions on List<Game> {
     return sorted;
   }
 
+  /// Sort by the given option
+  List<Game> sortedBy(SortOption option) {
+    final sorted = List<Game>.from(this);
+    switch (option) {
+      case SortOption.size:
+        sorted.sort((a, b) => b.sizeBytes.compareTo(a.sizeBytes));
+      case SortOption.name:
+        sorted.sort((a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()));
+      case SortOption.source:
+        sorted.sort((a, b) => a.source.name.compareTo(b.source.name));
+    }
+    return sorted;
+  }
+
   /// Filter by source
   List<Game> filterBySource(GameSource? source) {
     if (source == null) return this;
     return where((g) => g.source == source).toList();
+  }
+
+  /// Filter by tag
+  List<Game> filterByTag(GameTag? tag) {
+    if (tag == null) return this;
+    return where((g) => g.tag == tag).toList();
   }
 }

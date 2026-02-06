@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
+import 'package:game_size_manager/core/theme/game_colors.dart';
+
 /// Get color based on usage percentage
+/// Uses centralized GameColors for consistency
 Color getColorForUsage(double percent) {
-  if (percent > 0.9) return Colors.red;
-  if (percent > 0.7) return Colors.orange;
-  return Colors.blue;
+  return GameColors.forStoragePercent(percent);
 }

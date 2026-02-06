@@ -11,6 +11,9 @@ _$SettingsImpl _$$SettingsImplFromJson(Map<String, dynamic> json) =>
       themeMode:
           $enumDecodeNullable(_$ThemeModeEnumMap, json['themeMode']) ??
           ThemeMode.dark,
+      appThemeMode:
+          $enumDecodeNullable(_$AppThemeModeEnumMap, json['appThemeMode']) ??
+          AppThemeMode.dark,
       heroicConfigPath: json['heroicConfigPath'] as String?,
       lutrisDbPath: json['lutrisDbPath'] as String?,
       steamPath: json['steamPath'] as String?,
@@ -23,6 +26,7 @@ _$SettingsImpl _$$SettingsImplFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$$SettingsImplToJson(_$SettingsImpl instance) =>
     <String, dynamic>{
       'themeMode': _$ThemeModeEnumMap[instance.themeMode]!,
+      'appThemeMode': _$AppThemeModeEnumMap[instance.appThemeMode]!,
       'heroicConfigPath': instance.heroicConfigPath,
       'lutrisDbPath': instance.lutrisDbPath,
       'steamPath': instance.steamPath,
@@ -36,4 +40,11 @@ const _$ThemeModeEnumMap = {
   ThemeMode.system: 'system',
   ThemeMode.light: 'light',
   ThemeMode.dark: 'dark',
+};
+
+const _$AppThemeModeEnumMap = {
+  AppThemeMode.system: 'system',
+  AppThemeMode.light: 'light',
+  AppThemeMode.dark: 'dark',
+  AppThemeMode.oled: 'oled',
 };

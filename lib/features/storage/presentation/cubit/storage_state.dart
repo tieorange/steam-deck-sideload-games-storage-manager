@@ -11,6 +11,7 @@ class StorageState with _$StorageState {
     required int usedBytes,
     required int freeBytes,
     required List<StorageDrive> drives,
+    @Default([]) List<String> warnings,
   }) = _Loaded;
   const factory StorageState.error(String message) = _Error;
 }

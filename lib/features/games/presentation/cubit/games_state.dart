@@ -2,6 +2,8 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 import 'package:game_size_manager/core/constants.dart';
 import 'package:game_size_manager/features/games/domain/entities/game_entity.dart';
+import 'package:game_size_manager/features/games/domain/entities/game_tag.dart';
+import 'package:game_size_manager/features/games/domain/entities/sort_option.dart';
 import 'package:game_size_manager/features/games/presentation/cubit/refresh_state.dart';
 
 part 'games_state.freezed.dart';
@@ -24,6 +26,9 @@ class GamesState with _$GamesState {
     @Default(true) bool sortDescending,
     @Default(null) String? searchQuery,
     @Default(null) RefreshProgressState? refreshProgress,
+    @Default(SortOption.size) SortOption sortOption,
+    @Default(null) GameTag? filterTag,
+    @Default(null) DateTime? lastRefresh,
   }) = GamesLoaded;
 
   /// Error state
@@ -31,8 +36,13 @@ class GamesState with _$GamesState {
 
   /// Get displayed games (filtered and sorted)
   List<Game> get displayedGames => maybeWhen(
-    loaded: (games, filter, sortDesc, searchQuery, _) {
+    loaded: (games, filter, sortDesc, searchQuery, _, sortOption, filterTag, __) {
       var result = games.filterBySource(filter);
+
+      // Apply tag filter
+      if (filterTag != null) {
+        result = result.filterByTag(filterTag);
+      }
 
       // Apply search filter
       if (searchQuery != null && searchQuery.isNotEmpty) {
@@ -40,7 +50,7 @@ class GamesState with _$GamesState {
         result = result.where((g) => g.title.toLowerCase().contains(query)).toList();
       }
 
-      result = result.sortedBySize();
+      result = result.sortedBy(sortOption);
       if (!sortDesc) {
         result = result.reversed.toList();
       }
@@ -49,9 +59,13 @@ class GamesState with _$GamesState {
     orElse: () => [],
   );
 
+  /// Get all games (unfiltered) for operations that need the complete list
+  List<Game> get allGames =>
+      maybeWhen(loaded: (games, _, __, ___, ____, _____, ______, _______) => games, orElse: () => []);
+
   /// Get selected games
   List<Game> get selectedGames =>
-      maybeWhen(loaded: (games, _, __, ___, ____) => games.selectedGames, orElse: () => []);
+      maybeWhen(loaded: (games, _, __, ___, ____, _____, ______, _______) => games.selectedGames, orElse: () => []);
 
   /// Are any games selected?
   bool get hasSelection => selectedGames.isNotEmpty;

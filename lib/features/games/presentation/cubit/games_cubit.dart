@@ -1,11 +1,15 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:game_size_manager/core/constants.dart';
+import 'package:game_size_manager/core/database/game_database.dart';
 import 'package:game_size_manager/core/logging/logger_service.dart';
 import 'package:game_size_manager/features/games/domain/entities/game_entity.dart';
+import 'package:game_size_manager/features/games/domain/entities/game_tag.dart';
+import 'package:game_size_manager/features/games/domain/entities/sort_option.dart';
 import 'package:game_size_manager/features/games/domain/usecases/calculate_game_size_usecase.dart';
 import 'package:game_size_manager/features/games/domain/usecases/get_all_games_usecase.dart';
 import 'package:game_size_manager/features/games/domain/usecases/refresh_games_usecase.dart';
-import 'package:game_size_manager/features/games/domain/usecases/search_games_usecase.dart';
+import 'package:game_size_manager/features/games/domain/usecases/search_games_usecase.dart'
+    show SearchGamesFilter;
 import 'package:game_size_manager/features/games/domain/usecases/uninstall_game_usecase.dart';
 import 'package:game_size_manager/features/games/presentation/cubit/games_state.dart';
 import 'package:game_size_manager/features/games/presentation/cubit/refresh_state.dart';
@@ -18,7 +22,7 @@ class GamesCubit extends Cubit<GamesState> {
     required RefreshGamesUsecase refreshGames,
     required UninstallGameUsecase uninstallGame,
     required CalculateGameSizeUsecase calculateGameSize,
-    required SearchGamesUsecase searchGames,
+    required SearchGamesFilter searchGames,
   }) : _getAllGames = getAllGames,
        _refreshGames = refreshGames,
        _uninstallGame = uninstallGame,
@@ -30,7 +34,7 @@ class GamesCubit extends Cubit<GamesState> {
   final RefreshGamesUsecase _refreshGames;
   final UninstallGameUsecase _uninstallGame;
   final CalculateGameSizeUsecase _calculateGameSize;
-  final SearchGamesUsecase _searchGames;
+  final SearchGamesFilter _searchGames;
   final _logger = LoggerService.instance;
 
   /// Load all games from configured sources
@@ -44,27 +48,36 @@ class GamesCubit extends Cubit<GamesState> {
         _logger.error('Failed to load games: ${failure.message}', tag: 'GamesCubit');
         emit(GamesState.error(failure.message));
       },
-      (games) {
+      (games) async {
         _logger.info('Loaded ${games.length} games', tag: 'GamesCubit');
-        emit(GamesState.loaded(games: games));
+        final lastRefresh = await GameDatabase.instance.getLastRefreshTime();
+        emit(GamesState.loaded(games: games, lastRefresh: lastRefresh));
       },
     );
   }
 
   /// Refresh games from sources
   Future<void> refreshGames() async {
-    // Keep current filter while refreshing
-    final currentFilters = state.maybeWhen(
-      loaded: (_, filter, sortDesc, query, __) => (filter, sortDesc, query),
-      orElse: () => (null, true, null),
-    );
+    // Keep current filters while refreshing
+    final currentState = state;
+    GameSource? currentFilter;
+    bool currentSortDesc = true;
+    String? currentQuery;
+    SortOption currentSortOption = SortOption.size;
+    GameTag? currentFilterTag;
+
+    if (currentState is GamesLoaded) {
+      currentFilter = currentState.filterSource;
+      currentSortDesc = currentState.sortDescending;
+      currentQuery = currentState.searchQuery;
+      currentSortOption = currentState.sortOption;
+      currentFilterTag = currentState.filterTag;
+    }
 
     final funPhrase = FunPhrases.getRandom();
     final startTime = DateTime.now();
 
     void updateProgress(String phase, double progress) {
-      // Calculate estimated time remaining
-      // Very rough estimate based on progress
       Duration? eta;
       if (progress > 0) {
         final elapsed = DateTime.now().difference(startTime);
@@ -81,7 +94,7 @@ class GamesCubit extends Cubit<GamesState> {
       );
 
       state.maybeWhen(
-        loaded: (games, filter, sortDesc, query, _) {
+        loaded: (games, filter, sortDesc, query, _, sortOpt, filterTag, lastRefresh) {
           emit(
             GamesState.loaded(
               games: games,
@@ -89,6 +102,9 @@ class GamesCubit extends Cubit<GamesState> {
               sortDescending: sortDesc,
               searchQuery: query,
               refreshProgress: progressState,
+              sortOption: sortOpt,
+              filterTag: filterTag,
+              lastRefresh: lastRefresh,
             ),
           );
         },
@@ -114,10 +130,13 @@ class GamesCubit extends Cubit<GamesState> {
       (games) => emit(
         GamesState.loaded(
           games: games,
-          filterSource: currentFilters.$1,
-          sortDescending: currentFilters.$2,
-          searchQuery: currentFilters.$3,
-          refreshProgress: null, // Clear progress
+          filterSource: currentFilter,
+          sortDescending: currentSortDesc,
+          searchQuery: currentQuery,
+          refreshProgress: null,
+          sortOption: currentSortOption,
+          filterTag: currentFilterTag,
+          lastRefresh: DateTime.now(),
         ),
       ),
     );
@@ -133,77 +152,59 @@ class GamesCubit extends Cubit<GamesState> {
           'Failed to calculate size for ${game.title}: ${failure.message}',
           tag: 'GamesCubit',
         );
-        // We don't necessarily need to emit an error state here, just log it
       },
       (updatedGame) {
-        // Update the game in the list
-        state.maybeWhen(
-          loaded: (games, filter, sortDesc, query, _) {
-            final updatedGames = games
-                .map((g) => g.id == updatedGame.id ? updatedGame : g)
-                .toList();
-            emit(
-              GamesState.loaded(
-                games: updatedGames,
-                filterSource: filter,
-                sortDescending: sortDesc,
-                searchQuery: query,
-              ),
-            );
-          },
-          orElse: () {},
-        );
+        _updateGameInState(updatedGame);
       },
     );
   }
 
   /// Set search query
   void setSearchQuery(String query) {
-    state.maybeWhen(
-      loaded: (games, filter, sortDesc, _, __) {
-        emit(
-          GamesState.loaded(
-            games: games,
-            filterSource: filter,
-            sortDescending: sortDesc,
-            searchQuery: query,
-            refreshProgress: null,
-          ),
-        );
-      },
-      orElse: () {},
-    );
+    _updateLoadedState((s) => s.copyWith(searchQuery: query));
   }
 
   /// Filter games by source
   void setFilter(GameSource? source) {
-    state.maybeWhen(
-      loaded: (games, _, sortDesc, query, __) {
-        emit(
-          GamesState.loaded(
-            games: games,
-            filterSource: source,
-            sortDescending: sortDesc,
-            searchQuery: query,
-            refreshProgress: null,
-          ),
-        );
-      },
-      orElse: () {},
-    );
+    _updateLoadedState((s) => s.copyWith(filterSource: source));
+  }
+
+  /// Filter games by tag
+  void setTagFilter(GameTag? tag) {
+    _updateLoadedState((s) => s.copyWith(filterTag: tag));
+  }
+
+  /// Set sort option
+  void setSortOption(SortOption option) {
+    _updateLoadedState((s) => s.copyWith(sortOption: option));
   }
 
   /// Toggle sort order
   void toggleSortOrder() {
+    _updateLoadedState((s) => s.copyWith(sortDescending: !s.sortDescending));
+  }
+
+  /// Set tag for a game
+  Future<void> setGameTag(String gameId, GameTag? tag) async {
+    await GameDatabase.instance.updateGameTag(gameId, tag);
     state.maybeWhen(
-      loaded: (games, filter, sortDesc, query, __) {
+      loaded: (games, filter, sortDesc, query, _, sortOpt, filterTag, lastRefresh) {
+        final updatedGames = games.map((game) {
+          if (game.id == gameId) {
+            return game.copyWith(tag: tag);
+          }
+          return game;
+        }).toList();
+
         emit(
           GamesState.loaded(
-            games: games,
+            games: updatedGames,
             filterSource: filter,
-            sortDescending: !sortDesc,
+            sortDescending: sortDesc,
             searchQuery: query,
-            refreshProgress: null,
+            sortOption: sortOpt,
+            filterTag: filterTag,
+            lastRefresh: lastRefresh,
           ),
         );
       },
@@ -214,7 +215,7 @@ class GamesCubit extends Cubit<GamesState> {
   /// Toggle selection of a game
   void toggleGameSelection(String gameId) {
     state.maybeWhen(
-      loaded: (games, filter, sortDesc, query, __) {
+      loaded: (games, filter, sortDesc, query, _, sortOpt, filterTag, lastRefresh) {
         final updatedGames = games.map((game) {
           if (game.id == gameId) {
             return game.toggleSelected();
@@ -228,7 +229,9 @@ class GamesCubit extends Cubit<GamesState> {
             filterSource: filter,
             sortDescending: sortDesc,
             searchQuery: query,
-            refreshProgress: null,
+            sortOption: sortOpt,
+            filterTag: filterTag,
+            lastRefresh: lastRefresh,
           ),
         );
       },
@@ -239,15 +242,11 @@ class GamesCubit extends Cubit<GamesState> {
   /// Select all visible games
   void selectAll() {
     state.maybeWhen(
-      loaded: (games, filter, sortDesc, query, __) {
-        // Use the usecase logic or displayedGames logic to determine what is "visible"
-        // Since logic is in State's displayedGames, we can rely on that if we had access to it,
-        // but here we are in the Cubit.
-        // Replicating visibility logic: source filter + search query
-
-        // Filter by source
+      loaded: (games, filter, sortDesc, query, _, sortOpt, filterTag, lastRefresh) {
         var visible = games.filterBySource(filter);
-        // Filter by search
+        if (filterTag != null) {
+          visible = visible.filterByTag(filterTag);
+        }
         if (query != null && query.isNotEmpty) {
           visible = _searchGames(visible, query);
         }
@@ -267,7 +266,9 @@ class GamesCubit extends Cubit<GamesState> {
             filterSource: filter,
             sortDescending: sortDesc,
             searchQuery: query,
-            refreshProgress: null,
+            sortOption: sortOpt,
+            filterTag: filterTag,
+            lastRefresh: lastRefresh,
           ),
         );
       },
@@ -278,7 +279,7 @@ class GamesCubit extends Cubit<GamesState> {
   /// Deselect all games
   void deselectAll() {
     state.maybeWhen(
-      loaded: (games, filter, sortDesc, query, __) {
+      loaded: (games, filter, sortDesc, query, _, sortOpt, filterTag, lastRefresh) {
         final updatedGames = games.map((game) => game.copyWith(isSelected: false)).toList();
 
         emit(
@@ -287,7 +288,9 @@ class GamesCubit extends Cubit<GamesState> {
             filterSource: filter,
             sortDescending: sortDesc,
             searchQuery: query,
-            refreshProgress: null,
+            sortOption: sortOpt,
+            filterTag: filterTag,
+            lastRefresh: lastRefresh,
           ),
         );
       },
@@ -335,5 +338,34 @@ class GamesCubit extends Cubit<GamesState> {
         return true;
       },
     );
+  }
+
+  void _updateGameInState(Game updatedGame) {
+    state.maybeWhen(
+      loaded: (games, filter, sortDesc, query, _, sortOpt, filterTag, lastRefresh) {
+        final updatedGames = games
+            .map((g) => g.id == updatedGame.id ? updatedGame : g)
+            .toList();
+        emit(
+          GamesState.loaded(
+            games: updatedGames,
+            filterSource: filter,
+            sortDescending: sortDesc,
+            searchQuery: query,
+            sortOption: sortOpt,
+            filterTag: filterTag,
+            lastRefresh: lastRefresh,
+          ),
+        );
+      },
+      orElse: () {},
+    );
+  }
+
+  void _updateLoadedState(GamesLoaded Function(GamesLoaded) updater) {
+    final current = state;
+    if (current is GamesLoaded) {
+      emit(updater(current));
+    }
   }
 }

@@ -26,7 +26,8 @@ class DiskSizeService {
           try {
             totalSize += await entity.length();
           } catch (e) {
-            // Skip files we can't read (permissions, etc.)
+            // Log skipped files (permissions, etc.)
+            _logger.debug('Skipped file (permission denied): ${entity.path}', tag: 'DiskSize');
           }
         }
       }

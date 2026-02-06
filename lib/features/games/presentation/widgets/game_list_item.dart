@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import 'package:game_size_manager/core/constants.dart';
 import 'package:game_size_manager/core/extensions/size_formatter.dart';
+import 'package:game_size_manager/core/theme/game_colors.dart';
 import 'package:game_size_manager/core/theme/steam_deck_constants.dart';
 import 'package:game_size_manager/features/games/domain/entities/game_entity.dart';
 
@@ -77,7 +78,7 @@ class _GameListItemState extends State<GameListItem> with SingleTickerProviderSt
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final sourceColor = _getSourceColor(widget.game.source);
+    final sourceColor = GameColors.forSource(widget.game.source);
 
     return AnimatedBuilder(
       animation: _controller,
@@ -276,33 +277,7 @@ class _GameListItemState extends State<GameListItem> with SingleTickerProviderSt
   }
 
   Widget _buildFallbackIcon(Color color) {
-    return Icon(_getSourceIcon(widget.game.source), color: color, size: 24);
-  }
-
-  IconData _getSourceIcon(GameSource source) {
-    switch (source) {
-      case GameSource.heroic:
-        return Icons.storefront_rounded;
-      case GameSource.ogi:
-        return Icons.apps_rounded;
-      case GameSource.lutris:
-        return Icons.sports_esports_rounded;
-      case GameSource.steam:
-        return Icons.gamepad_rounded;
-    }
-  }
-
-  Color _getSourceColor(GameSource source) {
-    switch (source) {
-      case GameSource.heroic:
-        return const Color(0xFFE91E63); // Pink for Epic/GOG
-      case GameSource.ogi:
-        return const Color(0xFF9C27B0); // Purple
-      case GameSource.lutris:
-        return const Color(0xFFFF9800); // Orange
-      case GameSource.steam:
-        return const Color(0xFF2196F3); // Blue
-    }
+    return Icon(GameColors.iconForSource(widget.game.source), color: color, size: 24);
   }
 
   Color _getSizeColor(int sizeBytes, ColorScheme colorScheme) {

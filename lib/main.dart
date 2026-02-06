@@ -12,6 +12,7 @@ import 'package:game_size_manager/core/platform/platform_service.dart';
 import 'package:game_size_manager/core/router/app_router.dart';
 import 'package:game_size_manager/core/theme/app_theme.dart';
 import 'package:game_size_manager/features/games/presentation/cubit/games_cubit.dart';
+import 'package:game_size_manager/features/settings/domain/entities/settings_entity.dart';
 import 'package:game_size_manager/features/settings/presentation/cubit/settings_cubit.dart';
 import 'package:game_size_manager/features/settings/presentation/cubit/settings_state.dart';
 import 'package:game_size_manager/features/settings/presentation/cubit/update_cubit.dart';
@@ -76,12 +77,18 @@ class GameSizeManagerApp extends StatelessWidget {
             loaded: (settings) => settings.themeMode,
             orElse: () => ThemeMode.dark,
           );
+          final appThemeMode = state.maybeWhen(
+            loaded: (settings) => settings.appThemeMode,
+            orElse: () => AppThemeMode.dark,
+          );
 
           return MaterialApp.router(
             title: 'Game Size Manager',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.lightTheme,
-            darkTheme: AppTheme.darkTheme,
+            darkTheme: appThemeMode == AppThemeMode.oled
+                ? AppTheme.oledTheme
+                : AppTheme.darkTheme,
             themeMode: themeMode,
             routerConfig: AppRouter.router,
             builder: (context, child) =>
