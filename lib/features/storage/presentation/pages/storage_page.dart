@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:game_size_manager/core/di/injection.dart';
 import 'package:game_size_manager/core/theme/steam_deck_constants.dart';
 import 'package:game_size_manager/core/widgets/animated_card.dart';
+import 'package:game_size_manager/core/widgets/error_state.dart';
 import 'package:game_size_manager/core/widgets/skeleton_loading.dart';
 import 'package:game_size_manager/features/storage/presentation/cubit/storage_cubit.dart';
 import 'package:game_size_manager/features/storage/presentation/cubit/storage_state.dart';
@@ -65,10 +66,45 @@ class _StorageViewState extends State<StorageView> with SingleTickerProviderStat
           return state.when(
             initial: () => const SizedBox.shrink(),
             loading: () => const StoragePageSkeleton(),
-            error: (msg) => Center(child: Text('Error: $msg')),
-            loaded: (total, used, free, drives) => ListView(
+            error: (msg) => ErrorState(
+              message: msg,
+              onRetry: () => context.read<StorageCubit>().loadStorageInfo(),
+            ),
+            loaded: (total, used, free, drives, warnings) => ListView(
               padding: const EdgeInsets.all(SteamDeckConstants.pagePadding),
               children: [
+                // Show warnings banner if any
+                if (warnings.isNotEmpty) ...[
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.errorContainer.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: theme.colorScheme.error.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.warning_amber_rounded,
+                          color: theme.colorScheme.error,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            warnings.join('\n'),
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.error,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
                 StorageOverviewCard(
                   controller: _controller,
                   totalBytes: total,

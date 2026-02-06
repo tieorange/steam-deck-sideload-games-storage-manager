@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:game_size_manager/core/di/injection.dart';
+import 'package:game_size_manager/core/logging/logger_service.dart';
 import 'package:game_size_manager/core/services/game_launch_service.dart';
 import 'package:game_size_manager/core/theme/game_colors.dart';
 import 'package:game_size_manager/core/theme/app_opacity.dart';
@@ -26,10 +27,12 @@ class GameDetailsPage extends StatefulWidget {
 class _GameDetailsPageState extends State<GameDetailsPage> {
   int? _compatDataSize;
   int? _shaderCacheSize;
+  late final GameLaunchService __launchService;
 
   @override
   void initState() {
     super.initState();
+    __launchService = sl<GameLaunchService>();
     _loadSizes();
   }
 
@@ -40,12 +43,22 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
     if (compatPath != null) {
       GameUtils.getDirectorySize(compatPath).then((size) {
         if (mounted) setState(() => _compatDataSize = size);
+      }).catchError((e, s) {
+        LoggerService.instance.warning(
+          'Failed to calculate compatdata size for ${widget.game.title}: $e',
+          tag: 'GameDetails',
+        );
       });
     }
 
     if (shaderPath != null) {
       GameUtils.getDirectorySize(shaderPath).then((size) {
         if (mounted) setState(() => _shaderCacheSize = size);
+      }).catchError((e, s) {
+        LoggerService.instance.warning(
+          'Failed to calculate shader cache size for ${widget.game.title}: $e',
+          tag: 'GameDetails',
+        );
       });
     }
   }
@@ -67,7 +80,6 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
     final game = widget.game;
     final theme = Theme.of(context);
     final sourceColor = GameColors.forSource(game.source);
-    final launchService = sl<GameLaunchService>();
 
     return Scaffold(
       body: CustomScrollView(
@@ -83,13 +95,13 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
                   GameTitleSection(game: game, sourceColor: sourceColor),
 
                   // Play Button
-                  if (launchService.canLaunch(game)) ...[
+                  if (_launchService.canLaunch(game)) ...[
                     const SizedBox(height: 16),
                     SizedBox(
                       width: double.infinity,
                       child: FilledButton.icon(
                         onPressed: () async {
-                          final success = await launchService.launch(game);
+                          final success = await _launchService.launch(game);
                           if (!success && context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text('Failed to launch game')),

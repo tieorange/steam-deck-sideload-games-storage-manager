@@ -78,7 +78,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => RefreshGamesUsecase(sl()));
   sl.registerLazySingleton(() => CalculateGameSizeUsecase(sl()));
   sl.registerLazySingleton(() => UninstallGameUsecase(sl()));
-  sl.registerLazySingleton(() => SearchGamesUsecase());
+  sl.registerLazySingleton(() => SearchGamesFilter());
 
   // BloC / Cubit
   sl.registerFactory(

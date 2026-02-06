@@ -43,31 +43,32 @@ class GameRepositoryImpl implements GameRepository {
       // First try to load from database
       final cachedResult = await _localDatasource.getCachedGames();
 
-      return cachedResult.fold(
-        (failure) {
-          _logger.warning('Failed to load from cache, refreshing...', tag: 'GameRepo');
+      // Handle failure case - refresh games
+      if (cachedResult.isLeft()) {
+        _logger.warning('Failed to load from cache, refreshing...', tag: 'GameRepo');
+        return refreshGames();
+      }
+
+      // Extract games from Right side
+      final games = cachedResult.getOrElse(() => []);
+
+      if (games.isEmpty) {
+        _logger.info('Cache empty, refreshing...', tag: 'GameRepo');
+        return refreshGames();
+      }
+
+      // Check cache staleness (async operation)
+      final lastRefresh = await GameDatabase.instance.getLastRefreshTime();
+      if (lastRefresh != null) {
+        final age = DateTime.now().difference(lastRefresh);
+        if (age > _cacheTtl) {
+          _logger.info('Cache is stale (${age.inMinutes}m old), refreshing...', tag: 'GameRepo');
           return refreshGames();
-        },
-        (games) async {
-          if (games.isEmpty) {
-            _logger.info('Cache empty, refreshing...', tag: 'GameRepo');
-            return refreshGames();
-          }
+        }
+      }
 
-          // Check cache staleness
-          final lastRefresh = await GameDatabase.instance.getLastRefreshTime();
-          if (lastRefresh != null) {
-            final age = DateTime.now().difference(lastRefresh);
-            if (age > _cacheTtl) {
-              _logger.info('Cache is stale (${age.inMinutes}m old), refreshing...', tag: 'GameRepo');
-              return refreshGames();
-            }
-          }
-
-          _logger.info('Loaded ${games.length} games from cache', tag: 'GameRepo');
-          return Right(games);
-        },
-      );
+      _logger.info('Loaded ${games.length} games from cache', tag: 'GameRepo');
+      return Right(games);
     } catch (e, s) {
       _logger.error(
         'Unexpected error loading games from cache',

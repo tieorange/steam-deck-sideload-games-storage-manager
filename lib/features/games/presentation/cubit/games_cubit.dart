@@ -8,7 +8,8 @@ import 'package:game_size_manager/features/games/domain/entities/sort_option.dar
 import 'package:game_size_manager/features/games/domain/usecases/calculate_game_size_usecase.dart';
 import 'package:game_size_manager/features/games/domain/usecases/get_all_games_usecase.dart';
 import 'package:game_size_manager/features/games/domain/usecases/refresh_games_usecase.dart';
-import 'package:game_size_manager/features/games/domain/usecases/search_games_usecase.dart';
+import 'package:game_size_manager/features/games/domain/usecases/search_games_usecase.dart'
+    show SearchGamesFilter;
 import 'package:game_size_manager/features/games/domain/usecases/uninstall_game_usecase.dart';
 import 'package:game_size_manager/features/games/presentation/cubit/games_state.dart';
 import 'package:game_size_manager/features/games/presentation/cubit/refresh_state.dart';
@@ -21,7 +22,7 @@ class GamesCubit extends Cubit<GamesState> {
     required RefreshGamesUsecase refreshGames,
     required UninstallGameUsecase uninstallGame,
     required CalculateGameSizeUsecase calculateGameSize,
-    required SearchGamesUsecase searchGames,
+    required SearchGamesFilter searchGames,
   }) : _getAllGames = getAllGames,
        _refreshGames = refreshGames,
        _uninstallGame = uninstallGame,
@@ -33,7 +34,7 @@ class GamesCubit extends Cubit<GamesState> {
   final RefreshGamesUsecase _refreshGames;
   final UninstallGameUsecase _uninstallGame;
   final CalculateGameSizeUsecase _calculateGameSize;
-  final SearchGamesUsecase _searchGames;
+  final SearchGamesFilter _searchGames;
   final _logger = LoggerService.instance;
 
   /// Load all games from configured sources

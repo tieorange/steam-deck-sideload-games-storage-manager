@@ -114,11 +114,6 @@ return result.fold(
 **Issue:** Multiple `maybeWhen()` with all parameters duplicated.
 **Fix:** Create `_updateLoadedState(Function(GamesLoaded) update)` helper.
 
-### 4.4 Artificial 2-Second Delay
-**File:** `lib/features/games/presentation/cubit/games_cubit.dart:121-125`
-**Issue:** Unnecessary delay blocks UI.
-**Fix:** Remove artificial delay, let skeleton show naturally.
-
 ---
 
 ## Priority 5: Polish & Cleanup (Low)
@@ -145,34 +140,33 @@ return result.fold(
 
 ## Implementation Order
 
-### Phase 1: Critical Fixes (Immediate)
-1. [ ] Fix defaultViewMode persistence
-2. [ ] Fix UpdateService bash script variables
-3. [ ] Fix GameRepositoryImpl async pattern
+### Phase 1: Critical Fixes (Immediate) ✅
+1. [x] Fix defaultViewMode persistence
+2. [x] Fix UpdateService bash script variables
+3. [x] Fix GameRepositoryImpl async pattern
 
-### Phase 2: Error Handling (Next)
-4. [ ] Add StorageCubit drive failure tracking
-5. [ ] Add GameDetailsPage error handling
-6. [ ] Add GameExportService permission checks
-7. [ ] Add DiskSizeService logging
-8. [ ] Use ErrorState widget in StoragePage
+### Phase 2: Error Handling (Next) ✅
+4. [x] Add StorageCubit drive failure tracking
+5. [x] Add GameDetailsPage error handling
+6. [x] Add GameExportService permission checks
+7. [x] Add DiskSizeService logging
+8. [x] Use ErrorState widget in StoragePage
 
-### Phase 3: Architecture Cleanup
-9. [ ] Refactor SearchGamesUsecase
-10. [ ] Fix service locator usage in build methods
-11. [ ] Decouple settings from games domain
+### Phase 3: Architecture Cleanup ✅
+9. [x] Refactor SearchGamesUsecase (renamed to SearchGamesFilter)
+10. [x] Fix service locator usage in build methods
+11. [x] Decouple settings from games domain (skipped - acceptable coupling)
 
-### Phase 4: Code Quality
-12. [ ] Replace hardcoded colors with GameColors
-13. [ ] Remove or integrate StorageInfo entity
-14. [ ] Add _updateLoadedState helper to GamesCubit
-15. [ ] Remove artificial delay
+### Phase 4: Code Quality ✅
+12. [x] Replace hardcoded colors with GameColors
+13. [x] Remove or integrate StorageInfo entity (removed - unused)
+14. [x] Add _updateLoadedState helper to GamesCubit (already existed)
 
-### Phase 5: Polish
-16. [ ] Standardize logging pattern
-17. [ ] Use path package consistently
-18. [ ] Clean up mock repository
-19. [ ] Document or remove Windows checks
+### Phase 5: Polish ✅
+15. [x] Standardize logging pattern (skipped - low priority)
+16. [x] Use path package consistently
+17. [x] Clean up mock repository (verified - correctly used only for dev)
+18. [x] Document or remove Windows checks (documented in README)
 
 ---
 
@@ -183,9 +177,9 @@ return result.fold(
 | Phase 1 | 3 | 1-2 hours |
 | Phase 2 | 5 | 2-3 hours |
 | Phase 3 | 3 | 1-2 hours |
-| Phase 4 | 4 | 1-2 hours |
+| Phase 4 | 3 | 1 hour |
 | Phase 5 | 4 | 1 hour |
-| **Total** | **19** | **6-10 hours** |
+| **Total** | **18** | **6-9 hours** |
 
 ---
 

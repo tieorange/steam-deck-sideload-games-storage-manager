@@ -172,6 +172,11 @@ If your launchers are installed in non-standard locations, you can override path
 
 **Requirements:** Flutter SDK, Docker Desktop (for Linux builds on macOS)
 
+**Platform Support:**
+- **Linux / Steam Deck**: Full support (primary target)
+- **macOS**: Development mode with mock data
+- **Windows**: Not currently supported (code contains forward-looking placeholders)
+
 ```bash
 # Clone the repo
 git clone https://github.com/tieorange/steam-deck-sideload-games-storage-manager.git

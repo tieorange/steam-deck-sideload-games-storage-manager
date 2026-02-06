@@ -21,6 +21,7 @@ class SettingsRepositoryImpl implements SettingsRepository {
   static const _keyOgiPath = 'ogi_library_path';
   static const _keyConfirmUninstall = 'confirm_before_uninstall';
   static const _keySortBySize = 'sort_by_size_descending';
+  static const _keyDefaultViewMode = 'default_view_mode';
 
   @override
   Future<Result<Settings>> loadSettings() async {
@@ -43,6 +44,7 @@ class SettingsRepositoryImpl implements SettingsRepository {
         ogiLibraryPath: _prefs.getString(_keyOgiPath),
         confirmBeforeUninstall: _prefs.getBool(_keyConfirmUninstall) ?? true,
         sortBySizeDescending: _prefs.getBool(_keySortBySize) ?? true,
+        defaultViewMode: _prefs.getString(_keyDefaultViewMode) ?? 'list',
       );
 
       return Right(settings);
@@ -95,6 +97,7 @@ class SettingsRepositoryImpl implements SettingsRepository {
 
       await _prefs.setBool(_keyConfirmUninstall, settings.confirmBeforeUninstall);
       await _prefs.setBool(_keySortBySize, settings.sortBySizeDescending);
+      await _prefs.setString(_keyDefaultViewMode, settings.defaultViewMode);
 
       return const Right(null);
     } catch (e, s) {

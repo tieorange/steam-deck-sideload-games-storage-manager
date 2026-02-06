@@ -57,19 +57,16 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
           FilledButton.tonal(
             onPressed: () async {
               Navigator.pop(dialogContext);
-              try {
-                final file = await exportService.exportToJson(games);
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+              final result = await exportService.exportToJson(games);
+              if (context.mounted) {
+                result.fold(
+                  (failure) => ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Export failed: ${failure.message}')),
+                  ),
+                  (file) => ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Exported to ${file.path}')),
-                  );
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Export failed: $e')),
-                  );
-                }
+                  ),
+                );
               }
             },
             child: const Text('JSON'),
@@ -77,19 +74,16 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
           FilledButton.tonal(
             onPressed: () async {
               Navigator.pop(dialogContext);
-              try {
-                final file = await exportService.exportToCsv(games);
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+              final result = await exportService.exportToCsv(games);
+              if (context.mounted) {
+                result.fold(
+                  (failure) => ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Export failed: ${failure.message}')),
+                  ),
+                  (file) => ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Exported to ${file.path}')),
-                  );
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Export failed: $e')),
-                  );
-                }
+                  ),
+                );
               }
             },
             child: const Text('CSV'),

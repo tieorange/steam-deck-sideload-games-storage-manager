@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:path/path.dart' as path;
 import 'package:game_size_manager/core/logging/logger_service.dart';
 import 'package:game_size_manager/core/platform/platform_service.dart';
 import 'package:game_size_manager/core/services/disk_size_service.dart';
@@ -167,7 +168,7 @@ class OrphanedDataService {
       final entries = <Directory>[];
       await for (final entity in baseDir.list()) {
         if (entity is Directory) {
-          final dirName = entity.path.split('/').last;
+          final dirName = path.basename(entity.path);
           // Skip non-numeric directories and system entry '0'
           if (int.tryParse(dirName) == null || dirName == '0') continue;
 
@@ -182,7 +183,7 @@ class OrphanedDataService {
       for (var i = 0; i < entries.length; i += batchSize) {
         final batch = entries.skip(i).take(batchSize);
         final futures = batch.map((dir) async {
-          final dirName = dir.path.split('/').last;
+          final dirName = path.basename(dir.path);
           final isSymlink = await FileSystemEntity.isLink(dir.path);
           final isNonSteam = dirName.length > 10;
           final size = isSymlink
@@ -228,7 +229,7 @@ class OrphanedDataService {
       try {
         await for (final entity in dir.list()) {
           if (entity is File) {
-            final match = manifestRegex.firstMatch(entity.path.split('/').last);
+            final match = manifestRegex.firstMatch(path.basename(entity.path));
             if (match != null) {
               ids.add(match.group(1)!);
             }
@@ -259,7 +260,7 @@ class OrphanedDataService {
       try {
         await for (final entity in dir.list()) {
           if (entity is File) {
-            final fileName = entity.path.split('/').last;
+            final fileName = path.basename(entity.path);
             final match = manifestRegex.firstMatch(fileName);
             if (match != null) {
               final appId = match.group(1)!;
