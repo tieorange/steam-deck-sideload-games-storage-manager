@@ -14,26 +14,33 @@ You are building a Flutter Android app called **"Quest Game Manager"** that runs
 - **Target:** Android only (no iOS, no web, no desktop)
 - **minSdkVersion:** 29 (Android 10 — Quest 2 base)
 - **targetSdkVersion:** 32 (Android 12L — Meta requirement)
-- **Architecture:** Clean Architecture with BLoC pattern
-- **State management:** flutter_bloc
-- **HTTP:** dio (with download progress, resume support)
-- **Local storage:** shared_preferences for settings, hive for game catalog cache
-- **JSON:** dart:convert (built-in, no code generation needed)
-- **File operations:** dart:io
-- **Crypto:** crypto package (for MD5 hashing)
-- **APK installation:** Custom platform channel to Android's PackageInstaller API (NOT a pub.dev plugin — they are unreliable on Quest)
+- **Architecture:** Clean Architecture (3-layer: Data → Domain → Presentation)
+- **State management:** `flutter_bloc` (BLoC for complex features, Cubit for simple ones)
+- **DI:** `get_it` + `injectable` (auto-wired dependency injection)
+- **HTTP:** `dio` (with download progress, HTTP Range resume, interceptors, cancellation)
+- **Error handling:** `fpdart` (`Either<Failure, T>`) — type-safe, no exception swallowing
+- **Immutable models:** `freezed` + `json_serializable` for sealed union states, copyWith, and pattern matching
+- **Local storage:** `shared_preferences` for settings, `hive` for game catalog cache + download queue
+- **JSON:** `dart:convert` (built-in)
+- **File operations:** `dart:io`
+- **Crypto:** `crypto` package (for MD5 hashing)
+- **APK installation:** Custom Kotlin platform channel to Android's `PackageInstaller` API (NOT a pub.dev plugin — they are unreliable on Quest)
 - **7z extraction:** Bundled `7za` ARM64 Linux binary invoked via `Process.run()`
-- **Permissions:** permission_handler package
+- **Permissions:** `permission_handler` package
 
 ### Architecture Rules
 - Follow Clean Architecture: `data/` → `domain/` → `presentation/`
-- Every feature gets its own folder under each layer
-- BLoC for state management — one BLoC per screen/feature
-- Repository pattern for data access
+- **Domain layer** has ZERO external dependencies — pure Dart, no Flutter imports
+- **Data layer** implements domain interfaces — depends on `dio`, `hive`, platform channels
+- **Presentation layer** consumes domain use cases via BLoCs — depends on `flutter_bloc`
+- Feature-first folder structure: every feature gets its own folder under each layer
+- BLoC for complex features (catalog, download, installer), Cubit for simple ones (settings)
+- Repository pattern: abstract interfaces in domain, implementations in data
+- Use `fpdart` `Either<Failure, T>` as return type for all repository methods — never throw exceptions from repositories
+- All BLoC states and events defined as `freezed` sealed classes with Dart 3 pattern matching in UI
 - All network calls must be cancellable and have timeout handling
 - All file operations must check available storage space before proceeding
-- All errors must be caught and shown to user — never silently swallow exceptions
-- Use freezed + json_serializable ONLY for complex models. For simple models, hand-write fromJson/toJson
+- DI with `get_it` + `injectable` — annotate with `@injectable`, `@lazySingleton`, `@Injectable(as: ...)`
 
 ### UI Rules
 - The app runs as a **2D floating panel** in Quest's Horizon OS
@@ -89,7 +96,7 @@ Response JSON:
 ```
 
 - `baseUri` — The HTTP base URL for all subsequent downloads
-- `password` — Base64-encoded. Decode it: `String.fromCharCodes(base64Decode(password))`. This decoded string is the 7z archive password.
+- `password` — Base64-encoded. Decode it: `utf8.decode(base64Decode(password))`. This decoded string is the 7z archive password.
 
 Fallback URL if GitHub fails:
 ```
@@ -603,24 +610,46 @@ List<(String, int)> parseDirectoryListing(String html) {
 dependencies:
   flutter:
     sdk: flutter
-  dio: ^5.4.0                    # HTTP client with progress
-  flutter_bloc: ^8.1.0           # State management
+
+  # Architecture
+  flutter_bloc: ^8.1.6           # State management (BLoC + Cubit)
+  get_it: ^7.7.0                 # Service locator for DI
+  injectable: ^2.4.4             # Annotation-based DI generation
   equatable: ^2.0.5              # Value equality for BLoC states
-  shared_preferences: ^2.2.0     # Simple key-value storage
-  hive: ^2.2.3                   # Fast local database for game catalog
+
+  # Networking
+  dio: ^5.7.0                    # HTTP client with progress, resume, cancellation
+
+  # Functional Programming / Error Handling
+  fpdart: ^1.1.0                 # Either<Failure, T> for type-safe errors
+
+  # Code Generation (Models)
+  freezed_annotation: ^2.4.6     # Sealed classes, copyWith, pattern matching
+  json_annotation: ^4.9.0        # JSON serialization annotations
+
+  # Local Storage
+  hive: ^2.2.3                   # Fast NoSQL cache for game catalog
   hive_flutter: ^1.1.0           # Hive Flutter integration
-  crypto: ^3.0.3                 # MD5 hashing for game IDs
-  path_provider: ^2.1.0          # App directories
-  permission_handler: ^11.0.0    # Runtime permissions
-  cached_network_image: ^3.3.0   # Thumbnail caching
-  path: ^1.8.0                   # Path manipulation
+  shared_preferences: ^2.3.0     # Simple key-value settings
+
+  # Utilities
+  crypto: ^3.0.5                 # MD5 hashing for game IDs
+  path_provider: ^2.1.4          # App directories
+  path: ^1.9.0                   # Path manipulation
+  permission_handler: ^11.3.1    # Runtime permissions
+  cached_network_image: ^3.4.1   # Thumbnail caching
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  very_good_analysis: ^5.1.0     # Lint rules
-  hive_generator: ^2.0.1
-  build_runner: ^2.4.0
+  very_good_analysis: ^6.0.0     # Lint rules
+  build_runner: ^2.4.13          # Code generation runner
+  freezed: ^2.5.7                # Sealed class code gen
+  json_serializable: ^6.8.0      # JSON code gen
+  injectable_generator: ^2.6.2   # DI code gen
+  hive_generator: ^2.0.1         # Hive adapter code gen
+  bloc_test: ^9.1.7              # BLoC testing utilities
+  mocktail: ^1.0.4               # Mocking for tests
 ```
 
 ---
